@@ -5,10 +5,10 @@ milestone_name: milestone
 status: unknown
 last_updated: "2026-02-27T12:45:44.347Z"
 progress:
-  total_phases: 1
+  total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Project State
@@ -18,32 +18,33 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Designers can quickly create and share interactive MUI-based prototypes that every team member can use from their own perspective (text editing, component inspection, dark/light mode)
-**Current focus:** Phase 1 — Rendering Foundation
+**Current focus:** Phase 2 — Inspector and Responsive Preview
 
 ## Current Position
 
-Phase: 1 of 4 (Rendering Foundation)
-Plan: 2 of 2 in current phase
-Status: Phase 1 complete
-Last activity: 2026-02-27 — Plan 01-02 complete (app shell, theme toggle, hot reload)
+Phase: 2 of 4 (Inspector and Responsive Preview)
+Plan: 1 of 2 in current phase (02-01 complete)
+Status: In progress
+Last activity: 2026-02-27 — Plan 02-01 complete (AST inspector pipeline, tree API, iframe inspector)
 
-Progress: [██░░░░░░░░] 20%
+Progress: [███░░░░░░░] 30%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 25 min
-- Total execution time: 0.83 hours
+- Total plans completed: 3
+- Average duration: 21 min
+- Total execution time: 1.05 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-rendering-foundation | 2 | 50 min | 25 min |
+| 02-inspector-responsive-preview | 1 | 13 min | 13 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (5 min), 01-02 (45 min)
+- Last 5 plans: 01-01 (5 min), 01-02 (45 min), 02-01 (13 min)
 - Trend: —
 
 *Updated after each plan completion*
@@ -65,6 +66,9 @@ Recent decisions affecting current work:
 - [Phase 1][01-02]: ThemeSyncProvider pattern bridges Zustand (external store) to MUI useColorScheme() (React context) — Zustand is single source of truth, MUI is a sink
 - [Phase 1][01-02]: postMessage protocol established: shell sends SET_THEME + RELOAD, iframe sends RENDER_ERROR — Phase 2 can add new message types without conflict
 - [Phase 2]: Use AST-based (Babel) component inspection, NOT runtime fiber introspection — fiber approach breaks across React versions and is inaccessible inside iframes
+- [Phase 2][02-01]: @ts-expect-error for @babel/traverse and @babel/generator imports — @types/babel__traverse conflicts with MUI CssVarsThemeOptions type resolution
+- [Phase 2][02-01]: colorSchemeSelector must be nested inside cssVariables object in createTheme() — top-level usage is a type mismatch exposed by clean builds
+- [Phase 2][02-01]: Shell fetches /api/preview/[id]/tree directly rather than via iframe postMessage — simpler architecture, avoids iframe complexity
 
 ### Pending Todos
 
@@ -77,5 +81,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 01-02-PLAN.md (app shell, theme toggle, hot reload) — Phase 1 complete
+Stopped at: Completed 02-01-PLAN.md (AST inspector pipeline, tree API, iframe inspector script)
 Resume file: None

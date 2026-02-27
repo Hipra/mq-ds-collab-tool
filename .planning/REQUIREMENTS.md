@@ -14,8 +14,8 @@
 
 ### Inspector Panel
 
-- [ ] **INSP-01**: Komponens fa megjelenítése — MUI komponens hierarchia fa nézetben
-- [ ] **INSP-02**: Prop inspector — kiválasztott komponens propjainak és értékeinek megjelenítése
+- [x] **INSP-01**: Komponens fa megjelenítése — MUI komponens hierarchia fa nézetben
+- [x] **INSP-02**: Prop inspector — kiválasztott komponens propjainak és értékeinek megjelenítése
 - [ ] **INSP-03**: Inline text editing — "Copy" tab ahol a copywriter látja az összes szöveget és szerkesztheti
 - [ ] **INSP-04**: Közös panel két tabbal: "Copy" (copywriter szövegszerkesztés) és "Components" (fejlesztői komponens fa + propok)
 
