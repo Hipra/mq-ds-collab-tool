@@ -107,6 +107,92 @@ export async function GET(
 }
 
 /**
+ * POST /api/preview/[id]/screens
+ *
+ * Creates a new screen file in the prototype directory.
+ * Body: { name: string }
+ *
+ * - Slugifies name → screen id, file = `screen-{slug}.jsx`
+ * - 409 if file already exists
+ * - Writes template JSX and appends to metadata.json screens.order
+ * - Returns { id, name, file } with 201
+ */
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const protoDir = process.env.PROTOTYPES_DIR ?? path.join(process.cwd(), 'prototypes');
+  const dir = path.join(protoDir, id);
+
+  let body: { name?: string };
+  try {
+    body = (await req.json()) as { name?: string };
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const name = body.name?.trim();
+  if (!name) {
+    return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+  }
+
+  // Slugify: lowercase, replace non-alphanumeric with hyphens, collapse, trim
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  if (!slug) {
+    return NextResponse.json({ error: 'Name must contain at least one alphanumeric character' }, { status: 400 });
+  }
+
+  const screenId = slug;
+  const fileName = `screen-${slug}.jsx`;
+  const filePath = path.join(dir, fileName);
+
+  // Check if file already exists
+  try {
+    await fs.access(filePath);
+    return NextResponse.json({ error: 'A screen with this name already exists' }, { status: 409 });
+  } catch {
+    // File doesn't exist — good
+  }
+
+  // Write template
+  const template = `import { Box } from '@mui/material';\n\nexport default function Screen() {\n  return <Box sx={{ p: 3 }} />;\n}\n`;
+  try {
+    await fs.writeFile(filePath, template, 'utf-8');
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+
+  // Update metadata.json — append to screens.order
+  const metaPath = path.join(dir, 'metadata.json');
+  let meta: Record<string, unknown> = {};
+  try {
+    const raw = await fs.readFile(metaPath, 'utf-8');
+    meta = JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    // No existing metadata — start fresh
+  }
+
+  const existingScreens = (meta.screens as ScreensMeta | undefined) ?? {};
+  const order = existingScreens.order ?? [];
+  order.push(screenId);
+  meta.screens = { ...existingScreens, order };
+
+  try {
+    await fs.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+  } catch {
+    // Non-fatal — file was created, metadata update failed
+  }
+
+  return NextResponse.json({ id: screenId, name, file: fileName }, { status: 201 });
+}
+
+/**
  * PATCH /api/preview/[id]/screens
  *
  * Persists screen order and/or custom names to metadata.json.

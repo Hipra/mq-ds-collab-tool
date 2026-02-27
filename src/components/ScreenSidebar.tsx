@@ -8,9 +8,16 @@ import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Alert from '@mui/material/Alert';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import AddIcon from '@mui/icons-material/Add';
 import {
   DndContext,
   closestCenter,
@@ -160,6 +167,10 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
   const [localScreens, setLocalScreens] = useState<Screen[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [createError, setCreateError] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const { sidebarOpen, setSidebarOpen, activeScreenId, setActiveScreen, setScreens } = useInspectorStore();
 
@@ -258,6 +269,36 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
     setEditValue('');
   }, []);
 
+  const handleCreateScreen = async () => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    setCreating(true);
+    setCreateError('');
+    try {
+      const res = await fetch(`/api/preview/${prototypeId}/screens`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setCreateError(data.error ?? 'Failed to create screen');
+        return;
+      }
+      const newScreen = (await res.json()) as Screen;
+      const updated = [...localScreens, newScreen];
+      setLocalScreens(updated);
+      setScreens(updated);
+      setActiveScreen(newScreen.id);
+      setCreateOpen(false);
+      setNewName('');
+    } catch {
+      setCreateError('Network error');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const isOnlyIndex =
     localScreens.length === 1 && localScreens[0]?.id === 'index';
 
@@ -326,16 +367,54 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
           </SortableContext>
         </DndContext>
 
-        {/* Empty state hint */}
-        {isOnlyIndex && (
-          <Box sx={{ px: 1.5, py: 1 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
-              Add screen-[name].jsx files to create multiple screens
-            </Typography>
-          </Box>
-        )}
       </Box>
 
+      {/* Add screen button */}
+      <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<AddIcon />}
+          fullWidth
+          onClick={() => { setCreateError(''); setNewName(''); setCreateOpen(true); }}
+          sx={{ textTransform: 'none', fontSize: 12 }}
+        >
+          Add screen
+        </Button>
+      </Box>
+
+      {/* Create screen dialog */}
+      <Dialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>New screen</DialogTitle>
+        <DialogContent>
+          {createError && <Alert severity="error" sx={{ mb: 2 }}>{createError}</Alert>}
+          <TextField
+            autoFocus
+            fullWidth
+            size="small"
+            label="Screen name"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleCreateScreen(); }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleCreateScreen}
+            disabled={!newName.trim() || creating}
+          >
+            {creating ? 'Creating...' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
