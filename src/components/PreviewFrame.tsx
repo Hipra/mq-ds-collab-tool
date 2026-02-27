@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useThemeStore } from '@/stores/theme';
+
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 
 interface PreviewFrameProps {
@@ -32,7 +33,7 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
   const [previewState, setPreviewState] = useState<PreviewState>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const isLoadedRef = useRef(false);
-  const mode = useThemeStore((s) => s.mode);
+  const { mode } = useThemeStore();
 
   // Send theme to iframe via postMessage
   const sendThemeToIframe = useCallback(
@@ -113,7 +114,6 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
     isLoadedRef.current = true;
     setPreviewState('ready');
     if (mode) {
-      // Send initial theme now that iframe is ready to receive postMessages
       if (iframeRef.current?.contentWindow) {
         iframeRef.current.contentWindow.postMessage(
           { type: 'SET_THEME', mode },
@@ -122,6 +122,24 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
       }
     }
   }, [mode]);
+
+  // Catch iframe loads that happened before React hydration (browser cache race).
+  // On refresh, the iframe may load from cache before React attaches the onLoad
+  // handler, so the load event is missed and the spinner stays forever.
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (iframe && !isLoadedRef.current) {
+      // Check if the iframe document is already loaded
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (doc && doc.readyState === 'complete') {
+          handleIframeLoad();
+        }
+      } catch {
+        // Cross-origin access blocked — fall back to onLoad handler
+      }
+    }
+  }, [handleIframeLoad]);
 
   return (
     <Box

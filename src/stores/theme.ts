@@ -1,42 +1,36 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { useColorScheme } from '@mui/material/styles';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
 const CYCLE_ORDER: ThemeMode[] = ['light', 'dark', 'system'];
 
-interface ThemeStore {
-  mode: ThemeMode;
-  setMode: (mode: ThemeMode) => void;
-  cycleMode: () => void;
-}
-
 /**
- * Global Zustand store for theme mode selection.
+ * Theme mode hook — thin wrapper over MUI's useColorScheme.
  *
- * Design decisions:
- * - Default mode: 'system' — follows OS prefers-color-scheme per CONTEXT.md
- * - Persist key: 'mq-ds-theme-mode' in localStorage — global, not per-prototype
- * - cycleMode rotates: light -> dark -> system -> light
- * - This store is the single source of truth for theme selection across both
- *   the app shell (via MUI useColorScheme) and the iframe (via postMessage SET_THEME)
+ * MUI v6 with colorSchemeSelector: 'data' already handles:
+ * - localStorage persistence (key: 'mui-mode')
+ * - system preference detection
+ * - setMode('light' | 'dark' | 'system')
+ *
+ * This hook adds cycleMode() for the three-state toggle and keeps the
+ * same API surface so Toolbar and PreviewFrame don't need to change.
+ *
+ * Single source of truth — no Zustand/MUI sync needed, no flicker on refresh.
  */
-export const useThemeStore = create<ThemeStore>()(
-  persist(
-    (set, get) => ({
-      mode: 'system',
-      setMode: (mode) => set({ mode }),
-      cycleMode: () => {
-        const current = get().mode;
-        const currentIndex = CYCLE_ORDER.indexOf(current);
-        const nextIndex = (currentIndex + 1) % CYCLE_ORDER.length;
-        set({ mode: CYCLE_ORDER[nextIndex] });
-      },
-    }),
-    {
-      name: 'mq-ds-theme-mode',
-      // Only persist the mode field, not the functions
-      partialize: (state) => ({ mode: state.mode }),
-    }
-  )
-);
+export function useThemeStore() {
+  const { mode, setMode } = useColorScheme();
+
+  const safeMode: ThemeMode = (mode as ThemeMode) || 'system';
+
+  const cycleMode = () => {
+    const currentIndex = CYCLE_ORDER.indexOf(safeMode);
+    const nextIndex = (currentIndex + 1) % CYCLE_ORDER.length;
+    setMode(CYCLE_ORDER[nextIndex]);
+  };
+
+  return {
+    mode: safeMode,
+    setMode: setMode as (m: ThemeMode) => void,
+    cycleMode,
+  };
+}

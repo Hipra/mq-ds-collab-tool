@@ -16,6 +16,7 @@ export function createAppTheme() {
   return createTheme({
     cssVariables: true,
     colorSchemeSelector: 'data',
+    defaultColorScheme: 'light',
     colorSchemes: {
       light: true,
       dark: true,

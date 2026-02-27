@@ -10,8 +10,7 @@ import Tooltip from '@mui/material/Tooltip';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
-import { useThemeStore } from '@/stores/theme';
-import type { ThemeMode } from '@/stores/theme';
+import { useThemeStore, type ThemeMode } from '@/stores/theme';
 
 interface ToolbarProps {
   prototypeName: string;
@@ -38,8 +37,7 @@ const MODE_CONFIG: Record<
 export function Toolbar({ prototypeName }: ToolbarProps) {
   const { mode, cycleMode } = useThemeStore();
 
-  // Guard for undefined mode on first MUI render to avoid hydration mismatch
-  const modeConfig = mode ? MODE_CONFIG[mode] : null;
+  const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.system;
 
   return (
     <AppBar position="static" color="default" elevation={0}>
@@ -48,17 +46,14 @@ export function Toolbar({ prototypeName }: ToolbarProps) {
           {prototypeName}
         </Typography>
         <Box sx={{ flex: 1 }} />
-        <Tooltip title={modeConfig?.label ?? 'Theme'}>
-          <span>
-            <IconButton
-              onClick={cycleMode}
-              size="small"
-              aria-label={modeConfig?.label ?? 'Toggle theme'}
-              disabled={!modeConfig}
-            >
-              {modeConfig?.icon ?? <SettingsBrightnessIcon />}
-            </IconButton>
-          </span>
+        <Tooltip title={modeConfig.label}>
+          <IconButton
+            onClick={cycleMode}
+            size="small"
+            aria-label={modeConfig.label}
+          >
+            {modeConfig.icon}
+          </IconButton>
         </Tooltip>
       </MuiToolbar>
     </AppBar>

@@ -9,13 +9,12 @@ export const metadata: Metadata = {
 /**
  * Root layout — provides the HTML document shell.
  *
- * InitColorSchemeScript is placed before children so it runs synchronously
- * before React hydration, setting data-mui-color-scheme on <html> from
- * localStorage. This prevents flash of wrong theme (FOWT) when the user
- * has a saved theme preference.
+ * InitColorSchemeScript runs synchronously before React hydration to set
+ * data-mui-color-scheme on <html> from localStorage. This initializes
+ * MUI's useColorScheme() hook and prevents flash of wrong theme.
  *
- * The MUI ThemeProvider is NOT here — it's in (shell)/layout.tsx to avoid
- * wrapping non-shell routes like /preview/[id] which are Route Handlers.
+ * The MUI ThemeProvider is in (shell)/layout.tsx to avoid wrapping non-shell
+ * routes like /preview/[id] which are Route Handlers.
  */
 export default function RootLayout({
   children,
