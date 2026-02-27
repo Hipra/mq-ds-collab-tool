@@ -105,3 +105,62 @@ export async function GET(
 
   return NextResponse.json(screens);
 }
+
+/**
+ * PATCH /api/preview/[id]/screens
+ *
+ * Persists screen order and/or custom names to metadata.json.
+ * Body: { order?: string[], customNames?: Record<string, string> }
+ *
+ * Merges partial updates — only provided fields are updated.
+ */
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const protoDir = process.env.PROTOTYPES_DIR ?? path.join(process.cwd(), 'prototypes');
+  const dir = path.join(protoDir, id);
+  const metaPath = path.join(dir, 'metadata.json');
+
+  let body: { order?: string[]; customNames?: Record<string, string> };
+  try {
+    body = (await req.json()) as { order?: string[]; customNames?: Record<string, string> };
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  // Read existing metadata
+  let meta: Record<string, unknown> = {};
+  try {
+    const raw = await fs.readFile(metaPath, 'utf-8');
+    meta = JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    // No existing metadata — start fresh
+  }
+
+  // Merge screens section
+  const existingScreens = (meta.screens as ScreensMeta | undefined) ?? {};
+  const updatedScreens: ScreensMeta = { ...existingScreens };
+
+  if (body.order !== undefined) {
+    updatedScreens.order = body.order;
+  }
+  if (body.customNames !== undefined) {
+    updatedScreens.customNames = {
+      ...(existingScreens.customNames ?? {}),
+      ...body.customNames,
+    };
+  }
+
+  meta.screens = updatedScreens;
+
+  try {
+    await fs.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
+}
