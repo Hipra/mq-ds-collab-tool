@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useThemeStore } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
+import { useCopyStore } from '@/stores/copy';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 
 interface PreviewFrameProps {
@@ -137,7 +138,7 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
     };
   }, [prototypeId, sendReloadToIframe, fetchTree]);
 
-  // Listen for messages from iframe (RENDER_ERROR, COMPONENT_HOVER, COMPONENT_SELECT)
+  // Listen for messages from iframe (RENDER_ERROR, COMPONENT_HOVER, COMPONENT_SELECT, TEXT_CLICK)
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (!event.data || typeof event.data !== 'object') return;
@@ -154,6 +155,16 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
 
       if (event.data.type === 'COMPONENT_SELECT') {
         setSelectedComponent(event.data.id ?? null);
+      }
+
+      // Phase 3: forward TEXT_CLICK to copy store — highlight matching entry
+      if (event.data.type === 'TEXT_CLICK') {
+        const { inspectorId } = event.data as { inspectorId: string };
+        const entries = useCopyStore.getState().entries;
+        const match = entries.find((e) => e.inspectorId === inspectorId);
+        if (match) {
+          useCopyStore.getState().setHighlightedKey(match.key);
+        }
       }
     };
 
@@ -250,6 +261,7 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
         <Box
           component="iframe"
           key={iframeSrc}
+          id="preview-iframe"
           ref={iframeRef}
           src={iframeSrc}
           sandbox="allow-scripts allow-same-origin"

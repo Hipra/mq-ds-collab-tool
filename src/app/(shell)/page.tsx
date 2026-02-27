@@ -35,7 +35,7 @@ export default function ShellPage() {
       <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <ScreenSidebar prototypeId={prototypeId} />
         <PreviewFrame prototypeId={prototypeId} />
-        <InspectorPanel />
+        <InspectorPanel prototypeId={prototypeId} />
       </Box>
     </Box>
   );

@@ -4,11 +4,11 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import { useInspectorStore } from '@/stores/inspector';
 import { ComponentTree } from '@/components/ComponentTree';
 import { PropInspector } from '@/components/PropInspector';
+import { CopyTab } from '@/components/CopyTab';
 import type { ComponentNode } from '@/lib/ast-inspector';
 
 /**
@@ -52,19 +52,23 @@ function findNodeById(tree: ComponentNode[], id: string): ComponentNode | null {
   return null;
 }
 
+interface InspectorPanelProps {
+  prototypeId: string;
+}
+
 /**
  * Right sidebar inspector panel with Copy and Components tabs.
  *
  * Design decisions per CONTEXT.md locked decisions:
  * - Fixed width 320px (matches VS Code default sidebar width)
  * - Uses display:none TabPanel for state-preserving tab switching
- * - Copy tab is a placeholder for Phase 3 functionality
+ * - Copy tab replaced with CopyTab component (Phase 3)
  * - Components tab shows ComponentTree (upper) + PropInspector (lower)
  * - Panel collapse/show is controlled by the toolbar ViewSidebar toggle
  * - Tree hover only highlights in tree (not iframe) for v1 simplicity
  *   (iframe hover highlights BOTH iframe overlay and tree via Zustand)
  */
-export function InspectorPanel() {
+export function InspectorPanel({ prototypeId }: InspectorPanelProps) {
   const {
     panelOpen,
     activeTab,
@@ -120,13 +124,9 @@ export function InspectorPanel() {
         <Tab label="Components" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
       </Tabs>
 
-      {/* Copy tab — Phase 3 placeholder */}
+      {/* Copy tab — Phase 3 copy editing */}
       <TabPanel value={tabIndex} index={0}>
-        <Box sx={{ p: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            Copy editing will be available in a future update.
-          </Typography>
-        </Box>
+        <CopyTab prototypeId={prototypeId} />
       </TabPanel>
 
       {/* Components tab — tree + prop inspector */}
