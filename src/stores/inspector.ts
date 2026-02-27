@@ -12,6 +12,9 @@ interface InspectorState {
   inspectorMode: boolean;
   // Preview
   previewWidth: number | 'auto';
+  // Screens (Phase 3)
+  activeScreenId: string;
+  screens: { id: string; name: string; file: string }[];
 }
 
 interface InspectorActions {
@@ -22,6 +25,9 @@ interface InspectorActions {
   setComponentTree: (tree: ComponentNode[]) => void;
   setPreviewWidth: (width: number | 'auto') => void;
   setInspectorMode: (enabled: boolean) => void;
+  // Screen actions (Phase 3)
+  setActiveScreen: (id: string) => void;
+  setScreens: (screens: { id: string; name: string; file: string }[]) => void;
 }
 
 /**
@@ -48,6 +54,10 @@ export const useInspectorStore = create<InspectorState & InspectorActions>((set)
   // Preview defaults
   previewWidth: 'auto',
 
+  // Screen defaults (Phase 3)
+  activeScreenId: 'index',
+  screens: [],
+
   // Actions
   togglePanel: () => set((s) => ({ panelOpen: !s.panelOpen })),
   setActiveTab: (tab) => set({ activeTab: tab }),
@@ -56,4 +66,6 @@ export const useInspectorStore = create<InspectorState & InspectorActions>((set)
   setComponentTree: (tree) => set({ componentTree: tree }),
   setPreviewWidth: (width) => set({ previewWidth: width }),
   setInspectorMode: (enabled) => set({ inspectorMode: enabled }),
+  setActiveScreen: (id) => set({ activeScreenId: id }),
+  setScreens: (screens) => set({ screens }),
 }));
