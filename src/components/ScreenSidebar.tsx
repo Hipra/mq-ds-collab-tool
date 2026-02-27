@@ -157,12 +157,11 @@ function SortableScreenItem({
  * - PointerSensor activationConstraint.distance = 8px prevents drag/click conflict
  */
 export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [localScreens, setLocalScreens] = useState<Screen[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
 
-  const { activeScreenId, setActiveScreen, setScreens } = useInspectorStore();
+  const { sidebarOpen, setSidebarOpen, activeScreenId, setActiveScreen, setScreens } = useInspectorStore();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -344,21 +343,6 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
         )}
       </Box>
 
-      {/* Collapsed state: floating expand button */}
-      {!sidebarOpen && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 8,
-            left: 4,
-            zIndex: 10,
-          }}
-        >
-          <IconButton size="small" onClick={() => setSidebarOpen(true)}>
-            <ChevronRightIcon sx={{ fontSize: 18 }} />
-          </IconButton>
-        </Box>
-      )}
     </Box>
   );
 }

@@ -13,6 +13,7 @@ interface InspectorState {
   // Preview
   previewWidth: number | 'auto';
   // Screens (Phase 3)
+  sidebarOpen: boolean;
   activeScreenId: string;
   screens: { id: string; name: string; file: string }[];
 }
@@ -26,6 +27,8 @@ interface InspectorActions {
   setPreviewWidth: (width: number | 'auto') => void;
   setInspectorMode: (enabled: boolean) => void;
   // Screen actions (Phase 3)
+  toggleSidebar: () => void;
+  setSidebarOpen: (open: boolean) => void;
   setActiveScreen: (id: string) => void;
   setScreens: (screens: { id: string; name: string; file: string }[]) => void;
 }
@@ -55,6 +58,7 @@ export const useInspectorStore = create<InspectorState & InspectorActions>((set)
   previewWidth: 'auto',
 
   // Screen defaults (Phase 3)
+  sidebarOpen: true,
   activeScreenId: 'index',
   screens: [],
 
@@ -66,6 +70,8 @@ export const useInspectorStore = create<InspectorState & InspectorActions>((set)
   setComponentTree: (tree) => set({ componentTree: tree }),
   setPreviewWidth: (width) => set({ previewWidth: width }),
   setInspectorMode: (enabled) => set({ inspectorMode: enabled }),
+  toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setActiveScreen: (id) => set({ activeScreenId: id }),
   setScreens: (screens) => set({ screens }),
 }));

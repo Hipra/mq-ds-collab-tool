@@ -419,7 +419,9 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                     '&:hover': { bgcolor: 'action.selected' },
                     position: 'sticky',
                     top: 0,
-                    zIndex: 1,
+                    zIndex: 2,
+                    borderBottom: 1,
+                    borderColor: 'divider',
                   }}
                 >
                   {isCollapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}

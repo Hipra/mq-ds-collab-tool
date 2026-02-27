@@ -11,6 +11,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
+import MenuIcon from '@mui/icons-material/Menu';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
 import { BreakpointSwitcher } from '@/components/BreakpointSwitcher';
@@ -42,7 +43,7 @@ const MODE_CONFIG: Record<
  */
 export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
   const { mode, cycleMode } = useThemeStore();
-  const { togglePanel, panelOpen } = useInspectorStore();
+  const { togglePanel, panelOpen, sidebarOpen, toggleSidebar } = useInspectorStore();
 
   const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.system;
 
@@ -58,6 +59,17 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
         <Box sx={{ flex: 1 }} />
         <BreakpointSwitcher />
         <Box sx={{ flex: 1 }} />
+        <Tooltip title={sidebarOpen ? 'Hide screens' : 'Show screens'}>
+          <IconButton
+            onClick={toggleSidebar}
+            size="small"
+            aria-label={sidebarOpen ? 'Hide screens' : 'Show screens'}
+            color={sidebarOpen ? 'primary' : 'default'}
+            sx={{ mr: 0.5 }}
+          >
+            <MenuIcon />
+          </IconButton>
+        </Tooltip>
         <Tooltip title={panelOpen ? 'Hide inspector panel' : 'Show inspector panel'}>
           <IconButton
             onClick={togglePanel}
