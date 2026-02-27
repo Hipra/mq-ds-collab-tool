@@ -7,8 +7,8 @@
 
 ### Rendering
 
-- [ ] **REND-01**: Claude Code által generált React/MUI fájlok élő renderelése sandboxolt iframe-ben
-- [ ] **REND-02**: Error boundary — hibás komponens ne crashelje az appot, olvasható hibaüzenet jelenik meg
+- [x] **REND-01**: Claude Code által generált React/MUI fájlok élő renderelése sandboxolt iframe-ben
+- [x] **REND-02**: Error boundary — hibás komponens ne crashelje az appot, olvasható hibaüzenet jelenik meg
 - [ ] **REND-03**: Dark/light mód váltás a prototípuson belül (ThemeProvider a sandboxban)
 - [ ] **REND-04**: Reszponzív preview — breakpoint váltó (xs 0px, sm 600px, md 900px, lg 1200px, xl 1536px) iframe átméretezéssel
 
@@ -32,7 +32,7 @@
 
 ### Theme
 
-- [ ] **THME-01**: MUI default theme alkalmazása a sandbox-ban, architektúra felkészítése custom theme JSON betöltésre
+- [x] **THME-01**: MUI default theme alkalmazása a sandbox-ban, architektúra felkészítése custom theme JSON betöltésre
 
 ## v2 Requirements
 
@@ -75,10 +75,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REND-01 | Phase 1 | Pending |
-| REND-02 | Phase 1 | Pending |
+| REND-01 | Phase 1 | Complete |
+| REND-02 | Phase 1 | Complete |
 | REND-03 | Phase 1 | Pending |
-| THME-01 | Phase 1 | Pending |
+| THME-01 | Phase 1 | Complete |
 | REND-04 | Phase 2 | Pending |
 | INSP-01 | Phase 2 | Pending |
 | INSP-02 | Phase 2 | Pending |
