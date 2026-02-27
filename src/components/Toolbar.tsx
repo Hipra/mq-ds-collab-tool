@@ -21,6 +21,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
 import { useRouter } from 'next/navigation';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
@@ -66,7 +67,6 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
     const command = `claude "Work on screen ${screenFile} in prototype prototypes/${prototypeId}/. Follow the rules in CLAUDE.md. Read existing files before editing. Only modify files inside prototypes/${prototypeId}/ — never touch src/, config files, or other prototypes. Stack: React + MUI."`;
     navigator.clipboard.writeText(command);
     setCopiedClaude(true);
-    setTimeout(() => setCopiedClaude(false), 2000);
   };
 
   const handleDelete = async () => {
@@ -122,7 +122,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
         <BreakpointSwitcher />
         <Box sx={{ flex: 1 }} />
         <ShareButton prototypeId={prototypeId} />
-        <Tooltip title={copiedClaude ? 'Copied!' : 'Copy Claude Code command'}>
+        <Tooltip title="Copy Claude Code command">
           <IconButton
             onClick={handleCopyClaudeCommand}
             size="small"
@@ -132,6 +132,16 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
             <TerminalIcon fontSize="small" />
           </IconButton>
         </Tooltip>
+        <Snackbar
+          open={copiedClaude}
+          autoHideDuration={3000}
+          onClose={() => setCopiedClaude(false)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert severity="success" variant="filled" onClose={() => setCopiedClaude(false)}>
+            Copied! Navigate to project folder and paste command
+          </Alert>
+        </Snackbar>
         <Tooltip title={sidebarOpen ? 'Hide screens' : 'Show screens'}>
           <IconButton
             onClick={toggleSidebar}
