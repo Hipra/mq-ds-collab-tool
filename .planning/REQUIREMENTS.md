@@ -28,7 +28,7 @@
 ### Multi-screen
 
 - [x] **SCRN-01**: Több screen per prototípus — 5-10 screen támogatás
-- [ ] **SCRN-02**: Screenek közötti navigáció a prototípuson belül (tab strip vagy sidebar)
+- [x] **SCRN-02**: Screenek közötti navigáció a prototípuson belül (tab strip vagy sidebar)
 
 ### Theme
 
@@ -85,7 +85,7 @@
 | INSP-04 | Phase 2 | Complete |
 | INSP-03 | Phase 3 | Pending |
 | SCRN-01 | Phase 3 | Complete |
-| SCRN-02 | Phase 3 | Pending |
+| SCRN-02 | Phase 3 | Complete |
 | SHAR-03 | Phase 3 | Complete |
 | SHAR-01 | Phase 4 | Pending |
 | SHAR-02 | Phase 4 | Pending |

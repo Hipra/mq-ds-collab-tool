@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-27T15:02:03.688Z"
+last_updated: "2026-02-27T15:05:09Z"
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 9
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 3 of 4 (Copywriter Multi-Screen Status) — IN PROGRESS
-Plan: 1 of 3 in current phase (03-01 complete)
-Status: Phase 3 started — 03-01 complete, 03-02 and 03-03 pending
-Last activity: 2026-02-27 — Plan 03-01 complete (status badge, screen discovery, text extraction, copy overlay)
+Plan: 2 of 4 in current phase (03-01 and 03-02 complete)
+Status: Phase 3 in progress — 03-02 complete, 03-03 and 03-04 pending
+Last activity: 2026-02-27 — Plan 03-02 complete (ScreenSidebar with dnd-kit, screen-aware PreviewFrame and preview route)
 
-Progress: [██████░░░░] 60%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Progress: [██████░░░░] 60%
 
 *Updated after each plan completion*
 | Phase 03-copywriter-multi-screen-status P03-01 | 4 | 2 tasks | 12 files |
+| Phase 03-copywriter-multi-screen-status P03-02 | 3 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,9 @@ Recent decisions affecting current work:
 - [Phase 3][03-01]: Copy overlay conflict via three-way merge: sourceValueAtEdit vs current source vs edited value
 - [Phase 3][03-01]: Screen file convention: index.jsx = main screen (id: index), screen-{id}.jsx = additional screens
 - [Phase 3][03-01]: Text extraction: JSXAttribute StringLiterals AND JSXText children for six text-bearing prop categories
+- [Phase 3][03-02]: key={iframeSrc} on iframe forces re-mount on screen switch — simpler than tracking load state across src changes
+- [Phase 3][03-02]: PATCH /api/preview/[id]/screens is merge-patch — partial updates don't overwrite the other field
+- [Phase 3][03-02]: PointerSensor activationConstraint.distance=8 prevents drag from firing on single-click or double-click
 
 ### Pending Todos
 
@@ -89,5 +93,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 03-01-PLAN.md — status badge, screen discovery, text extraction, copy overlay
+Stopped at: Completed 03-02-PLAN.md — ScreenSidebar with dnd-kit, screen-aware PreviewFrame and preview route
 Resume file: None
