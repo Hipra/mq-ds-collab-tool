@@ -12,6 +12,7 @@
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.5.0",
     "@mui/material": "^6.4.7",
     "chokidar": "^4.0.3",
     "esbuild": "^0.24.2",
@@ -19,7 +20,8 @@
     "next": "^15.5.12",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-error-boundary": "^5.0.0"
+    "react-error-boundary": "^5.0.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@types/node": "^20",
