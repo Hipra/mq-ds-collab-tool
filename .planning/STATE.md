@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-27T12:45:44.347Z"
+last_updated: "2026-02-27T13:37:24Z"
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 4
+  completed_plans: 4
 ---
 
 # Project State
@@ -23,28 +23,28 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 2 of 4 (Inspector and Responsive Preview)
-Plan: 1 of 2 in current phase (02-01 complete)
+Plan: 2 of 3 in current phase (02-02 complete)
 Status: In progress
-Last activity: 2026-02-27 — Plan 02-01 complete (AST inspector pipeline, tree API, iframe inspector)
+Last activity: 2026-02-27 — Plan 02-02 complete (breakpoint switcher, responsive preview, inspector panel, component tree, prop inspector)
 
-Progress: [███░░░░░░░] 30%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 21 min
-- Total execution time: 1.05 hours
+- Total plans completed: 4
+- Average duration: 17 min
+- Total execution time: 1.1 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-rendering-foundation | 2 | 50 min | 25 min |
-| 02-inspector-responsive-preview | 1 | 13 min | 13 min |
+| 02-inspector-responsive-preview | 2 | 16 min | 8 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (5 min), 01-02 (45 min), 02-01 (13 min)
+- Last 5 plans: 01-01 (5 min), 01-02 (45 min), 02-01 (13 min), 02-02 (3 min)
 - Trend: —
 
 *Updated after each plan completion*
@@ -69,6 +69,9 @@ Recent decisions affecting current work:
 - [Phase 2][02-01]: @ts-expect-error for @babel/traverse and @babel/generator imports — @types/babel__traverse conflicts with MUI CssVarsThemeOptions type resolution
 - [Phase 2][02-01]: colorSchemeSelector must be nested inside cssVariables object in createTheme() — top-level usage is a type mismatch exposed by clean builds
 - [Phase 2][02-01]: Shell fetches /api/preview/[id]/tree directly rather than via iframe postMessage — simpler architecture, avoids iframe complexity
+- [Phase 2][02-02]: Pixel-width iframe container for responsive preview — CSS transform:scale() rejected (distorts fonts and interactions)
+- [Phase 2][02-02]: display:none TabPanel pattern — preserves ComponentTree expandedSet and scroll state across tab switches
+- [Phase 2][02-02]: One-directional hover sync (iframe->tree only) — avoids new SET_HIGHLIGHT postMessage type for v1 simplicity
 
 ### Pending Todos
 
@@ -81,5 +84,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 02-01-PLAN.md (AST inspector pipeline, tree API, iframe inspector script)
+Stopped at: Completed 02-02-PLAN.md (breakpoint switcher, responsive preview, inspector panel, component tree, prop inspector)
 Resume file: None

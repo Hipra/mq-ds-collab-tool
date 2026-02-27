@@ -10,14 +10,14 @@
 - [x] **REND-01**: Claude Code által generált React/MUI fájlok élő renderelése sandboxolt iframe-ben
 - [x] **REND-02**: Error boundary — hibás komponens ne crashelje az appot, olvasható hibaüzenet jelenik meg
 - [x] **REND-03**: Dark/light mód váltás a prototípuson belül (ThemeProvider a sandboxban)
-- [ ] **REND-04**: Reszponzív preview — breakpoint váltó (xs 0px, sm 600px, md 900px, lg 1200px, xl 1536px) iframe átméretezéssel
+- [x] **REND-04**: Reszponzív preview — breakpoint váltó (xs 0px, sm 600px, md 900px, lg 1200px, xl 1536px) iframe átméretezéssel
 
 ### Inspector Panel
 
 - [x] **INSP-01**: Komponens fa megjelenítése — MUI komponens hierarchia fa nézetben
 - [x] **INSP-02**: Prop inspector — kiválasztott komponens propjainak és értékeinek megjelenítése
 - [ ] **INSP-03**: Inline text editing — "Copy" tab ahol a copywriter látja az összes szöveget és szerkesztheti
-- [ ] **INSP-04**: Közös panel két tabbal: "Copy" (copywriter szövegszerkesztés) és "Components" (fejlesztői komponens fa + propok)
+- [x] **INSP-04**: Közös panel két tabbal: "Copy" (copywriter szövegszerkesztés) és "Components" (fejlesztői komponens fa + propok)
 
 ### Megosztás & Kezelés
 
@@ -79,10 +79,10 @@
 | REND-02 | Phase 1 | Complete |
 | REND-03 | Phase 1 | Complete |
 | THME-01 | Phase 1 | Complete |
-| REND-04 | Phase 2 | Pending |
-| INSP-01 | Phase 2 | Pending |
-| INSP-02 | Phase 2 | Pending |
-| INSP-04 | Phase 2 | Pending |
+| REND-04 | Phase 2 | Complete |
+| INSP-01 | Phase 2 | Complete |
+| INSP-02 | Phase 2 | Complete |
+| INSP-04 | Phase 2 | Complete |
 | INSP-03 | Phase 3 | Pending |
 | SCRN-01 | Phase 3 | Pending |
 | SCRN-02 | Phase 3 | Pending |
