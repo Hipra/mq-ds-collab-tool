@@ -190,7 +190,7 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
         alignItems: 'stretch',
         justifyContent: 'center',
         overflow: 'auto',
-        bgcolor: isFixedWidth ? 'grey.100' : 'transparent',
+        bgcolor: isFixedWidth ? 'action.hover' : 'transparent',
         position: 'relative',
       }}
     >

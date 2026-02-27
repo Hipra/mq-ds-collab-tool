@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body style={{ margin: 0, backgroundColor: 'var(--mui-palette-background-default)' }}>
         <InitColorSchemeScript attribute="data-mui-color-scheme" />
         {children}
       </body>
