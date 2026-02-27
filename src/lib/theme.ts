@@ -25,6 +25,16 @@ export function createAppTheme() {
       light: true,
       dark: true,
     },
+    components: {
+      MuiAppBar: {
+        styleOverrides: {
+          colorDefault: ({ theme: t }) => ({
+            backgroundColor: t.vars.palette.action.hover,
+            borderBottom: `1px solid ${t.vars.palette.divider}`,
+          }),
+        },
+      },
+    },
   });
 }
 
