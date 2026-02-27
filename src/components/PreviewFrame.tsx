@@ -41,6 +41,7 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
   const { mode } = useThemeStore();
   const {
     previewWidth,
+    activeScreenId,
     setHoveredComponent,
     setSelectedComponent,
     setComponentTree,
@@ -59,10 +60,14 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
     []
   );
 
-  // Fetch component tree from tree API endpoint
-  const fetchTree = useCallback(async () => {
+  // Fetch component tree from tree API endpoint (screen-aware)
+  const fetchTree = useCallback(async (screenId?: string) => {
     try {
-      const res = await fetch(`/api/preview/${prototypeId}/tree`);
+      const screen = screenId ?? activeScreenId;
+      const url = screen !== 'index'
+        ? `/api/preview/${prototypeId}/tree?screen=${screen}`
+        : `/api/preview/${prototypeId}/tree`;
+      const res = await fetch(url);
       if (res.ok) {
         const tree = await res.json();
         setComponentTree(tree);
@@ -70,7 +75,7 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
     } catch {
       // Ignore tree fetch errors — tree is a non-critical enhancement
     }
-  }, [prototypeId, setComponentTree]);
+  }, [prototypeId, activeScreenId, setComponentTree]);
 
   // Send RELOAD to iframe via postMessage
   const sendReloadToIframe = useCallback(() => {
@@ -93,7 +98,17 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
   // Fetch component tree on mount
   useEffect(() => {
     fetchTree();
-  }, [fetchTree]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Re-fetch component tree when active screen changes
+  useEffect(() => {
+    fetchTree(activeScreenId);
+    // When screen changes, reset iframe loaded state so spinner shows
+    isLoadedRef.current = false;
+    setPreviewState('loading');
+    setErrorMessage('');
+  }, [activeScreenId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // SSE hot reload: subscribe to /api/watch
   useEffect(() => {
@@ -182,6 +197,10 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
 
   const isFixedWidth = previewWidth !== 'auto';
 
+  // Build iframe src with ?screen= param for non-index screens
+  const screenParam = activeScreenId !== 'index' ? `?screen=${activeScreenId}` : '';
+  const iframeSrc = `/preview/${prototypeId}${screenParam}`;
+
   return (
     <Box
       sx={{
@@ -227,11 +246,12 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
           <ErrorDisplay message={errorMessage} onRetry={sendReloadToIframe} />
         )}
 
-        {/* iframe — always in DOM to preserve load state; hidden during loading/error */}
+        {/* iframe — key includes screen so switching screens forces re-mount */}
         <Box
           component="iframe"
+          key={iframeSrc}
           ref={iframeRef}
-          src={`/preview/${prototypeId}`}
+          src={iframeSrc}
           sandbox="allow-scripts allow-same-origin"
           onLoad={handleIframeLoad}
           sx={{

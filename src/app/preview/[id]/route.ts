@@ -18,11 +18,14 @@ import { NextRequest } from 'next/server';
  *    - Dynamically imports the prototype bundle from /api/preview/[id]/bundle
  */
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const bundleUrl = `/api/preview/${id}/bundle`;
+  const screen = req.nextUrl.searchParams.get('screen') || 'index';
+  const bundleUrl = screen !== 'index'
+    ? `/api/preview/${id}/bundle?screen=${screen}`
+    : `/api/preview/${id}/bundle`;
 
   const importMap = JSON.stringify({
     imports: {

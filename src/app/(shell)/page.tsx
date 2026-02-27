@@ -3,6 +3,7 @@
 import React from 'react';
 import Box from '@mui/material/Box';
 import { Toolbar } from '@/components/Toolbar';
+import { ScreenSidebar } from '@/components/ScreenSidebar';
 import { PreviewFrame } from '@/components/PreviewFrame';
 import { InspectorPanel } from '@/components/InspectorPanel';
 
@@ -32,6 +33,7 @@ export default function ShellPage() {
     >
       <Toolbar prototypeName={prototypeId} prototypeId={prototypeId} />
       <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <ScreenSidebar prototypeId={prototypeId} />
         <PreviewFrame prototypeId={prototypeId} />
         <InspectorPanel />
       </Box>
