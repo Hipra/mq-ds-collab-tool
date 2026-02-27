@@ -25,6 +25,7 @@ import DialogActions from '@mui/material/DialogActions';
 import Alert from '@mui/material/Alert';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
@@ -63,6 +64,9 @@ export default function GalleryPage() {
   const [newName, setNewName] = useState('');
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Prototype | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetch('/api/prototypes')
@@ -105,6 +109,26 @@ export default function GalleryPage() {
       setCreateError('Network error');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const res = await fetch(`/api/prototypes/${deleteTarget.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json();
+        setDeleteError(data.error ?? 'Failed to delete prototype');
+        return;
+      }
+      setPrototypes((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch {
+      setDeleteError('Network error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -199,10 +223,10 @@ export default function GalleryPage() {
             {filtered.map((proto) => {
               const config = STATUS_CONFIG[proto.status] ?? STATUS_CONFIG.draft;
               return (
-                <Card key={proto.id} variant="outlined">
+                <Card key={proto.id} variant="outlined" sx={{ position: 'relative' }}>
                   <CardActionArea onClick={() => router.push(`/prototype/${proto.id}`)}>
                     <CardContent>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 1 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 1, pr: 4 }}>
                         {proto.name}
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -215,6 +239,18 @@ export default function GalleryPage() {
                       </Box>
                     </CardContent>
                   </CardActionArea>
+                  <IconButton
+                    size="small"
+                    aria-label={`Delete ${proto.name}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteError('');
+                      setDeleteTarget(proto);
+                    }}
+                    sx={{ position: 'absolute', top: 8, right: 8 }}
+                  >
+                    <DeleteOutlineIcon fontSize="small" />
+                  </IconButton>
                 </Card>
               );
             })}
@@ -249,6 +285,32 @@ export default function GalleryPage() {
             disabled={!newName.trim() || creating}
           >
             {creating ? 'Creating...' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete prototype?</DialogTitle>
+        <DialogContent>
+          {deleteError && <Alert severity="error" sx={{ mb: 2 }}>{deleteError}</Alert>}
+          <Typography>
+            <strong>{deleteTarget?.name}</strong> will be permanently deleted. This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
