@@ -154,6 +154,16 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
         setPreviewState('error');
       }
 
+      // Bundle reloaded inside iframe (after RELOAD postMessage) — iframe onLoad
+      // does not fire because the URL stays the same, so the iframe signals readiness here.
+      if (event.data.type === 'PREVIEW_READY') {
+        isLoadedRef.current = true;
+        setPreviewState('ready');
+        if (mode) {
+          iframeRef.current?.contentWindow?.postMessage({ type: 'SET_THEME', mode }, '*');
+        }
+      }
+
       if (event.data.type === 'COMPONENT_HOVER') {
         setHoveredComponent(event.data.id ?? null);
       }

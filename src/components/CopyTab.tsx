@@ -19,6 +19,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import RestoreIcon from '@mui/icons-material/Restore';
+import CheckIcon from '@mui/icons-material/Check';
 import HistoryIcon from '@mui/icons-material/History';
 import DownloadIcon from '@mui/icons-material/Download';
 import UploadIcon from '@mui/icons-material/Upload';
@@ -116,10 +117,11 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
   const entryRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [expandedHistory, setExpandedHistory] = React.useState<Set<string>>(new Set());
+  const [approving, setApproving] = React.useState(false);
 
   // Fetch copy data on mount and when screen changes
-  const fetchCopyData = useCallback(async (screenId: string) => {
-    setLoading(true);
+  const fetchCopyData = useCallback(async (screenId: string, silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const screen = screenId !== 'index' ? `?screen=${screenId}` : '';
       const res = await fetch(`/api/preview/${prototypeId}/copy${screen}`);
@@ -222,6 +224,36 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
       return next;
     });
   }, []);
+
+  // Approve entries: write text edits back to JSX source
+  const handleApprove = useCallback(
+    async (entriesToApprove: Array<{ key: string; value: string }>) => {
+      setApproving(true);
+      try {
+        const screen = activeScreenId !== 'index' ? activeScreenId : undefined;
+        const res = await fetch(`/api/preview/${prototypeId}/copy/approve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entries: entriesToApprove, screen }),
+        });
+        if (res.ok) {
+          // Re-fetch copy data to reflect the updated source (silent — no full-screen spinner)
+          await fetchCopyData(activeScreenId, true);
+        }
+      } catch {
+        // Silently ignore — re-fetch will show current state
+      } finally {
+        setApproving(false);
+      }
+    },
+    [prototypeId, activeScreenId, fetchCopyData]
+  );
+
+  const handleApproveAll = useCallback(() => {
+    const modified = entries.filter((e) => e.currentValue !== e.sourceValue);
+    if (modified.length === 0) return;
+    handleApprove(modified.map((e) => ({ key: e.key, value: e.currentValue })));
+  }, [entries, handleApprove]);
 
   // Filter entries by search query
   const filteredEntries = useMemo(() => {
@@ -349,7 +381,20 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
         />
 
         {/* Action buttons */}
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          {summary.modified > 0 && (
+            <Button
+              size="small"
+              variant="outlined"
+              color="success"
+              startIcon={approving ? <CircularProgress size={14} /> : <CheckIcon />}
+              onClick={handleApproveAll}
+              disabled={approving}
+              sx={{ fontSize: '12px' }}
+            >
+              Approve all
+            </Button>
+          )}
           <Button
             size="small"
             variant="outlined"
@@ -496,6 +541,19 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                                   sx={{ p: 0.25 }}
                                 >
                                   <HistoryIcon sx={{ fontSize: 14 }} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            {/* Approve button — write to source */}
+                            {isModified && (
+                              <Tooltip title="Approve — write to source">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleApprove([{ key: entry.key, value: entry.currentValue }])}
+                                  disabled={approving}
+                                  sx={{ p: 0.25 }}
+                                >
+                                  <CheckIcon sx={{ fontSize: 14 }} color="success" />
                                 </IconButton>
                               </Tooltip>
                             )}

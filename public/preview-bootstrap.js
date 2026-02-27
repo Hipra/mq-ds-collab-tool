@@ -341,6 +341,9 @@ function Root() {
         Component,
         error: null,
       }));
+      // Notify parent that the bundle loaded successfully (used after RELOAD
+      // where the iframe onLoad event does not fire because the URL stays the same)
+      window.parent.postMessage({ type: 'PREVIEW_READY' }, '*');
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       window.parent.postMessage({ type: 'RENDER_ERROR', message }, '*');
