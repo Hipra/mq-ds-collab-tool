@@ -163,10 +163,33 @@ function ThemeListener() {
 // ─── TextOverrideApplier — applies text overrides to DOM after each render ────
 // Uses a MutationObserver to re-apply overrides whenever React re-renders, since
 // direct DOM mutations are overwritten by React on each update.
+// Tracks original values so removed overrides can be reverted without a full reload.
+const _originals = {}; // { "inspectorId::propName": originalValue }
+
 function TextOverrideApplier() {
   const overrides = useContext(TextOverrideContext);
 
   useEffect(() => {
+    // Collect which keys are currently overridden
+    const activeKeys = new Set();
+    for (const [inspectorId, propOverrides] of Object.entries(overrides)) {
+      for (const propName of Object.keys(propOverrides)) {
+        activeKeys.add(`${inspectorId}::${propName}`);
+      }
+    }
+
+    // Revert any previously overridden values that are no longer in overrides
+    for (const compositeKey of Object.keys(_originals)) {
+      if (!activeKeys.has(compositeKey)) {
+        const [inspectorId, propName] = compositeKey.split('::');
+        const el = document.querySelector(`[data-inspector-id="${inspectorId}"]`);
+        if (el) {
+          _applyValue(el, propName, _originals[compositeKey]);
+        }
+        delete _originals[compositeKey];
+      }
+    }
+
     if (!Object.keys(overrides).length) return;
 
     function applyOverrides() {
@@ -174,33 +197,12 @@ function TextOverrideApplier() {
         const el = document.querySelector(`[data-inspector-id="${inspectorId}"]`);
         if (!el) continue;
         for (const [propName, value] of Object.entries(propOverrides)) {
-          if (propName === 'children') {
-            // Find first non-empty text node and update its value
-            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
-            let textNode = walker.nextNode();
-            while (textNode) {
-              if (textNode.nodeValue && textNode.nodeValue.trim()) {
-                textNode.nodeValue = value;
-                break;
-              }
-              textNode = walker.nextNode();
-            }
-          } else if (propName === 'placeholder') {
-            const input = el.querySelector('input, textarea') || el;
-            if (input) input.setAttribute('placeholder', value);
-          } else if (propName === 'aria-label') {
-            el.setAttribute('aria-label', value);
-          } else if (propName === 'label') {
-            // MUI label is rendered as a <label> child
-            const label = el.querySelector('label');
-            if (label) label.textContent = value;
-          } else if (propName === 'helperText') {
-            // MUI helper text is rendered as a <p> with the MUI FormHelperText class
-            const helper = el.querySelector('p');
-            if (helper) helper.textContent = value;
-          } else if (propName === 'title') {
-            el.setAttribute('title', value);
+          const compositeKey = `${inspectorId}::${propName}`;
+          // Save original value on first override
+          if (!(compositeKey in _originals)) {
+            _originals[compositeKey] = _readValue(el, propName);
           }
+          _applyValue(el, propName, value);
         }
       }
     }
@@ -219,6 +221,68 @@ function TextOverrideApplier() {
   }, [overrides]);
 
   return null; // renders nothing — only applies DOM overrides
+}
+
+/** Read the current DOM value for a given prop type */
+function _readValue(el, propName) {
+  if (propName === 'children') {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    let textNode = walker.nextNode();
+    while (textNode) {
+      if (textNode.nodeValue && textNode.nodeValue.trim()) return textNode.nodeValue;
+      textNode = walker.nextNode();
+    }
+    return '';
+  } else if (propName === 'placeholder') {
+    const input = el.querySelector('input, textarea') || el;
+    return input ? (input.getAttribute('placeholder') || '') : '';
+  } else if (propName === 'aria-label') {
+    return el.getAttribute('aria-label') || '';
+  } else if (propName === 'label') {
+    const chipLabel = el.querySelector('.MuiChip-label');
+    if (chipLabel) return chipLabel.textContent || '';
+    const label = el.querySelector('label');
+    return label ? (label.textContent || '') : '';
+  } else if (propName === 'helperText') {
+    const helper = el.querySelector('p');
+    return helper ? (helper.textContent || '') : '';
+  } else if (propName === 'title') {
+    return el.getAttribute('title') || '';
+  }
+  return '';
+}
+
+/** Apply a value to the DOM for a given prop type */
+function _applyValue(el, propName, value) {
+  if (propName === 'children') {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    let textNode = walker.nextNode();
+    while (textNode) {
+      if (textNode.nodeValue && textNode.nodeValue.trim()) {
+        textNode.nodeValue = value;
+        break;
+      }
+      textNode = walker.nextNode();
+    }
+  } else if (propName === 'placeholder') {
+    const input = el.querySelector('input, textarea') || el;
+    if (input) input.setAttribute('placeholder', value);
+  } else if (propName === 'aria-label') {
+    el.setAttribute('aria-label', value);
+  } else if (propName === 'label') {
+    const chipLabel = el.querySelector('.MuiChip-label');
+    if (chipLabel) {
+      chipLabel.textContent = value;
+    } else {
+      const label = el.querySelector('label');
+      if (label) label.textContent = value;
+    }
+  } else if (propName === 'helperText') {
+    const helper = el.querySelector('p');
+    if (helper) helper.textContent = value;
+  } else if (propName === 'title') {
+    el.setAttribute('title', value);
+  }
 }
 
 // ─── App shell — wraps prototype in ThemeProvider + CacheProvider + ErrorBoundary ─

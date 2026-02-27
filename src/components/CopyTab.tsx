@@ -195,7 +195,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
       resetEntry(entry.key);
       // Reset value in API
       patchEntry(entry.key, entry.sourceValue, entry.sourceValue);
-      // Rebuild overrides after reset
+      // Rebuild overrides after reset and send to iframe
       const currentEntries = useCopyStore.getState().entries;
       const overrides = buildOverrideMap(currentEntries);
       postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides });

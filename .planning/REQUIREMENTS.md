@@ -16,7 +16,7 @@
 
 - [x] **INSP-01**: Komponens fa megjelenítése — MUI komponens hierarchia fa nézetben
 - [x] **INSP-02**: Prop inspector — kiválasztott komponens propjainak és értékeinek megjelenítése
-- [ ] **INSP-03**: Inline text editing — "Copy" tab ahol a copywriter látja az összes szöveget és szerkesztheti
+- [x] **INSP-03**: Inline text editing — "Copy" tab ahol a copywriter látja az összes szöveget és szerkesztheti
 - [x] **INSP-04**: Közös panel két tabbal: "Copy" (copywriter szövegszerkesztés) és "Components" (fejlesztői komponens fa + propok)
 
 ### Megosztás & Kezelés
@@ -83,7 +83,7 @@
 | INSP-01 | Phase 2 | Complete |
 | INSP-02 | Phase 2 | Complete |
 | INSP-04 | Phase 2 | Complete |
-| INSP-03 | Phase 3 | Pending |
+| INSP-03 | Phase 3 | Complete |
 | SCRN-01 | Phase 3 | Complete |
 | SCRN-02 | Phase 3 | Complete |
 | SHAR-03 | Phase 3 | Complete |
