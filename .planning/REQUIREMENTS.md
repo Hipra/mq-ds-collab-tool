@@ -75,26 +75,26 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REND-01 | — | Pending |
-| REND-02 | — | Pending |
-| REND-03 | — | Pending |
-| REND-04 | — | Pending |
-| INSP-01 | — | Pending |
-| INSP-02 | — | Pending |
-| INSP-03 | — | Pending |
-| INSP-04 | — | Pending |
-| SHAR-01 | — | Pending |
-| SHAR-02 | — | Pending |
-| SHAR-03 | — | Pending |
-| SCRN-01 | — | Pending |
-| SCRN-02 | — | Pending |
-| THME-01 | — | Pending |
+| REND-01 | Phase 1 | Pending |
+| REND-02 | Phase 1 | Pending |
+| REND-03 | Phase 1 | Pending |
+| THME-01 | Phase 1 | Pending |
+| REND-04 | Phase 2 | Pending |
+| INSP-01 | Phase 2 | Pending |
+| INSP-02 | Phase 2 | Pending |
+| INSP-04 | Phase 2 | Pending |
+| INSP-03 | Phase 3 | Pending |
+| SCRN-01 | Phase 3 | Pending |
+| SCRN-02 | Phase 3 | Pending |
+| SHAR-03 | Phase 3 | Pending |
+| SHAR-01 | Phase 4 | Pending |
+| SHAR-02 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 14 total
-- Mapped to phases: 0
-- Unmapped: 14 (roadmap pending)
+- Mapped to phases: 14
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-27*
-*Last updated: 2026-02-27 after initial definition*
+*Last updated: 2026-02-27 after roadmap creation — traceability complete*
