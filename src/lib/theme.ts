@@ -14,11 +14,11 @@ import { createTheme } from '@mui/material/styles';
  */
 export function createAppTheme() {
   return createTheme({
-    // cssVariables with colorSchemeSelector: 'data' — required for setMode() to write
-    // a [data-*] attribute on <html> rather than using a CSS media query.
-    // Type: nested inside cssVariables per MUI v6 createTheme signature.
+    // colorSchemeSelector must match InitColorSchemeScript's attribute ("data-mui-color-scheme")
+    // so the CSS selectors [data-mui-color-scheme="dark"] align with the HTML attribute
+    // that the script sets before hydration.
     cssVariables: {
-      colorSchemeSelector: 'data',
+      colorSchemeSelector: 'data-mui-color-scheme',
     },
     defaultColorScheme: 'light',
     colorSchemes: {

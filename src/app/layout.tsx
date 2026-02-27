@@ -23,7 +23,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body style={{ margin: 0, backgroundColor: 'var(--mui-palette-background-default)' }}>
+      <head>
+        {/* Body background: use MUI CSS variable after hydration, hardcoded #121212 for dark mode before hydration */}
+        <style>{`
+          body { margin: 0; background-color: var(--mui-palette-background-default, #fff); }
+          html[data-mui-color-scheme="dark"] { color-scheme: dark; }
+          html[data-mui-color-scheme="dark"] body { background-color: var(--mui-palette-background-default, #121212); }
+        `}</style>
+      </head>
+      <body>
         <InitColorSchemeScript attribute="data-mui-color-scheme" />
         {children}
       </body>
