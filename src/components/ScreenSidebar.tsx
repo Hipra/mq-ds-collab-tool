@@ -223,18 +223,14 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
       const { active, over } = event;
       if (!over || active.id === over.id) return;
 
-      setLocalScreens((prev) => {
-        const oldIndex = prev.findIndex((s) => s.id === active.id);
-        const newIndex = prev.findIndex((s) => s.id === over.id);
-        const reordered = arrayMove(prev, oldIndex, newIndex);
-        // Sync reordered list to store
-        setScreens(reordered);
-        // Persist new order
-        persistOrder(reordered.map((s) => s.id));
-        return reordered;
-      });
+      const oldIndex = localScreens.findIndex((s) => s.id === active.id);
+      const newIndex = localScreens.findIndex((s) => s.id === over.id);
+      const reordered = arrayMove(localScreens, oldIndex, newIndex);
+      setLocalScreens(reordered);
+      setScreens(reordered);
+      persistOrder(reordered.map((s) => s.id));
     },
-    [setScreens, persistOrder]
+    [localScreens, setScreens, persistOrder]
   );
 
   const handleDoubleClick = useCallback((id: string, name: string) => {
@@ -246,19 +242,16 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
     if (!editingId) return;
     const trimmed = editValue.trim();
     if (trimmed) {
-      // Update local state
-      setLocalScreens((prev) => {
-        const updated = prev.map((s) =>
-          s.id === editingId ? { ...s, name: trimmed } : s
-        );
-        setScreens(updated);
-        return updated;
-      });
+      const updated = localScreens.map((s) =>
+        s.id === editingId ? { ...s, name: trimmed } : s
+      );
+      setLocalScreens(updated);
+      setScreens(updated);
       persistCustomName(editingId, trimmed);
     }
     setEditingId(null);
     setEditValue('');
-  }, [editingId, editValue, setScreens, persistCustomName]);
+  }, [editingId, editValue, localScreens, setScreens, persistCustomName]);
 
   const handleEditCancel = useCallback(() => {
     setEditingId(null);
