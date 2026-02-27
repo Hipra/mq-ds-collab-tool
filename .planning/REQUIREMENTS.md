@@ -23,11 +23,11 @@
 
 - [ ] **SHAR-01**: Megosztható link generálás — egyedi URL, auth nélkül megtekinthető
 - [ ] **SHAR-02**: Prototípus lista oldal — keresés és szűrés (név, státusz, dátum)
-- [ ] **SHAR-03**: Státusz workflow — draft → review → approved állapotgép
+- [x] **SHAR-03**: Státusz workflow — draft → review → approved állapotgép
 
 ### Multi-screen
 
-- [ ] **SCRN-01**: Több screen per prototípus — 5-10 screen támogatás
+- [x] **SCRN-01**: Több screen per prototípus — 5-10 screen támogatás
 - [ ] **SCRN-02**: Screenek közötti navigáció a prototípuson belül (tab strip vagy sidebar)
 
 ### Theme
@@ -84,9 +84,9 @@
 | INSP-02 | Phase 2 | Complete |
 | INSP-04 | Phase 2 | Complete |
 | INSP-03 | Phase 3 | Pending |
-| SCRN-01 | Phase 3 | Pending |
+| SCRN-01 | Phase 3 | Complete |
 | SCRN-02 | Phase 3 | Pending |
-| SHAR-03 | Phase 3 | Pending |
+| SHAR-03 | Phase 3 | Complete |
 | SHAR-01 | Phase 4 | Pending |
 | SHAR-02 | Phase 4 | Pending |
 

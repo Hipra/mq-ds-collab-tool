@@ -55,7 +55,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Text edits survive a prototype source update — a designer pushing a new version does not overwrite the copywriter's text changes
   3. A prototype with multiple screens shows a navigation control (tab strip or sidebar), and clicking a screen label loads that screen in the preview
   4. A designer can move a prototype from Draft to Review to Approved, and the current status is visible to anyone viewing the prototype
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 03-01-PLAN.md — Status badge + metadata API + screen discovery + text extraction + copy overlay (Wave 1)
+- [ ] 03-02-PLAN.md — Screen sidebar with dnd-kit sortable, inline name editing, PreviewFrame screen routing (Wave 2)
+- [ ] 03-03-PLAN.md — CopyTab component, copy Zustand store, iframe text injection, two-way visual linking (Wave 2)
+- [ ] 03-04-PLAN.md — Human verification of all Phase 3 success criteria (Wave 3)
 
 ### Phase 4: Sharing & Gallery
 **Goal**: The team can share prototypes via link and find any prototype in a browsable, searchable list
@@ -76,5 +80,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Rendering Foundation | 2/2 | Complete   | 2026-02-27 |
 | 2. Inspector & Responsive Preview | 3/3 | Complete    | 2026-02-27 |
-| 3. Copywriter, Multi-screen & Status | 0/? | Not started | - |
+| 3. Copywriter, Multi-screen & Status | 1/4 | In Progress|  |
 | 4. Sharing & Gallery | 0/? | Not started | - |
