@@ -41,7 +41,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. The component tree panel displays the MUI hierarchy (e.g., Box > Paper > Stack > Button) without requiring React DevTools
   3. Selecting xs, sm, md, lg, or xl from the breakpoint switcher resizes the preview iframe to that exact pixel width — not CSS-scaled, actually resized
   4. The panel has two tabs — "Copy" and "Components" — and switching between them does not lose state in either tab
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 02-01-PLAN.md — AST inspector pipeline, Babel injection pre-pass, Zustand store, tree API, iframe inspector script
+- [ ] 02-02-PLAN.md — Breakpoint switcher, responsive PreviewFrame, InspectorPanel with tabs, ComponentTree, PropInspector
+- [ ] 02-03-PLAN.md — Human verification of all Phase 2 success criteria
 
 ### Phase 3: Copywriter, Multi-screen & Status
 **Goal**: Copywriters can edit all prototype text without touching code, multi-screen prototypes are navigable, and the team can track prototype status
@@ -72,6 +75,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Rendering Foundation | 2/2 | Complete   | 2026-02-27 |
-| 2. Inspector & Responsive Preview | 0/? | Not started | - |
+| 2. Inspector & Responsive Preview | 0/3 | Not started | - |
 | 3. Copywriter, Multi-screen & Status | 0/? | Not started | - |
 | 4. Sharing & Gallery | 0/? | Not started | - |
