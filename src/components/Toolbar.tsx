@@ -14,9 +14,11 @@ import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
 import { BreakpointSwitcher } from '@/components/BreakpointSwitcher';
+import { StatusBadge } from '@/components/StatusBadge';
 
 interface ToolbarProps {
   prototypeName: string;
+  prototypeId: string;
 }
 
 const MODE_CONFIG: Record<
@@ -38,7 +40,7 @@ const MODE_CONFIG: Record<
  * - ViewSidebar icon toggles the inspector panel open/closed
  * - BreakpointSwitcher in center lets users resize the preview viewport
  */
-export function Toolbar({ prototypeName }: ToolbarProps) {
+export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
   const { mode, cycleMode } = useThemeStore();
   const { togglePanel, panelOpen } = useInspectorStore();
 
@@ -50,6 +52,9 @@ export function Toolbar({ prototypeName }: ToolbarProps) {
         <Typography variant="subtitle1" component="div" sx={{ fontWeight: 500, flexShrink: 0 }}>
           {prototypeName}
         </Typography>
+        <Box sx={{ ml: 1 }}>
+          <StatusBadge prototypeId={prototypeId} />
+        </Box>
         <Box sx={{ flex: 1 }} />
         <BreakpointSwitcher />
         <Box sx={{ flex: 1 }} />

@@ -30,7 +30,7 @@ export default function ShellPage() {
         overflow: 'hidden',
       }}
     >
-      <Toolbar prototypeName={prototypeId} />
+      <Toolbar prototypeName={prototypeId} prototypeId={prototypeId} />
       <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <PreviewFrame prototypeId={prototypeId} />
         <InspectorPanel />
