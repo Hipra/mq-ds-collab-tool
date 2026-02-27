@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useThemeStore } from '@/stores/theme';
-
+import { useInspectorStore } from '@/stores/inspector';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 
 interface PreviewFrameProps {
@@ -19,6 +19,10 @@ type PreviewState = 'loading' | 'ready' | 'error';
  * - SSE hot reload: subscribes to /api/watch, sends RELOAD on file change
  * - Error handling: listens for RENDER_ERROR from iframe, shows ErrorDisplay
  * - Loading state: shows spinner while iframe is loading
+ * - Responsive width: driven by Zustand previewWidth — auto fills space,
+ *   fixed widths center the iframe with a gray surround
+ * - Component tree: fetched from /api/preview/[id]/tree on mount and reload
+ * - COMPONENT_HOVER/SELECT: updates Zustand store from iframe messages
  *
  * Design decisions:
  * - sandbox="allow-scripts allow-same-origin": same-origin needed for Blob URL
@@ -27,6 +31,7 @@ type PreviewState = 'loading' | 'ready' | 'error';
  * - Theme sync: sends SET_THEME on every mode change AFTER iframe loads (onLoad)
  * - Hot reload: checks if changed file path includes the prototypeId before reloading
  * - Error recovery: RELOAD message also clears the error state
+ * - CRITICAL: iframe width set via container pixel width, NOT CSS transform: scale()
  */
 export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -34,6 +39,12 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const isLoadedRef = useRef(false);
   const { mode } = useThemeStore();
+  const {
+    previewWidth,
+    setHoveredComponent,
+    setSelectedComponent,
+    setComponentTree,
+  } = useInspectorStore();
 
   // Send theme to iframe via postMessage
   const sendThemeToIframe = useCallback(
@@ -47,6 +58,19 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
     },
     []
   );
+
+  // Fetch component tree from tree API endpoint
+  const fetchTree = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/preview/${prototypeId}/tree`);
+      if (res.ok) {
+        const tree = await res.json();
+        setComponentTree(tree);
+      }
+    } catch {
+      // Ignore tree fetch errors — tree is a non-critical enhancement
+    }
+  }, [prototypeId, setComponentTree]);
 
   // Send RELOAD to iframe via postMessage
   const sendReloadToIframe = useCallback(() => {
@@ -66,6 +90,11 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
     }
   }, [mode, sendThemeToIframe]);
 
+  // Fetch component tree on mount
+  useEffect(() => {
+    fetchTree();
+  }, [fetchTree]);
+
   // SSE hot reload: subscribe to /api/watch
   useEffect(() => {
     const eventSource = new EventSource('/api/watch');
@@ -76,6 +105,8 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
         // Only reload if the changed file belongs to this prototype
         if (data.file.includes(prototypeId)) {
           sendReloadToIframe();
+          // Re-fetch the component tree after reload
+          fetchTree();
         }
       } catch {
         // Malformed SSE message — ignore
@@ -89,9 +120,9 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
     return () => {
       eventSource.close();
     };
-  }, [prototypeId, sendReloadToIframe]);
+  }, [prototypeId, sendReloadToIframe, fetchTree]);
 
-  // Listen for messages from iframe (RENDER_ERROR)
+  // Listen for messages from iframe (RENDER_ERROR, COMPONENT_HOVER, COMPONENT_SELECT)
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (!event.data || typeof event.data !== 'object') return;
@@ -101,13 +132,21 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
         setErrorMessage(String(message));
         setPreviewState('error');
       }
+
+      if (event.data.type === 'COMPONENT_HOVER') {
+        setHoveredComponent(event.data.id ?? null);
+      }
+
+      if (event.data.type === 'COMPONENT_SELECT') {
+        setSelectedComponent(event.data.id ?? null);
+      }
     };
 
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, []);
+  }, [setHoveredComponent, setSelectedComponent]);
 
   // iframe onLoad: mark as loaded, send initial theme
   const handleIframeLoad = useCallback(() => {
@@ -141,52 +180,69 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
     }
   }, [handleIframeLoad]);
 
+  const isFixedWidth = previewWidth !== 'auto';
+
   return (
     <Box
       sx={{
         flex: 1,
         display: 'flex',
-        flexDirection: 'column',
+        alignItems: 'stretch',
+        justifyContent: 'center',
+        overflow: 'auto',
+        bgcolor: isFixedWidth ? 'grey.100' : 'transparent',
         position: 'relative',
-        overflow: 'hidden',
       }}
     >
-      {/* Loading spinner — shown while iframe is loading */}
-      {previewState === 'loading' && (
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1,
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      )}
-
-      {/* Error display — shown when iframe sends RENDER_ERROR */}
-      {previewState === 'error' && (
-        <ErrorDisplay message={errorMessage} onRetry={sendReloadToIframe} />
-      )}
-
-      {/* iframe — always in DOM to preserve load state; hidden during loading/error */}
+      {/* Width-constrained wrapper — centers the iframe at fixed widths */}
       <Box
-        component="iframe"
-        ref={iframeRef}
-        src={`/preview/${prototypeId}`}
-        sandbox="allow-scripts allow-same-origin"
-        onLoad={handleIframeLoad}
         sx={{
-          width: '100%',
-          flex: 1,
-          border: 'none',
-          display: previewState === 'ready' ? 'block' : 'none',
+          width: isFixedWidth ? previewWidth : '100%',
+          maxWidth: '100%',
+          flexShrink: 0,
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: 'background.default',
         }}
-        title={`Preview: ${prototypeId}`}
-      />
+      >
+        {/* Loading spinner — shown while iframe is loading */}
+        {previewState === 'loading' && (
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1,
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        )}
+
+        {/* Error display — shown when iframe sends RENDER_ERROR */}
+        {previewState === 'error' && (
+          <ErrorDisplay message={errorMessage} onRetry={sendReloadToIframe} />
+        )}
+
+        {/* iframe — always in DOM to preserve load state; hidden during loading/error */}
+        <Box
+          component="iframe"
+          ref={iframeRef}
+          src={`/preview/${prototypeId}`}
+          sandbox="allow-scripts allow-same-origin"
+          onLoad={handleIframeLoad}
+          sx={{
+            width: '100%',
+            flex: 1,
+            border: 'none',
+            display: previewState === 'ready' ? 'block' : 'none',
+          }}
+          title={`Preview: ${prototypeId}`}
+        />
+      </Box>
     </Box>
   );
 }

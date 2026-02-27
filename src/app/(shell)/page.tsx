@@ -4,15 +4,18 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import { Toolbar } from '@/components/Toolbar';
 import { PreviewFrame } from '@/components/PreviewFrame';
+import { InspectorPanel } from '@/components/InspectorPanel';
 
 /**
- * Main app page — renders the app shell with toolbar and preview iframe.
+ * Main app page — renders the app shell with toolbar, preview iframe, and inspector panel.
  *
  * Layout: Full viewport height flex column
- * - Top: Toolbar (prototype name + theme toggle)
- * - Main: PreviewFrame (embeds /preview/[id], takes remaining space)
+ * - Top: Toolbar (prototype name + breakpoint switcher + panel toggle + theme toggle)
+ * - Main: flex row
+ *   - Left: PreviewFrame (fills remaining space, embeds /preview/[id])
+ *   - Right: InspectorPanel (320px fixed, collapsible from toolbar toggle)
  *
- * prototypeId is hardcoded to 'sample' for Phase 1 — prototype selection
+ * prototypeId is hardcoded to 'sample' for Phase 1/2 — prototype selection
  * will be added in a later phase.
  */
 const prototypeId = 'sample';
@@ -28,7 +31,10 @@ export default function ShellPage() {
       }}
     >
       <Toolbar prototypeName={prototypeId} />
-      <PreviewFrame prototypeId={prototypeId} />
+      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <PreviewFrame prototypeId={prototypeId} />
+        <InspectorPanel />
+      </Box>
     </Box>
   );
 }
