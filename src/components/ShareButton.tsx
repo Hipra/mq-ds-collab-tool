@@ -65,7 +65,7 @@ export function ShareButton({ prototypeId }: ShareButtonProps) {
           aria-label="Share prototype"
           sx={{ mr: 0.5 }}
         >
-          <ShareIcon />
+          <ShareIcon fontSize="small" />
         </IconButton>
       </Tooltip>
       <Popover

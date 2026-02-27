@@ -12,6 +12,8 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import MenuIcon from '@mui/icons-material/Menu';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useRouter } from 'next/navigation';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
 import { BreakpointSwitcher } from '@/components/BreakpointSwitcher';
@@ -27,9 +29,9 @@ const MODE_CONFIG: Record<
   ThemeMode,
   { icon: React.ReactNode; label: string }
 > = {
-  light: { icon: <LightModeIcon />, label: 'Light mode' },
-  dark: { icon: <DarkModeIcon />, label: 'Dark mode' },
-  system: { icon: <SettingsBrightnessIcon />, label: 'System mode' },
+  light: { icon: <LightModeIcon fontSize="small" />, label: 'Light mode' },
+  dark: { icon: <DarkModeIcon fontSize="small" />, label: 'Dark mode' },
+  system: { icon: <SettingsBrightnessIcon fontSize="small" />, label: 'System mode' },
 };
 
 /**
@@ -43,6 +45,7 @@ const MODE_CONFIG: Record<
  * - BreakpointSwitcher in center lets users resize the preview viewport
  */
 export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
+  const router = useRouter();
   const { mode, cycleMode } = useThemeStore();
   const { togglePanel, panelOpen, sidebarOpen, toggleSidebar } = useInspectorStore();
 
@@ -50,7 +53,17 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
 
   return (
     <AppBar position="static" color="default" elevation={0}>
-      <MuiToolbar variant="dense">
+      <MuiToolbar variant="dense" disableGutters sx={{ px: 1 }}>
+        <Tooltip title="Back to prototypes">
+          <IconButton
+            onClick={() => router.push('/')}
+            size="small"
+            aria-label="Back to prototypes"
+            sx={{ mr: 0.5 }}
+          >
+            <ArrowBackIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
         <Typography variant="subtitle1" component="div" sx={{ fontWeight: 500, flexShrink: 0 }}>
           {prototypeName}
         </Typography>
@@ -69,7 +82,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
             color={sidebarOpen ? 'primary' : 'default'}
             sx={{ mr: 0.5 }}
           >
-            <MenuIcon />
+            <MenuIcon fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title={panelOpen ? 'Hide inspector panel' : 'Show inspector panel'}>
@@ -80,7 +93,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
             color={panelOpen ? 'primary' : 'default'}
             sx={{ mr: 0.5 }}
           >
-            <ViewSidebarIcon />
+            <ViewSidebarIcon fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title={modeConfig.label}>
