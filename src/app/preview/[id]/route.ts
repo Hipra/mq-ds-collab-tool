@@ -49,11 +49,12 @@ export async function GET(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Preview: ${escapeHtml(id)}</title>
+  <meta name="bundle-url" content="${escapeHtml(bundleUrl)}" />
   <script type="importmap">${importMap}</script>
 </head>
 <body>
   <div id="root"></div>
-  <script type="module" src="/preview-bootstrap.js" data-bundle-url="${escapeHtml(bundleUrl)}"></script>
+  <script type="module" src="/preview-bootstrap.js"></script>
 </body>
 </html>`;
 

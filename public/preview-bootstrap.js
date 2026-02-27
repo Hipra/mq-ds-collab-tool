@@ -33,14 +33,17 @@ const emotionCache = createCache({ key: 'mui', container: document.head });
 // colorSchemes: { light, dark } — enables useColorScheme() with 'light'|'dark'|'system'
 const theme = createTheme({
   cssVariables: true,
+  colorSchemeSelector: 'data',
   colorSchemes: {
     light: true,
     dark: true,
   },
 });
 
-// ─── Bundle URL from data attribute ──────────────────────────────────────────
-const bundleUrl = document.currentScript?.dataset?.bundleUrl ?? '';
+// ─── Bundle URL from <meta> tag ──────────────────────────────────────────────
+// document.currentScript is always null inside type="module" scripts (browser spec),
+// so we read the bundle URL from a <meta> tag instead.
+const bundleUrl = document.querySelector('meta[name="bundle-url"]')?.getAttribute('content') ?? '';
 
 // ─── Singleton render key for RELOAD support ─────────────────────────────────
 let renderKey = 0;

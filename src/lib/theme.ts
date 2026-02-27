@@ -15,6 +15,7 @@ import { createTheme } from '@mui/material/styles';
 export function createAppTheme() {
   return createTheme({
     cssVariables: true,
+    colorSchemeSelector: 'data',
     colorSchemes: {
       light: true,
       dark: true,
