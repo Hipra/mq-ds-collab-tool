@@ -17,7 +17,14 @@ import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import InputAdornment from '@mui/material/InputAdornment';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Alert from '@mui/material/Alert';
 import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
@@ -52,6 +59,10 @@ export default function GalleryPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [createError, setCreateError] = useState('');
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetch('/api/prototypes')
@@ -70,6 +81,32 @@ export default function GalleryPage() {
       return matchesSearch && matchesStatus;
     });
   }, [prototypes, searchQuery, statusFilter]);
+
+  const handleCreate = async () => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    setCreating(true);
+    setCreateError('');
+    try {
+      const res = await fetch('/api/prototypes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setCreateError(data.error ?? 'Failed to create prototype');
+        return;
+      }
+      const data = await res.json();
+      setCreateOpen(false);
+      router.push(`/prototype/${data.id}`);
+    } catch {
+      setCreateError('Network error');
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.system;
 
@@ -119,6 +156,14 @@ export default function GalleryPage() {
             <ToggleButton value="review">Review</ToggleButton>
             <ToggleButton value="approved">Approved</ToggleButton>
           </ToggleButtonGroup>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={() => { setNewName(''); setCreateError(''); setCreateOpen(true); }}
+          >
+            New Prototype
+          </Button>
         </Box>
 
         {/* Loading */}
@@ -176,6 +221,37 @@ export default function GalleryPage() {
           </Box>
         )}
       </Box>
+
+      <Dialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>New Prototype</DialogTitle>
+        <DialogContent>
+          {createError && <Alert severity="error" sx={{ mb: 2 }}>{createError}</Alert>}
+          <TextField
+            autoFocus
+            fullWidth
+            label="Prototype name"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleCreate}
+            disabled={!newName.trim() || creating}
+          >
+            {creating ? 'Creating...' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import MuiToolbar from '@mui/material/Toolbar';
@@ -13,6 +13,7 @@ import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import MenuIcon from '@mui/icons-material/Menu';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import TerminalIcon from '@mui/icons-material/Terminal';
 import { useRouter } from 'next/navigation';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
@@ -48,6 +49,14 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
   const router = useRouter();
   const { mode, cycleMode } = useThemeStore();
   const { togglePanel, panelOpen, sidebarOpen, toggleSidebar } = useInspectorStore();
+  const [copiedClaude, setCopiedClaude] = useState(false);
+
+  const handleCopyClaudeCommand = () => {
+    const command = `claude "Work on prototype prototypes/${prototypeId}/. Follow the rules in CLAUDE.md. Read existing files before editing. Only modify files inside prototypes/${prototypeId}/ — never touch src/, config files, or other prototypes. Stack: React + MUI."`;
+    navigator.clipboard.writeText(command);
+    setCopiedClaude(true);
+    setTimeout(() => setCopiedClaude(false), 2000);
+  };
 
   const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.system;
 
@@ -74,6 +83,16 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
         <BreakpointSwitcher />
         <Box sx={{ flex: 1 }} />
         <ShareButton prototypeId={prototypeId} />
+        <Tooltip title={copiedClaude ? 'Copied!' : 'Copy Claude Code command'}>
+          <IconButton
+            onClick={handleCopyClaudeCommand}
+            size="small"
+            aria-label="Copy Claude Code command"
+            sx={{ mr: 0.5 }}
+          >
+            <TerminalIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
         <Tooltip title={sidebarOpen ? 'Hide screens' : 'Show screens'}>
           <IconButton
             onClick={toggleSidebar}
