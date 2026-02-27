@@ -271,6 +271,81 @@ function Root() {
   });
 }
 
+// ─── Inspector mode — hover/click to identify components ─────────────────────
+let inspectorEnabled = true; // start enabled per default store state
+let highlightOverlay = null;
+
+function ensureOverlay() {
+  if (highlightOverlay) return highlightOverlay;
+  highlightOverlay = document.createElement('div');
+  highlightOverlay.style.cssText = 'position:fixed;pointer-events:none;border:2px solid #1976d2;background:rgba(25,118,210,0.08);z-index:99999;display:none;transition:all 0.05s ease-out;';
+  document.body.appendChild(highlightOverlay);
+  return highlightOverlay;
+}
+
+function findInspectorTarget(el) {
+  while (el && el !== document.body) {
+    if (el.dataset && el.dataset.inspectorId) return el;
+    el = el.parentElement;
+  }
+  return null;
+}
+
+document.addEventListener('mouseover', function(e) {
+  if (!inspectorEnabled) return;
+  const target = findInspectorTarget(e.target);
+  if (!target) {
+    const overlay = ensureOverlay();
+    overlay.style.display = 'none';
+    window.parent.postMessage({ type: 'COMPONENT_HOVER', id: null, rect: null }, '*');
+    return;
+  }
+  const rect = target.getBoundingClientRect();
+  const overlay = ensureOverlay();
+  overlay.style.top = rect.top + 'px';
+  overlay.style.left = rect.left + 'px';
+  overlay.style.width = rect.width + 'px';
+  overlay.style.height = rect.height + 'px';
+  overlay.style.display = 'block';
+  window.parent.postMessage({
+    type: 'COMPONENT_HOVER',
+    id: target.dataset.inspectorId,
+    rect: { top: rect.top, left: rect.left, width: rect.width, height: rect.height }
+  }, '*');
+}, true);
+
+document.addEventListener('mouseout', function(e) {
+  if (!inspectorEnabled) return;
+  if (e.relatedTarget && document.contains(e.relatedTarget)) return;
+  const overlay = ensureOverlay();
+  overlay.style.display = 'none';
+  window.parent.postMessage({ type: 'COMPONENT_HOVER', id: null, rect: null }, '*');
+}, true);
+
+document.addEventListener('click', function(e) {
+  if (!inspectorEnabled) return;
+  const target = findInspectorTarget(e.target);
+  if (!target) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const rect = target.getBoundingClientRect();
+  window.parent.postMessage({
+    type: 'COMPONENT_SELECT',
+    id: target.dataset.inspectorId,
+    rect: { top: rect.top, left: rect.left, width: rect.width, height: rect.height }
+  }, '*');
+}, true);
+
+// Listen for SET_INSPECTOR_MODE from parent shell
+window.addEventListener('message', function(event) {
+  if (event.data?.type === 'SET_INSPECTOR_MODE') {
+    inspectorEnabled = !!event.data.enabled;
+    if (!inspectorEnabled && highlightOverlay) {
+      highlightOverlay.style.display = 'none';
+    }
+  }
+});
+
 // ─── Mount the root ───────────────────────────────────────────────────────────
 const rootElement = document.getElementById('root');
 if (rootElement) {

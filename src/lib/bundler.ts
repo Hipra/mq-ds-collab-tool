@@ -1,6 +1,7 @@
 import * as esbuild from 'esbuild';
 import { readFile } from 'fs/promises';
 import path from 'path';
+import { injectInspectorIds } from './inspector-plugin';
 
 /**
  * Transpile a JSX prototype file to an ESM bundle using esbuild.
@@ -8,6 +9,9 @@ import path from 'path';
  * Uses build() with stdin (NOT transform()) because transform() does not support
  * the `external` option. React and MUI are marked external so they are resolved
  * by the import map in the iframe HTML, not bundled into each prototype.
+ *
+ * Runs a Babel pre-pass (injectInspectorIds) before esbuild to inject
+ * data-inspector-id attributes on all MUI components for Phase 2 inspection.
  */
 export async function bundlePrototype(filePath: string): Promise<string> {
   const contents = await readFile(filePath, 'utf-8');
@@ -15,9 +19,12 @@ export async function bundlePrototype(filePath: string): Promise<string> {
   // Handle missing default export — Claude Code sometimes generates named exports only.
   const normalizedContents = ensureDefaultExport(contents);
 
+  // Babel pre-pass: inject data-inspector-id attributes on MUI components
+  const instrumentedContents = injectInspectorIds(normalizedContents, filePath);
+
   const result = await esbuild.build({
     stdin: {
-      contents: normalizedContents,
+      contents: instrumentedContents,
       loader: 'jsx',
       // resolveDir needed for relative imports within the prototype
       resolveDir: path.dirname(filePath),
@@ -67,4 +74,13 @@ function ensureDefaultExport(source: string): string {
   );
 
   return `${source}\nexport default ${componentName};\n`;
+}
+
+/**
+ * Read and normalize a prototype source file WITHOUT running the Babel pre-pass or bundling.
+ * Used by the /api/preview/[id]/tree endpoint to get clean source for AST analysis.
+ */
+export async function getPrototypeSource(filePath: string): Promise<string> {
+  const contents = await readFile(filePath, 'utf-8');
+  return ensureDefaultExport(contents);
 }

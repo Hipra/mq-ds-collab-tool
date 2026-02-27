@@ -1,10 +1,10 @@
 import { parse } from '@babel/parser';
+// @ts-expect-error — @babel/traverse ships without .d.ts in the version installed as a Next.js transitive dep
 import _traverse from '@babel/traverse';
-import type { NodePath } from '@babel/traverse';
-import type { JSXElement } from '@babel/types';
 
 // Handle CJS default export interop for @babel/traverse
-const traverse = (typeof _traverse === 'function' ? _traverse : (_traverse as any).default) as typeof _traverse;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const traverse: (ast: any, visitors: any) => void = typeof _traverse === 'function' ? _traverse : (_traverse as any).default;
 
 export interface PropEntry {
   name: string;
@@ -100,7 +100,8 @@ export function extractComponentTree(sourceCode: string, filePath: string): Comp
 
   traverse(ast, {
     JSXElement: {
-      enter(path: NodePath<JSXElement>) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      enter(path: any) {
         const opening = path.node.openingElement;
         const nameNode = opening.name;
 

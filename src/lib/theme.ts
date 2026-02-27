@@ -14,8 +14,12 @@ import { createTheme } from '@mui/material/styles';
  */
 export function createAppTheme() {
   return createTheme({
-    cssVariables: true,
-    colorSchemeSelector: 'data',
+    // cssVariables with colorSchemeSelector: 'data' — required for setMode() to write
+    // a [data-*] attribute on <html> rather than using a CSS media query.
+    // Type: nested inside cssVariables per MUI v6 createTheme signature.
+    cssVariables: {
+      colorSchemeSelector: 'data',
+    },
     defaultColorScheme: 'light',
     colorSchemes: {
       light: true,
