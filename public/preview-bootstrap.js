@@ -16,7 +16,7 @@
  */
 
 import { createRoot } from 'react-dom/client';
-import { createElement, useState, useEffect, useCallback } from 'react';
+import { createElement, useState, useEffect, useCallback, useContext, createContext } from 'react';
 import createCache from '@emotion/cache';
 import { CacheProvider } from '@emotion/react';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
@@ -39,6 +39,11 @@ const theme = createTheme({
     dark: true,
   },
 });
+
+// ─── Text override context — Phase 3 copy editing ────────────────────────────
+// Carries the current text override map from Root down to TextOverrideApplier
+// without prop-drilling through the prototype component tree.
+const TextOverrideContext = createContext({});
 
 // ─── Bundle URL from <meta> tag ──────────────────────────────────────────────
 // document.currentScript is always null inside type="module" scripts (browser spec),
@@ -155,8 +160,69 @@ function ThemeListener() {
   return null; // renders nothing — only registers the listener
 }
 
+// ─── TextOverrideApplier — applies text overrides to DOM after each render ────
+// Uses a MutationObserver to re-apply overrides whenever React re-renders, since
+// direct DOM mutations are overwritten by React on each update.
+function TextOverrideApplier() {
+  const overrides = useContext(TextOverrideContext);
+
+  useEffect(() => {
+    if (!Object.keys(overrides).length) return;
+
+    function applyOverrides() {
+      for (const [inspectorId, propOverrides] of Object.entries(overrides)) {
+        const el = document.querySelector(`[data-inspector-id="${inspectorId}"]`);
+        if (!el) continue;
+        for (const [propName, value] of Object.entries(propOverrides)) {
+          if (propName === 'children') {
+            // Find first non-empty text node and update its value
+            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+            let textNode = walker.nextNode();
+            while (textNode) {
+              if (textNode.nodeValue && textNode.nodeValue.trim()) {
+                textNode.nodeValue = value;
+                break;
+              }
+              textNode = walker.nextNode();
+            }
+          } else if (propName === 'placeholder') {
+            const input = el.querySelector('input, textarea') || el;
+            if (input) input.setAttribute('placeholder', value);
+          } else if (propName === 'aria-label') {
+            el.setAttribute('aria-label', value);
+          } else if (propName === 'label') {
+            // MUI label is rendered as a <label> child
+            const label = el.querySelector('label');
+            if (label) label.textContent = value;
+          } else if (propName === 'helperText') {
+            // MUI helper text is rendered as a <p> with the MUI FormHelperText class
+            const helper = el.querySelector('p');
+            if (helper) helper.textContent = value;
+          } else if (propName === 'title') {
+            el.setAttribute('title', value);
+          }
+        }
+      }
+    }
+
+    applyOverrides();
+
+    // Re-apply after React re-renders using MutationObserver
+    const rootEl = document.getElementById('root');
+    if (!rootEl) return;
+    const observer = new MutationObserver(() => {
+      requestAnimationFrame(applyOverrides);
+    });
+    observer.observe(rootEl, { childList: true, subtree: true, characterData: false });
+
+    return () => observer.disconnect();
+  }, [overrides]);
+
+  return null; // renders nothing — only applies DOM overrides
+}
+
 // ─── App shell — wraps prototype in ThemeProvider + CacheProvider + ErrorBoundary ─
-function PreviewApp({ Component, errorBoundaryKey, onRetry }) {
+function PreviewApp({ Component, errorBoundaryKey, onRetry, textOverrides }) {
   return createElement(
     CacheProvider,
     { value: emotionCache },
@@ -166,13 +232,18 @@ function PreviewApp({ Component, errorBoundaryKey, onRetry }) {
       createElement(CssBaseline),
       createElement(ThemeListener),
       createElement(
-        ErrorBoundary,
-        {
-          FallbackComponent: ErrorFallback,
-          resetKeys: [errorBoundaryKey],
-          onReset: onRetry,
-        },
-        createElement(Component)
+        TextOverrideContext.Provider,
+        { value: textOverrides },
+        createElement(TextOverrideApplier),
+        createElement(
+          ErrorBoundary,
+          {
+            FallbackComponent: ErrorFallback,
+            resetKeys: [errorBoundaryKey],
+            onReset: onRetry,
+          },
+          createElement(Component)
+        )
       )
     )
   );
@@ -186,6 +257,8 @@ function Root() {
     bundleVersion: 0, // incremented on RELOAD
     errorBoundaryKey: 0, // incremented on Retry
   });
+  // Phase 3: text overrides — Record<inspectorId, Record<propName, string>>
+  const [textOverrides, setTextOverrides] = useState({});
 
   const load = useCallback(async (version) => {
     const url = version > 0 ? `${bundleUrl}?t=${Date.now()}` : bundleUrl;
@@ -220,7 +293,7 @@ function Root() {
     load(0);
   }, [load]);
 
-  // Listen for RELOAD postMessage
+  // Listen for RELOAD and SET_TEXT_OVERRIDES postMessages
   useEffect(() => {
     function handleMessage(event) {
       if (event.data?.type === 'RELOAD') {
@@ -229,6 +302,10 @@ function Root() {
           load(nextVersion);
           return { ...prev, bundleVersion: nextVersion };
         });
+      }
+      // Phase 3: apply text overrides from Copy tab
+      if (event.data?.type === 'SET_TEXT_OVERRIDES') {
+        setTextOverrides(event.data.overrides ?? {});
       }
     }
 
@@ -268,6 +345,7 @@ function Root() {
     Component: state.Component,
     errorBoundaryKey: state.errorBoundaryKey,
     onRetry: handleRetry,
+    textOverrides,
   });
 }
 
@@ -329,19 +407,48 @@ document.addEventListener('click', function(e) {
   e.preventDefault();
   e.stopPropagation();
   const rect = target.getBoundingClientRect();
+  const inspectorId = target.dataset.inspectorId;
   window.parent.postMessage({
     type: 'COMPONENT_SELECT',
-    id: target.dataset.inspectorId,
+    id: inspectorId,
     rect: { top: rect.top, left: rect.left, width: rect.width, height: rect.height }
   }, '*');
+  // Phase 3: also send TEXT_CLICK so the shell can scroll to the Copy tab entry
+  // The shell matches inspectorId to a text entry key — key is left empty here
+  window.parent.postMessage({ type: 'TEXT_CLICK', key: '', inspectorId }, '*');
 }, true);
 
-// Listen for SET_INSPECTOR_MODE from parent shell
+// Listen for SET_INSPECTOR_MODE and Phase 3 HIGHLIGHT_TEXT from parent shell
 window.addEventListener('message', function(event) {
   if (event.data?.type === 'SET_INSPECTOR_MODE') {
     inspectorEnabled = !!event.data.enabled;
     if (!inspectorEnabled && highlightOverlay) {
       highlightOverlay.style.display = 'none';
+    }
+  }
+
+  // Phase 3: highlight element from Copy tab selection
+  if (event.data?.type === 'HIGHLIGHT_TEXT') {
+    const id = event.data.inspectorId;
+    if (id) {
+      const el = document.querySelector(`[data-inspector-id="${id}"]`);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const overlay = ensureOverlay();
+        overlay.style.top = rect.top + 'px';
+        overlay.style.left = rect.left + 'px';
+        overlay.style.width = rect.width + 'px';
+        overlay.style.height = rect.height + 'px';
+        overlay.style.display = 'block';
+        overlay.style.borderColor = '#ed6c02'; // amber to distinguish from inspector blue
+        overlay.style.background = 'rgba(237,108,2,0.08)';
+      }
+    } else {
+      if (highlightOverlay) {
+        highlightOverlay.style.display = 'none';
+        highlightOverlay.style.borderColor = '#1976d2'; // restore default
+        highlightOverlay.style.background = 'rgba(25,118,210,0.08)';
+      }
     }
   }
 });
