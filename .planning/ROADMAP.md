@@ -28,7 +28,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. When a prototype contains a syntax error or runtime crash, a readable error message appears instead of a blank screen or app crash
   3. A dark/light mode toggle in the toolbar switches the prototype's MUI theme visually without reloading the page
   4. The MUI ThemeProvider lives inside the sandboxed iframe, not the app shell — verified by confirming theme changes do not affect shell UI elements
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 01-01-PLAN.md — Bundler pipeline + preview iframe rendering (esbuild, import map, ThemeProvider, ErrorBoundary)
+- [ ] 01-02-PLAN.md — App shell + theme toggle + file watcher (Toolbar, PreviewFrame, SSE hot reload)
 
 ### Phase 2: Inspector & Responsive Preview
 **Goal**: Developers can inspect the MUI component tree and props, and anyone can preview the prototype at any MUI breakpoint
@@ -69,7 +71,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Rendering Foundation | 0/? | Not started | - |
+| 1. Rendering Foundation | 0/2 | Planned | - |
 | 2. Inspector & Responsive Preview | 0/? | Not started | - |
 | 3. Copywriter, Multi-screen & Status | 0/? | Not started | - |
 | 4. Sharing & Gallery | 0/? | Not started | - |
