@@ -16,6 +16,7 @@ import { useThemeStore, type ThemeMode } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
 import { BreakpointSwitcher } from '@/components/BreakpointSwitcher';
 import { StatusBadge } from '@/components/StatusBadge';
+import { ShareButton } from '@/components/ShareButton';
 
 interface ToolbarProps {
   prototypeName: string;
@@ -59,6 +60,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
         <Box sx={{ flex: 1 }} />
         <BreakpointSwitcher />
         <Box sx={{ flex: 1 }} />
+        <ShareButton prototypeId={prototypeId} />
         <Tooltip title={sidebarOpen ? 'Hide screens' : 'Show screens'}>
           <IconButton
             onClick={toggleSidebar}

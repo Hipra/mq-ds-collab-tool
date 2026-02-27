@@ -10,6 +10,7 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 
 interface PreviewFrameProps {
   prototypeId: string;
+  readOnly?: boolean;
 }
 
 type PreviewState = 'loading' | 'ready' | 'error';
@@ -34,7 +35,7 @@ type PreviewState = 'loading' | 'ready' | 'error';
  * - Error recovery: RELOAD message also clears the error state
  * - CRITICAL: iframe width set via container pixel width, NOT CSS transform: scale()
  */
-export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
+export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [previewState, setPreviewState] = useState<PreviewState>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -96,23 +97,24 @@ export function PreviewFrame({ prototypeId }: PreviewFrameProps) {
     }
   }, [mode, sendThemeToIframe]);
 
-  // Fetch component tree on mount
+  // Fetch component tree on mount (skip in readOnly mode)
   useEffect(() => {
-    fetchTree();
+    if (!readOnly) fetchTree();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-fetch component tree when active screen changes
+  // Re-fetch component tree when active screen changes (skip in readOnly mode)
   useEffect(() => {
-    fetchTree(activeScreenId);
+    if (!readOnly) fetchTree(activeScreenId);
     // When screen changes, reset iframe loaded state so spinner shows
     isLoadedRef.current = false;
     setPreviewState('loading');
     setErrorMessage('');
   }, [activeScreenId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // SSE hot reload: subscribe to /api/watch
+  // SSE hot reload: subscribe to /api/watch (skip in readOnly mode)
   useEffect(() => {
+    if (readOnly) return;
     const eventSource = new EventSource('/api/watch');
 
     eventSource.onmessage = (event) => {
