@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 1 of 4 (Rendering Foundation)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-27 — Plan 01-01 complete (rendering pipeline)
+Plan: 2 of 2 in current phase
+Status: Phase 1 complete
+Last activity: 2026-02-27 — Plan 01-02 complete (app shell, theme toggle, hot reload)
 
-Progress: [█░░░░░░░░░] 10%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 5 min
-- Total execution time: 0.08 hours
+- Total plans completed: 2
+- Average duration: 25 min
+- Total execution time: 0.83 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-rendering-foundation | 1 | 5 min | 5 min |
+| 01-rendering-foundation | 2 | 50 min | 25 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (5 min)
+- Last 5 plans: 01-01 (5 min), 01-02 (45 min)
 - Trend: —
 
 *Updated after each plan completion*
@@ -47,6 +47,10 @@ Recent decisions affecting current work:
 - [Phase 1][01-01]: Route Handler (route.ts) used for /preview/[id] instead of page.tsx — produces standalone HTML bypassing Next.js layout system
 - [Phase 1][01-01]: esbuild build() + esm.sh import map chosen — React/MUI served once via CDN, not bundled per prototype (~400KB savings per load)
 - [Phase 1][01-01]: chokidar v4 (CJS) over v5 (ESM) — Node 18+ compatibility for Next.js 15 minimum
+- [Phase 1][01-02]: colorSchemeSelector: 'data' required in MUI v6 createTheme() for setMode() to write data attribute on <html> — must be in BOTH shell and iframe theme configs
+- [Phase 1][01-02]: document.currentScript is null in type=module scripts (browser spec) — bundle URL passed via <meta name="bundle-url"> instead
+- [Phase 1][01-02]: ThemeSyncProvider pattern bridges Zustand (external store) to MUI useColorScheme() (React context) — Zustand is single source of truth, MUI is a sink
+- [Phase 1][01-02]: postMessage protocol established: shell sends SET_THEME + RELOAD, iframe sends RENDER_ERROR — Phase 2 can add new message types without conflict
 - [Phase 2]: Use AST-based (Babel) component inspection, NOT runtime fiber introspection — fiber approach breaks across React versions and is inaccessible inside iframes
 
 ### Pending Todos
@@ -60,5 +64,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 01-01-PLAN.md (rendering pipeline)
+Stopped at: Completed 01-02-PLAN.md (app shell, theme toggle, hot reload) — Phase 1 complete
 Resume file: None

@@ -9,7 +9,7 @@
 
 - [x] **REND-01**: Claude Code által generált React/MUI fájlok élő renderelése sandboxolt iframe-ben
 - [x] **REND-02**: Error boundary — hibás komponens ne crashelje az appot, olvasható hibaüzenet jelenik meg
-- [ ] **REND-03**: Dark/light mód váltás a prototípuson belül (ThemeProvider a sandboxban)
+- [x] **REND-03**: Dark/light mód váltás a prototípuson belül (ThemeProvider a sandboxban)
 - [ ] **REND-04**: Reszponzív preview — breakpoint váltó (xs 0px, sm 600px, md 900px, lg 1200px, xl 1536px) iframe átméretezéssel
 
 ### Inspector Panel
@@ -77,7 +77,7 @@
 |-------------|-------|--------|
 | REND-01 | Phase 1 | Complete |
 | REND-02 | Phase 1 | Complete |
-| REND-03 | Phase 1 | Pending |
+| REND-03 | Phase 1 | Complete |
 | THME-01 | Phase 1 | Complete |
 | REND-04 | Phase 2 | Pending |
 | INSP-01 | Phase 2 | Pending |
