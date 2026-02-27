@@ -13,7 +13,7 @@ A four-phase build that lays the sandboxed rendering foundation first — becaus
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Rendering Foundation** - Sandboxed iframe rendering pipeline with esbuild bundler, postMessage bridge, and ThemeProvider inside the sandbox (completed 2026-02-27)
-- [ ] **Phase 2: Inspector & Responsive Preview** - AST-based component tree, prop inspector, breakpoint switcher, and shared panel shell
+- [x] **Phase 2: Inspector & Responsive Preview** - AST-based component tree, prop inspector, breakpoint switcher, and shared panel shell (completed 2026-02-27)
 - [ ] **Phase 3: Copywriter, Multi-screen & Status** - Inline text editing, multi-screen navigation, and draft→review→approved workflow
 - [ ] **Phase 4: Sharing & Gallery** - Shareable links and prototype list with search and filter
 
@@ -75,6 +75,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Rendering Foundation | 2/2 | Complete   | 2026-02-27 |
-| 2. Inspector & Responsive Preview | 1/3 | In progress | - |
+| 2. Inspector & Responsive Preview | 3/3 | Complete   | 2026-02-27 |
 | 3. Copywriter, Multi-screen & Status | 0/? | Not started | - |
 | 4. Sharing & Gallery | 0/? | Not started | - |
