@@ -373,6 +373,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
       <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
         <Button
           variant="outlined"
+          color="secondary"
           size="small"
           startIcon={<AddIcon />}
           fullWidth

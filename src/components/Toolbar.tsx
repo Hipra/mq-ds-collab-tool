@@ -27,7 +27,6 @@ import { useThemeStore, type ThemeMode } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
 import { BreakpointSwitcher } from '@/components/BreakpointSwitcher';
 import { StatusBadge } from '@/components/StatusBadge';
-import { ShareButton } from '@/components/ShareButton';
 
 interface ToolbarProps {
   prototypeName: string;
@@ -121,8 +120,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
         <Box sx={{ flex: 1 }} />
         <BreakpointSwitcher />
         <Box sx={{ flex: 1 }} />
-        <ShareButton prototypeId={prototypeId} />
-        <Tooltip title="Copy Claude Code command">
+<Tooltip title="Copy Claude Code command">
           <IconButton
             onClick={handleCopyClaudeCommand}
             size="small"
@@ -147,8 +145,8 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
             onClick={toggleSidebar}
             size="small"
             aria-label={sidebarOpen ? 'Hide screens' : 'Show screens'}
-            color={sidebarOpen ? 'primary' : 'default'}
-            sx={{ mr: 0.5 }}
+            color="inherit"
+            sx={{ mr: 0.5, color: sidebarOpen ? 'text.primary' : 'text.secondary' }}
           >
             <MenuIcon fontSize="small" />
           </IconButton>
@@ -158,8 +156,8 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
             onClick={togglePanel}
             size="small"
             aria-label={panelOpen ? 'Hide inspector panel' : 'Show inspector panel'}
-            color={panelOpen ? 'primary' : 'default'}
-            sx={{ mr: 0.5 }}
+            color="inherit"
+            sx={{ mr: 0.5, color: panelOpen ? 'text.primary' : 'text.secondary' }}
           >
             <ViewSidebarIcon fontSize="small" />
           </IconButton>
