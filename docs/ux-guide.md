@@ -44,7 +44,7 @@ Left to right:
 | **Prototype name** | Displays the current prototype |
 | **Status badge** | Click to change status (Draft / Review / Approved) |
 | **Delete icon** | Delete this prototype |
-| **Breakpoint switcher** (center) | Resize preview: Auto, xs (360), sm (600), md (900), lg (1200), xl (1536) |
+| **Breakpoint switcher** (center) | Resize preview: Auto, md (900), lg (1200), xl (1536) |
 | **Share icon** | Generate a public share link and copy it |
 | **Terminal icon** | Copy a Claude Code command for the active screen |
 | **Menu icon** | Toggle screen sidebar |
@@ -72,7 +72,7 @@ A live rendering of the active screen. Updates automatically when the source fil
 
 ### Inspector Panel (right panel)
 
-Two tabs: **Copy** and **Components**.
+Three tabs: **Components**, **Copy**, and **Theme**.
 
 ---
 
@@ -131,14 +131,29 @@ The Components tab shows the MUI component tree of the active screen.
 
 ### Prop inspector (lower area)
 
-When a component is selected, its props are displayed in a table:
+When a component is selected, its props are displayed in a 40/60 two-column table:
 
 | Column | Description |
 |--------|-------------|
-| **Name** | Prop name (e.g., `variant`, `color`, `sx`) |
-| **Value** | Color-coded by type: green = string, blue = number, purple = boolean, gray = expression |
+| **Name** | Prop name with colon separator (e.g., `variant:`, `color:`, `sx:`) |
+| **Value** | Displayed in `text.secondary` color. Color values show a swatch + memoQ token name (if matching) or hex code. MUI palette names (e.g., `primary`) resolve to the theme color with hex in parentheses. |
 
-Complex props (like `sx` objects) can be expanded by clicking them. The source file and line number are shown at the top.
+Complex props (like `sx` objects) can be expanded by clicking them.
+
+### Component highlight
+
+Selecting a component in the tree highlights it in the preview with an amber border overlay. This works for all components including custom ones (like `MqIcon`) as long as they forward unknown props to their root DOM element.
+
+---
+
+## Theme Tab — Customization
+
+The Theme tab provides a full MUI palette editor for customizing the prototype's visual appearance.
+
+- **Palette groups** — edit primary, secondary, error, warning, info, and success colors (main, light, dark, contrastText)
+- **Color picker** — click any color swatch to open the memoQ token-aware color picker, which shows all design system tokens grouped by color family
+- **Live preview** — changes are applied immediately to both the app shell and the preview iframe
+- **Persistence** — theme configuration is saved to `theme-config.json` and loaded on startup
 
 ---
 
@@ -194,3 +209,4 @@ Click the status badge in the toolbar to change it. The status is visible in the
 - **Multiple screens** — use the sidebar to organize prototypes into multiple pages (e.g., Login, Dashboard, Settings)
 - **Responsive testing** — use the breakpoint switcher to test how the prototype looks at different widths
 - **Text editing workflow** — designers edit text in the Copy tab, then export JSON for developer handoff; developers can see what changed without digging through code
+- **Custom icons** — use `<MqIcon name="check" />` in prototypes to access the ~260 memoQ icons with MUI-compatible `size`, `color`, and `sx` props

@@ -10,7 +10,7 @@ Technical documentation for developers working on the application codebase.
 |-------|------------|
 | Framework | Next.js 15 (App Router) |
 | UI | React 19, MUI 6, Emotion 11 |
-| State | Zustand 5 (3 stores) |
+| State | Zustand 5 (4 stores) |
 | Bundling | esbuild 0.24 (server-side JSX → ESM) |
 | AST | Babel (parser, traverse, generator) |
 | Drag & Drop | dnd-kit (core, sortable, utilities) |
@@ -56,6 +56,8 @@ src/
 │   ├── ComponentTree.tsx           # Recursive MUI component tree view
 │   ├── PropInspector.tsx           # Selected component props table
 │   ├── CopyTab.tsx                 # Text editing UI (grouped entries, search, export/import)
+│   ├── ThemeTab.tsx                # Global theme palette editor with memoQ color picker
+│   ├── MemoqColorPicker.tsx        # Token-aware color picker popover
 │   ├── BreakpointSwitcher.tsx      # Responsive width selector
 │   ├── StatusBadge.tsx             # Clickable status chip with dropdown
 │   ├── ShareButton.tsx             # Share URL popover
@@ -63,14 +65,19 @@ src/
 ├── stores/
 │   ├── inspector.ts                # Panel, tree, selection, screens, breakpoint state
 │   ├── theme.ts                    # Theme mode (wraps MUI useColorScheme)
-│   └── copy.ts                     # Text entries, conflicts, search, edit state
+│   ├── copy.ts                     # Text entries, conflicts, search, edit state
+│   └── theme-config.ts             # Global theme configuration state
 ├── lib/
-│   ├── theme.ts                    # MUI theme creation (cssVariables, colorSchemes)
+│   ├── theme.ts                    # MUI theme creation (cssVariables, colorSchemes, component overrides)
+│   ├── theme-config.ts             # ThemeConfig type + defaults
 │   ├── bundler.ts                  # esbuild bundling logic
+│   ├── memoq-tokens.ts             # memoQ design system color tokens (~80 colors)
 │   ├── extractTextEntries.ts       # Babel AST → text entry extraction
 │   └── injectInspectorIds.ts       # Babel transform: adds data-inspector-id to MUI components
 └── public/
-    └── preview-bootstrap.js        # Iframe bootstrap: React root, theme, text overrides
+    ├── preview-bootstrap.js        # Iframe bootstrap: React root, theme, text overrides
+    ├── mq-icons.js                 # @mq/icons ESM module (MqIcon component for prototypes)
+    └── icon-set/                   # Symlink → assets/icon-set (~260 SVG icons)
 prototypes/
 └── {id}/
     ├── metadata.json               # Name, status, createdAt, shareToken, screens config
@@ -112,7 +119,8 @@ Communication between the app shell and the iframe:
 | `SET_THEME` | Sync theme mode (light/dark/system) |
 | `RELOAD` | Re-import bundle (with cache buster) |
 | `SET_TEXT_OVERRIDES` | Apply live text edits from Copy tab |
-| `HIGHLIGHT_TEXT` | Highlight a text element when Copy entry is focused |
+| `SET_THEME_CONFIG` | Apply custom theme palette/typography/shape/spacing |
+| `HIGHLIGHT_TEXT` | Highlight a component when selected in tree or Copy entry is focused |
 
 **Iframe → Shell:**
 
@@ -121,6 +129,7 @@ Communication between the app shell and the iframe:
 | `RENDER_ERROR` | Report import/render failure |
 | `COMPONENT_HOVER` | Component hover (inspector tree highlights) |
 | `COMPONENT_SELECT` | Component click (inspector tree selects + scrolls) |
+| `PREVIEW_READY` | Bundle loaded successfully (triggers theme sync) |
 | `TEXT_CLICK` | Text element click (Copy tab scrolls to entry) |
 
 ### Hot Reload (SSE)
@@ -142,7 +151,7 @@ Three Zustand stores, no persistence (MUI handles theme persistence via localSto
 ```typescript
 // Key state
 panelOpen: boolean              // Inspector panel visibility
-activeTab: 'copy' | 'components'
+activeTab: 'components' | 'copy' | 'theme'
 selectedComponentId: string | null
 hoveredComponentId: string | null
 componentTree: ComponentNode[]
@@ -268,7 +277,9 @@ prototypes/{id}/
 
 - Must have a default export (component function)
 - Use bare MUI imports: `import { Box, Typography } from '@mui/material'`
+- Use `import { MqIcon } from '@mq/icons'` for memoQ design system icons
 - The bundler handles JSX transformation — no build config needed in prototype files
+- Custom components should spread `...rest` props to their root DOM element to support inspector highlighting
 
 ### Inspector ID injection
 
@@ -337,7 +348,7 @@ When a developer changes source text that a designer has already edited:
 ## Key Design Decisions
 
 1. **Iframe isolation** — prototypes can't break the app shell; CSS/JS fully sandboxed
-2. **CDN import maps** — MUI/React loaded from esm.sh, ensuring single React instance and avoiding bundling heavy dependencies
+2. **CDN import maps** — MUI/React loaded from esm.sh, `@mq/*` from local public dir; single React instance, no bundling of heavy deps
 3. **Babel AST for inspection** — component tree and text entries extracted at build time, not runtime; no prototype code modification needed
 4. **DOM mutation for text overrides** — avoids re-bundling on every keystroke; MutationObserver handles React re-renders
 5. **SSE for hot reload** — lightweight, unidirectional; chokidar watches filesystem, EventSource in browser
