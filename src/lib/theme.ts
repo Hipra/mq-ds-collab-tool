@@ -34,6 +34,21 @@ export function createAppTheme(config?: ThemeConfig | null) {
           }),
         },
       },
+      MuiListItemButton: {
+        styleOverrides: {
+          root: {
+            '&.Mui-selected': {
+              backgroundColor: 'rgba(var(--mui-palette-secondary-mainChannel) / 0.08)',
+            },
+            '&.Mui-selected:hover': {
+              backgroundColor: 'rgba(var(--mui-palette-secondary-mainChannel) / 0.12)',
+            },
+            '& .MuiTouchRipple-child': {
+              backgroundColor: 'var(--mui-palette-secondary-main)',
+            },
+          },
+        },
+      },
       MuiButton: {
         styleOverrides: {
           root: {

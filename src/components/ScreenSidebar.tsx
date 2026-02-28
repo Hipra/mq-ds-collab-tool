@@ -92,9 +92,6 @@ function SortableScreenItem({
         sx={{
           pr: 1,
           pl: 0.5,
-          '&.Mui-selected': {
-            bgcolor: 'action.selected',
-          },
         }}
       >
         {/* Drag handle */}

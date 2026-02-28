@@ -45,6 +45,7 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
   const {
     previewWidth,
     activeScreenId,
+    selectedComponentId,
     setHoveredComponent,
     setSelectedComponent,
     setComponentTree,
@@ -143,6 +144,16 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
       eventSource.close();
     };
   }, [prototypeId, sendReloadToIframe, fetchTree]);
+
+  // Highlight selected component in iframe
+  useEffect(() => {
+    if (iframeRef.current?.contentWindow && isLoadedRef.current) {
+      iframeRef.current.contentWindow.postMessage(
+        { type: 'HIGHLIGHT_TEXT', inspectorId: selectedComponentId ?? null },
+        '*'
+      );
+    }
+  }, [selectedComponentId]);
 
   // Listen for messages from iframe (RENDER_ERROR, COMPONENT_HOVER, COMPONENT_SELECT, TEXT_CLICK)
   useEffect(() => {

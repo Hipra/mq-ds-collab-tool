@@ -37,7 +37,7 @@ function resolveColor(color) {
   return color;
 }
 
-export function MqIcon({ name, size = 24, color = 'currentColor', sx }) {
+export function MqIcon({ name, size = 24, color = 'currentColor', sx, ...rest }) {
   const [svg, setSvg] = useState(svgCache.get(name) ?? null);
 
   useEffect(() => {
@@ -62,6 +62,7 @@ export function MqIcon({ name, size = 24, color = 'currentColor', sx }) {
   return createElement(Box, {
     component: 'span',
     'aria-hidden': true,
+    ...rest,
     sx: {
       display: 'inline-flex',
       alignItems: 'center',
