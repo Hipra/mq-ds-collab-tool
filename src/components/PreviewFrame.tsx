@@ -6,6 +6,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { useThemeStore } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
 import { useCopyStore } from '@/stores/copy';
+import { useThemeConfigStore } from '@/stores/theme-config';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 
 interface PreviewFrameProps {
@@ -162,6 +163,12 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
         if (mode) {
           iframeRef.current?.contentWindow?.postMessage({ type: 'SET_THEME', mode }, '*');
         }
+        // Send current theme config on ready
+        const themeConfig = useThemeConfigStore.getState().config;
+        iframeRef.current?.contentWindow?.postMessage(
+          { type: 'SET_THEME_CONFIG', config: themeConfig },
+          '*'
+        );
       }
 
       if (event.data.type === 'COMPONENT_HOVER') {
@@ -189,17 +196,22 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
     };
   }, [setHoveredComponent, setSelectedComponent]);
 
-  // iframe onLoad: mark as loaded, send initial theme
+  // iframe onLoad: mark as loaded, send initial theme + theme config
   const handleIframeLoad = useCallback(() => {
     isLoadedRef.current = true;
     setPreviewState('ready');
-    if (mode) {
-      if (iframeRef.current?.contentWindow) {
+    if (iframeRef.current?.contentWindow) {
+      if (mode) {
         iframeRef.current.contentWindow.postMessage(
           { type: 'SET_THEME', mode },
           '*'
         );
       }
+      const themeConfig = useThemeConfigStore.getState().config;
+      iframeRef.current.contentWindow.postMessage(
+        { type: 'SET_THEME_CONFIG', config: themeConfig },
+        '*'
+      );
     }
   }, [mode]);
 

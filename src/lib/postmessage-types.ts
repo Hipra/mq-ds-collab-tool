@@ -1,4 +1,5 @@
 import type { ComponentNode } from './ast-inspector';
+import type { ThemeConfig } from './theme-config';
 
 /**
  * postmessage-types.ts — shared type definitions for the shell <-> iframe postMessage protocol.
@@ -14,6 +15,9 @@ import type { ComponentNode } from './ast-inspector';
  * Phase 3 additions:
  *   Shell -> Iframe: SET_TEXT_OVERRIDES, HIGHLIGHT_TEXT
  *   Iframe -> Shell: TEXT_CLICK
+ *
+ * Phase 4 additions:
+ *   Shell -> Iframe: SET_THEME_CONFIG
  */
 
 // Shell -> iframe
@@ -25,8 +29,10 @@ export type ShellToIframe =
   | { type: 'SET_TEXT_OVERRIDES'; overrides: Record<string, Record<string, string>> }
   // overrides format: { [inspectorId]: { [propName]: editedValue } }
   // e.g., { "Typography_5_4": { "children": "New text" } }
-  | { type: 'HIGHLIGHT_TEXT'; inspectorId: string | null };
+  | { type: 'HIGHLIGHT_TEXT'; inspectorId: string | null }
   // Highlights an element in the preview when an entry is selected in Copy tab
+  // Phase 4: theme customization
+  | { type: 'SET_THEME_CONFIG'; config: ThemeConfig };
 
 // Iframe -> shell
 export type IframeToShell =

@@ -9,6 +9,7 @@ import { useInspectorStore } from '@/stores/inspector';
 import { ComponentTree } from '@/components/ComponentTree';
 import { PropInspector } from '@/components/PropInspector';
 import { CopyTab } from '@/components/CopyTab';
+import { ThemeTab } from '@/components/ThemeTab';
 import type { ComponentNode } from '@/lib/ast-inspector';
 
 /**
@@ -85,10 +86,12 @@ export function InspectorPanel({ prototypeId }: InspectorPanelProps) {
   }
 
   // Map string tab names to numeric indices for MUI Tabs
-  const tabIndex = activeTab === 'copy' ? 0 : 1;
+  const tabMap = { copy: 0, components: 1, theme: 2 } as const;
+  const tabNames = ['copy', 'components', 'theme'] as const;
+  const tabIndex = tabMap[activeTab];
 
   function handleTabChange(_event: React.SyntheticEvent, newValue: number) {
-    setActiveTab(newValue === 0 ? 'copy' : 'components');
+    setActiveTab(tabNames[newValue]);
   }
 
   const selectedNode = selectedComponentId
@@ -122,6 +125,7 @@ export function InspectorPanel({ prototypeId }: InspectorPanelProps) {
       >
         <Tab label="Copy" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
         <Tab label="Components" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
+        <Tab label="Theme" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
       </Tabs>
 
       {/* Copy tab — Phase 3 copy editing */}
@@ -160,6 +164,11 @@ export function InspectorPanel({ prototypeId }: InspectorPanelProps) {
             </>
           )}
         </Box>
+      </TabPanel>
+
+      {/* Theme tab — Phase 4 theme customization */}
+      <TabPanel value={tabIndex} index={2}>
+        <ThemeTab />
       </TabPanel>
     </Box>
   );

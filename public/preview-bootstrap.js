@@ -16,7 +16,7 @@
  */
 
 import { createRoot } from 'react-dom/client';
-import { createElement, useState, useEffect, useCallback, useContext, createContext } from 'react';
+import { createElement, useState, useEffect, useCallback, useContext, createContext, useMemo } from 'react';
 import createCache from '@emotion/cache';
 import { CacheProvider } from '@emotion/react';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
@@ -31,14 +31,42 @@ const emotionCache = createCache({ key: 'mui', container: document.head });
 // ─── MUI theme with CSS variables + light/dark color schemes ─────────────────
 // cssVariables: true — mode switching changes CSS variable values, not component tree
 // colorSchemes: { light, dark } — enables useColorScheme() with 'light'|'dark'|'system'
-const theme = createTheme({
+const BUTTON_OVERRIDES = {
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: { borderRadius: 100 },
+      },
+    },
+  },
+};
+
+const defaultTheme = createTheme({
   cssVariables: true,
   colorSchemeSelector: 'data',
   colorSchemes: {
     light: true,
     dark: true,
   },
+  ...BUTTON_OVERRIDES,
 });
+
+/** Build a MUI theme from ThemeConfig (sent via SET_THEME_CONFIG postMessage). */
+function buildTheme(config) {
+  if (!config) return defaultTheme;
+  return createTheme({
+    cssVariables: true,
+    colorSchemeSelector: 'data',
+    colorSchemes: {
+      light: { palette: config.palette.light },
+      dark: { palette: config.palette.dark },
+    },
+    typography: config.typography,
+    shape: config.shape,
+    spacing: config.spacing,
+    ...BUTTON_OVERRIDES,
+  });
+}
 
 // ─── Text override context — Phase 3 copy editing ────────────────────────────
 // Carries the current text override map from Root down to TextOverrideApplier
@@ -286,13 +314,13 @@ function _applyValue(el, propName, value) {
 }
 
 // ─── App shell — wraps prototype in ThemeProvider + CacheProvider + ErrorBoundary ─
-function PreviewApp({ Component, errorBoundaryKey, onRetry, textOverrides }) {
+function PreviewApp({ Component, errorBoundaryKey, onRetry, textOverrides, theme }) {
   return createElement(
     CacheProvider,
     { value: emotionCache },
     createElement(
       ThemeProvider,
-      { theme },
+      { theme: theme || defaultTheme },
       createElement(CssBaseline),
       createElement(ThemeListener),
       createElement(
@@ -323,6 +351,9 @@ function Root() {
   });
   // Phase 3: text overrides — Record<inspectorId, Record<propName, string>>
   const [textOverrides, setTextOverrides] = useState({});
+  // Phase 4: theme config
+  const [themeConfig, setThemeConfig] = useState(null);
+  const theme = useMemo(() => buildTheme(themeConfig), [themeConfig]);
 
   const load = useCallback(async (version) => {
     const url = version > 0 ? `${bundleUrl}?t=${Date.now()}` : bundleUrl;
@@ -374,6 +405,10 @@ function Root() {
       if (event.data?.type === 'SET_TEXT_OVERRIDES') {
         setTextOverrides(event.data.overrides ?? {});
       }
+      // Phase 4: apply theme config
+      if (event.data?.type === 'SET_THEME_CONFIG') {
+        setThemeConfig(event.data.config ?? null);
+      }
     }
 
     window.addEventListener('message', handleMessage);
@@ -413,6 +448,7 @@ function Root() {
     errorBoundaryKey: state.errorBoundaryKey,
     onRetry: handleRetry,
     textOverrides,
+    theme,
   });
 }
 

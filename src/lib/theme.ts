@@ -1,30 +1,30 @@
 import { createTheme } from '@mui/material/styles';
+import type { ThemeConfig } from '@/lib/theme-config';
 
 /**
  * Create the shared MUI theme with CSS variables and light/dark color schemes.
  *
- * Key decisions:
- * - cssVariables: true — mode switching does NOT cause component re-renders,
- *   only CSS variable values change. Required for the three-state toggle.
- * - colorSchemes: { light: true, dark: true } — enables MUI v6 native dark mode
- *   via useColorScheme() + setMode('light' | 'dark' | 'system').
- *
- * This function is used both by the app shell (Plan 02) and conceptually by the
- * iframe bootstrap (public/preview-bootstrap.js replicates the same config in vanilla JS).
+ * Accepts an optional ThemeConfig to apply custom palette, typography, shape,
+ * and spacing from the theme editor. Used by both the app shell and
+ * conceptually by the iframe bootstrap (preview-bootstrap.js).
  */
-export function createAppTheme() {
+export function createAppTheme(config?: ThemeConfig | null) {
   return createTheme({
-    // colorSchemeSelector must match InitColorSchemeScript's attribute ("data-mui-color-scheme")
-    // so the CSS selectors [data-mui-color-scheme="dark"] align with the HTML attribute
-    // that the script sets before hydration.
     cssVariables: {
       colorSchemeSelector: 'data-mui-color-scheme',
     },
     defaultColorScheme: 'light',
-    colorSchemes: {
-      light: true,
-      dark: true,
-    },
+    colorSchemes: config
+      ? {
+          light: { palette: config.palette.light },
+          dark: { palette: config.palette.dark },
+        }
+      : { light: true, dark: true },
+    ...(config && {
+      typography: config.typography,
+      shape: config.shape,
+      spacing: config.spacing,
+    }),
     components: {
       MuiAppBar: {
         styleOverrides: {
@@ -32,6 +32,13 @@ export function createAppTheme() {
             backgroundColor: t.vars.palette.action.hover,
             borderBottom: `1px solid ${t.vars.palette.divider}`,
           }),
+        },
+      },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: 100,
+          },
         },
       },
     },

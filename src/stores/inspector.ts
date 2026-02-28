@@ -4,7 +4,7 @@ import type { ComponentNode } from '@/lib/ast-inspector';
 interface InspectorState {
   // Panel
   panelOpen: boolean;
-  activeTab: 'copy' | 'components';
+  activeTab: 'copy' | 'components' | 'theme';
   // Inspector
   selectedComponentId: string | null;
   hoveredComponentId: string | null;
@@ -20,7 +20,7 @@ interface InspectorState {
 
 interface InspectorActions {
   togglePanel: () => void;
-  setActiveTab: (tab: 'copy' | 'components') => void;
+  setActiveTab: (tab: 'copy' | 'components' | 'theme') => void;
   setSelectedComponent: (id: string | null) => void;
   setHoveredComponent: (id: string | null) => void;
   setComponentTree: (tree: ComponentNode[]) => void;
