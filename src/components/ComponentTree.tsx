@@ -134,7 +134,7 @@ function TreeNode({
           sx={{
             fontFamily: 'monospace',
             fontSize: '13px',
-            color: 'primary.main',
+            color: 'text.primary',
             lineHeight: 1.4,
           }}
         >

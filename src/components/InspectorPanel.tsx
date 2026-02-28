@@ -116,6 +116,8 @@ export function InspectorPanel({ prototypeId }: InspectorPanelProps) {
         value={tabIndex}
         onChange={handleTabChange}
         variant="fullWidth"
+        textColor="secondary"
+        indicatorColor="secondary"
         sx={{
           borderBottom: 1,
           borderColor: 'divider',

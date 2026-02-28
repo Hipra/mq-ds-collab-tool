@@ -4,9 +4,91 @@ import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material/styles';
+import type { Palette } from '@mui/material/styles';
 import type { ComponentNode } from '@/lib/ast-inspector';
+import { MEMOQ_COLOR_GROUPS } from '@/lib/memoq-tokens';
 
 const KEY_PROPS = new Set(['variant', 'size', 'color', 'disabled']);
+
+/** Reverse lookup: hex (uppercase) → token name */
+const HEX_TO_TOKEN: Record<string, string> = {};
+for (const group of MEMOQ_COLOR_GROUPS) {
+  for (const t of group.tokens) {
+    HEX_TO_TOKEN[t.hex.toUpperCase()] = t.token;
+  }
+}
+
+const HEX_RE = /^#[0-9a-fA-F]{3,8}$/;
+const PALETTE_KEYS = ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const;
+
+/** Strip surrounding quotes from a serialized prop value. */
+function stripQuotes(v: string) {
+  return v.replace(/^"|"$/g, '');
+}
+
+/** Render a color swatch + label for hex colors and MUI palette names. */
+function ColorValue({ value }: { value: string }) {
+  const theme = useTheme();
+  const clean = stripQuotes(value);
+
+  // MUI palette name (primary, secondary, etc.)
+  if ((PALETTE_KEYS as readonly string[]).includes(clean)) {
+    const hex = (theme.palette[clean as keyof Palette] as { main?: string })?.main;
+    if (hex) {
+      const token = HEX_TO_TOKEN[hex.toUpperCase()];
+      return (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
+          <Box
+            sx={{
+              width: 10,
+              height: 10,
+              borderRadius: '2px',
+              bgcolor: hex,
+              border: '1px solid',
+              borderColor: 'divider',
+              flexShrink: 0,
+            }}
+          />
+          <Box
+            component="span"
+            sx={{ color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
+            {clean} ({token ?? hex})
+          </Box>
+        </Box>
+      );
+    }
+  }
+
+  // Hex color
+  if (HEX_RE.test(clean)) {
+    const token = HEX_TO_TOKEN[clean.toUpperCase()];
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
+        <Box
+          sx={{
+            width: 10,
+            height: 10,
+            borderRadius: '2px',
+            bgcolor: clean,
+            border: '1px solid',
+            borderColor: 'divider',
+            flexShrink: 0,
+          }}
+        />
+        <Box
+          component="span"
+          sx={{ color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+        >
+          {token ? `${token} (${clean})` : clean}
+        </Box>
+      </Box>
+    );
+  }
+
+  return <>{clean}</>;
+}
 
 interface PropInspectorProps {
   node: ComponentNode | null;
@@ -88,6 +170,8 @@ export function PropInspector({ node }: PropInspectorProps) {
         <Box
           component="table"
           sx={{
+            width: '100%',
+            tableLayout: 'fixed',
             borderCollapse: 'collapse',
             fontFamily: 'monospace',
             fontSize: '12px',
@@ -99,12 +183,12 @@ export function PropInspector({ node }: PropInspectorProps) {
               <Box component="tr" key={p.name}>
                 <Box
                   component="td"
-                  sx={{ pr: 1, color: 'text.secondary', whiteSpace: 'nowrap' }}
+                  sx={{ width: '40%', pr: 1, color: 'text.secondary', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                 >
                   {p.name}:
                 </Box>
-                <Box component="td" sx={{ color: 'text.secondary' }}>
-                  {p.rawType === 'boolean' ? 'true' : p.value.replace(/^"|"$/g, '')}
+                <Box component="td" sx={{ width: '60%', color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {p.rawType === 'boolean' ? 'true' : <ColorValue value={p.value} />}
                 </Box>
               </Box>
             ))}
@@ -124,6 +208,7 @@ export function PropInspector({ node }: PropInspectorProps) {
           component="table"
           sx={{
             width: '100%',
+            tableLayout: 'fixed',
             borderCollapse: 'collapse',
             fontFamily: 'monospace',
             fontSize: '12px',
@@ -148,11 +233,14 @@ export function PropInspector({ node }: PropInspectorProps) {
                     <Box
                       component="td"
                       sx={{
+                        width: '40%',
                         py: 0.25,
                         pr: 1,
                         color: 'text.secondary',
                         verticalAlign: 'top',
                         whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                       }}
                     >
                       {isExpression && (
@@ -168,26 +256,20 @@ export function PropInspector({ node }: PropInspectorProps) {
                           {isExpanded ? '▼' : '▶'}
                         </Box>
                       )}
-                      {prop.name}
+                      {prop.name}:
                     </Box>
 
                     {/* Prop value column */}
                     <Box
                       component="td"
                       sx={{
+                        width: '60%',
                         py: 0.25,
-                        color:
-                          prop.rawType === 'string'
-                            ? 'success.main'
-                            : prop.rawType === 'number'
-                            ? 'info.main'
-                            : prop.rawType === 'boolean'
-                            ? 'secondary.main'
-                            : 'text.secondary',
+                        color: 'text.secondary',
                         wordBreak: 'break-all',
                       }}
                     >
-                      {isExpanded ? null : prop.value}
+                      {isExpanded ? null : <ColorValue value={prop.value} />}
                     </Box>
                   </Box>
 

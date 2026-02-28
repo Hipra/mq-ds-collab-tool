@@ -43,6 +43,7 @@ export async function GET(
       '@emotion/cache': 'https://esm.sh/@emotion/cache@11',
       'react-error-boundary':
         'https://esm.sh/react-error-boundary@5?external=react',
+      '@mq/icons': '/mq-icons.js',
     },
   });
 

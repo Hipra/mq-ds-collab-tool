@@ -7,6 +7,7 @@ import TextField from '@mui/material/TextField';
 import { useThemeConfigStore } from '@/stores/theme-config';
 import { useColorScheme } from '@mui/material/styles';
 import type { PaletteConfig } from '@/lib/theme-config';
+import { MemoqColorPicker } from './MemoqColorPicker';
 
 /** Palette sections grouped by category. */
 const PALETTE_GROUPS: { title: string; rows: { label: string; path: string }[] }[] = [
@@ -214,18 +215,9 @@ export function ThemeTab() {
                   key={path}
                   sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
                 >
-                  <Box
-                    sx={{
-                      width: 24,
-                      height: 24,
-                      border: 1,
-                      borderColor: 'divider',
-                      borderRadius: 0.5,
-                      flexShrink: 0,
-                      backgroundImage: `linear-gradient(${value}, ${value}), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%)`,
-                      backgroundSize: '100% 100%, 8px 8px, 8px 8px',
-                      backgroundPosition: '0 0, 0 0, 4px 4px',
-                    }}
+                  <MemoqColorPicker
+                    currentColor={value}
+                    onSelect={(hex) => handlePaletteChange(path, hex)}
                   />
                   <Typography
                     variant="caption"

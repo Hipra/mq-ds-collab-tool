@@ -32,7 +32,7 @@ export async function bundlePrototype(filePath: string): Promise<string> {
     bundle: true,
     // External: these are served via import map in the iframe (esm.sh CDN)
     // Marking them external ensures a single React instance (avoids hook errors)
-    external: ['react', 'react-dom', 'react/jsx-runtime', '@mui/*', '@emotion/*'],
+    external: ['react', 'react-dom', 'react/jsx-runtime', '@mui/*', '@emotion/*', '@mq/*'],
     format: 'esm',
     write: false,
     jsx: 'automatic',
