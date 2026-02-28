@@ -15,6 +15,9 @@ dist/
 .env.test.local
 .env.production.local
 
+# Test
+test-results/
+
 # Misc
 .DS_Store
 *.tsbuildinfo
