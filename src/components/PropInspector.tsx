@@ -74,7 +74,7 @@ export function PropInspector({ node }: PropInspectorProps) {
           fontFamily: 'monospace',
           fontSize: '14px',
           fontWeight: 600,
-          color: 'primary.main',
+          color: 'text.primary',
           mb: 0.5,
         }}
       >
