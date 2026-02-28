@@ -2,8 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import type { ComponentNode } from '@/lib/ast-inspector';
+
+const KEY_PROPS = new Set(['variant', 'size', 'color', 'disabled']);
 
 interface PropInspectorProps {
   node: ComponentNode | null;
@@ -38,7 +41,18 @@ export function PropInspector({ node }: PropInspectorProps) {
     );
   }
 
-  const fileName = node.sourceFile.split('/').pop() ?? node.sourceFile;
+  const keyProps = node.props.filter(
+    (p) =>
+      KEY_PROPS.has(p.name) &&
+      (p.rawType === 'string' || p.rawType === 'boolean'),
+  );
+  const otherProps = node.props.filter(
+    (p) =>
+      !(
+        KEY_PROPS.has(p.name) &&
+        (p.rawType === 'string' || p.rawType === 'boolean')
+      ),
+  );
 
   function togglePropExpansion(propName: string) {
     setExpandedProps((prev) => {
@@ -69,19 +83,42 @@ export function PropInspector({ node }: PropInspectorProps) {
         {'>'}
       </Typography>
 
-      {/* Source location */}
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ display: 'block', mb: 1 }}
-      >
-        {fileName}:{node.sourceLine}
-      </Typography>
+      {/* Key props table */}
+      {keyProps.length > 0 && (
+        <Box
+          component="table"
+          sx={{
+            borderCollapse: 'collapse',
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            mb: 0.5,
+          }}
+        >
+          <tbody>
+            {keyProps.map((p) => (
+              <Box component="tr" key={p.name}>
+                <Box
+                  component="td"
+                  sx={{ pr: 1, color: 'text.secondary', whiteSpace: 'nowrap' }}
+                >
+                  {p.name}:
+                </Box>
+                <Box component="td" sx={{ color: 'text.secondary' }}>
+                  {p.rawType === 'boolean' ? 'true' : p.value.replace(/^"|"$/g, '')}
+                </Box>
+              </Box>
+            ))}
+          </tbody>
+        </Box>
+      )}
 
-      {node.props.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
-          No props
-        </Typography>
+
+      {otherProps.length === 0 ? (
+        node.props.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            No props
+          </Typography>
+        ) : null
       ) : (
         <Box
           component="table"
@@ -93,7 +130,7 @@ export function PropInspector({ node }: PropInspectorProps) {
           }}
         >
           <tbody>
-            {node.props.map((prop) => {
+            {otherProps.map((prop) => {
               const isExpression = prop.rawType === 'expression';
               const isExpanded = isExpression && expandedProps.has(prop.name);
 
