@@ -53,6 +53,21 @@ export function createAppTheme(config?: ThemeConfig | null) {
         styleOverrides: {
           root: {
             borderRadius: 100,
+            textTransform: 'none',
+          },
+        },
+      },
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            textTransform: 'none',
+          },
+        },
+      },
+      MuiToggleButton: {
+        styleOverrides: {
+          root: {
+            textTransform: 'none',
           },
         },
       },

@@ -53,8 +53,14 @@ function findNodeById(tree: ComponentNode[], id: string): ComponentNode | null {
   return null;
 }
 
+type TabName = 'components' | 'copy' | 'theme';
+
+const ALL_TABS: TabName[] = ['components', 'copy', 'theme'];
+
 interface InspectorPanelProps {
   prototypeId: string;
+  /** Which tabs to show. Defaults to all three. */
+  tabs?: TabName[];
 }
 
 /**
@@ -68,8 +74,9 @@ interface InspectorPanelProps {
  * - Panel collapse/show is controlled by the toolbar ViewSidebar toggle
  * - Tree hover only highlights in tree (not iframe) for v1 simplicity
  *   (iframe hover highlights BOTH iframe overlay and tree via Zustand)
+ * - tabs prop: pass a subset to hide unwanted tabs (e.g. template page shows only 'components')
  */
-export function InspectorPanel({ prototypeId }: InspectorPanelProps) {
+export function InspectorPanel({ prototypeId, tabs = ALL_TABS }: InspectorPanelProps) {
   const {
     panelOpen,
     activeTab,
@@ -85,13 +92,11 @@ export function InspectorPanel({ prototypeId }: InspectorPanelProps) {
     return null;
   }
 
-  // Map string tab names to numeric indices for MUI Tabs
-  const tabMap = { components: 0, copy: 1, theme: 2 } as const;
-  const tabNames = ['components', 'copy', 'theme'] as const;
-  const tabIndex = tabMap[activeTab];
+  // Index within the visible tabs list; fall back to 0 if active tab is not shown
+  const visibleTabIndex = tabs.includes(activeTab) ? tabs.indexOf(activeTab) : 0;
 
   function handleTabChange(_event: React.SyntheticEvent, newValue: number) {
-    setActiveTab(tabNames[newValue]);
+    setActiveTab(tabs[newValue]);
   }
 
   const selectedNode = selectedComponentId
@@ -111,67 +116,81 @@ export function InspectorPanel({ prototypeId }: InspectorPanelProps) {
         overflow: 'hidden',
       }}
     >
-      {/* Tab header */}
-      <Tabs
-        value={tabIndex}
-        onChange={handleTabChange}
-        variant="fullWidth"
-        textColor="secondary"
-        indicatorColor="secondary"
-        sx={{
-          borderBottom: 1,
-          borderColor: 'divider',
-          minHeight: 36,
-          flexShrink: 0,
-        }}
-      >
-        <Tab label="Components" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
-        <Tab label="Copy" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
-        <Tab label="Theme" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
-      </Tabs>
-
-      {/* Components tab — tree + prop inspector */}
-      <TabPanel value={tabIndex} index={0}>
-        <Box
+      {/* Tab header — hidden when only one tab is visible */}
+      {tabs.length > 1 && (
+        <Tabs
+          value={visibleTabIndex}
+          onChange={handleTabChange}
+          variant="fullWidth"
+          textColor="secondary"
+          indicatorColor="secondary"
           sx={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
+            borderBottom: 1,
+            borderColor: 'divider',
+            minHeight: 36,
+            flexShrink: 0,
           }}
         >
-          {/* Component tree — fills available space */}
-          <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-            <ComponentTree
-              tree={componentTree}
-              selectedId={selectedComponentId}
-              hoveredId={hoveredComponentId}
-              onSelect={setSelectedComponent}
-              onHover={setHoveredComponent}
-            />
-          </Box>
-
-          {/* Prop inspector — shown only when a component is selected */}
-          {selectedComponentId && (
-            <>
-              <Divider />
-              <Box sx={{ maxHeight: '40%', overflow: 'auto', flexShrink: 0 }}>
-                <PropInspector node={selectedNode} />
-              </Box>
-            </>
+          {tabs.includes('components') && (
+            <Tab label="Components" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
           )}
-        </Box>
-      </TabPanel>
+          {tabs.includes('copy') && (
+            <Tab label="Copy" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
+          )}
+          {tabs.includes('theme') && (
+            <Tab label="Theme" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
+          )}
+        </Tabs>
+      )}
+
+      {/* Components tab — tree + prop inspector */}
+      {tabs.includes('components') && (
+        <TabPanel value={visibleTabIndex} index={tabs.indexOf('components')}>
+          <Box
+            sx={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Component tree — fills available space */}
+            <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+              <ComponentTree
+                tree={componentTree}
+                selectedId={selectedComponentId}
+                hoveredId={hoveredComponentId}
+                onSelect={setSelectedComponent}
+                onHover={setHoveredComponent}
+              />
+            </Box>
+
+            {/* Prop inspector — shown only when a component is selected */}
+            {selectedComponentId && (
+              <>
+                <Divider />
+                <Box sx={{ maxHeight: '40%', overflow: 'auto', flexShrink: 0 }}>
+                  <PropInspector node={selectedNode} />
+                </Box>
+              </>
+            )}
+          </Box>
+        </TabPanel>
+      )}
 
       {/* Copy tab — Phase 3 copy editing */}
-      <TabPanel value={tabIndex} index={1}>
-        <CopyTab prototypeId={prototypeId} />
-      </TabPanel>
+      {tabs.includes('copy') && (
+        <TabPanel value={visibleTabIndex} index={tabs.indexOf('copy')}>
+          <CopyTab prototypeId={prototypeId} />
+        </TabPanel>
+      )}
 
       {/* Theme tab — Phase 4 theme customization */}
-      <TabPanel value={tabIndex} index={2}>
-        <ThemeTab />
-      </TabPanel>
+      {tabs.includes('theme') && (
+        <TabPanel value={visibleTabIndex} index={tabs.indexOf('theme')}>
+          <ThemeTab />
+        </TabPanel>
+      )}
     </Box>
   );
 }

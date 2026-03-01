@@ -1,16 +1,4 @@
 {
-  "empty": {
-    "name": "Empty",
-    "builtIn": true
-  },
-  "form": {
-    "name": "Form",
-    "builtIn": true
-  },
-  "card-list": {
-    "name": "Card list",
-    "builtIn": true
-  },
   "template-1": {
     "name": "Template 1",
     "builtIn": false
