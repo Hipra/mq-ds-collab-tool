@@ -1,0 +1,13 @@
+#!/bin/sh
+# Pre-push hook: run E2E tests before pushing.
+# Install: npm run setup:hooks
+
+echo "Running E2E tests before push..."
+npm run test:e2e
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "E2E tests failed. Push aborted."
+  echo "Fix the failing tests or use 'git push --no-verify' to skip."
+  exit 1
+fi
