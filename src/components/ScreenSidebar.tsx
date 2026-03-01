@@ -20,6 +20,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import AddIcon from '@mui/icons-material/Add';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 import {
   DndContext,
   closestCenter,
@@ -47,6 +48,12 @@ interface Screen {
   file: string;
 }
 
+interface Template {
+  id: string;
+  name: string;
+  builtIn: boolean;
+}
+
 interface SortableScreenItemProps {
   screen: Screen;
   isActive: boolean;
@@ -58,6 +65,7 @@ interface SortableScreenItemProps {
   onEditCommit: () => void;
   onEditCancel: () => void;
   onDuplicate: (id: string) => void;
+  onSaveAsTemplate: (id: string, name: string) => void;
 }
 
 function SortableScreenItem({
@@ -71,6 +79,7 @@ function SortableScreenItem({
   onEditCommit,
   onEditCancel,
   onDuplicate,
+  onSaveAsTemplate,
 }: SortableScreenItemProps) {
   const {
     attributes,
@@ -147,17 +156,30 @@ function SortableScreenItem({
         )}
 
         {!isEditing && (
-          <Tooltip title="Duplicate">
-            <IconButton
-              className="screen-dup-btn"
-              size="small"
-              aria-label="Duplicate"
-              onClick={(e) => { e.stopPropagation(); onDuplicate(screen.id); }}
-              sx={{ flexShrink: 0, p: 0.25 }}
-            >
-              <ContentCopyIcon sx={{ fontSize: 14 }} />
-            </IconButton>
-          </Tooltip>
+          <>
+            <Tooltip title="Duplicate">
+              <IconButton
+                className="screen-dup-btn"
+                size="small"
+                aria-label="Duplicate"
+                onClick={(e) => { e.stopPropagation(); onDuplicate(screen.id); }}
+                sx={{ flexShrink: 0, p: 0.25 }}
+              >
+                <ContentCopyIcon sx={{ fontSize: 14 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Save as template">
+              <IconButton
+                className="screen-dup-btn"
+                size="small"
+                aria-label="Save as template"
+                onClick={(e) => { e.stopPropagation(); onSaveAsTemplate(screen.id, screen.name); }}
+                sx={{ flexShrink: 0, p: 0.25 }}
+              >
+                <BookmarkAddIcon sx={{ fontSize: 14 }} />
+              </IconButton>
+            </Tooltip>
+          </>
         )}
       </ListItemButton>
     </div>
@@ -188,6 +210,13 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
   const [newName, setNewName] = useState('');
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('empty');
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [saveTemplateName, setSaveTemplateName] = useState('');
+  const [saveTemplateScreenId, setSaveTemplateScreenId] = useState('');
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [saveTemplateError, setSaveTemplateError] = useState('');
 
   const { sidebarOpen, setSidebarOpen, activeScreenId, setActiveScreen, setScreens } = useInspectorStore();
 
@@ -213,6 +242,14 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
     };
     fetchScreens();
   }, [prototypeId, setScreens]);
+
+  // Fetch templates on mount
+  useEffect(() => {
+    fetch('/api/templates')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: Template[]) => setTemplates(data))
+      .catch(() => {});
+  }, []);
 
   // Persist order to metadata via PATCH
   const persistOrder = useCallback(
@@ -312,6 +349,50 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
     [prototypeId, setScreens, setActiveScreen]
   );
 
+  const handleSaveAsTemplate = useCallback(async (screenId: string, screenName: string) => {
+    setSaveTemplateScreenId(screenId);
+    setSaveTemplateName(screenName);
+    setSaveTemplateError('');
+    setSaveTemplateOpen(true);
+  }, []);
+
+  const handleSaveTemplateConfirm = async () => {
+    const trimmed = saveTemplateName.trim();
+    if (!trimmed) return;
+    setSavingTemplate(true);
+    setSaveTemplateError('');
+    try {
+      // Fetch the screen's current JSX from the duplicate API's source file
+      const screenFile = saveTemplateScreenId === 'index'
+        ? 'index.jsx'
+        : `screen-${saveTemplateScreenId}.jsx`;
+      const codeRes = await fetch(`/api/preview/${prototypeId}/code?file=${encodeURIComponent(screenFile)}`);
+      if (!codeRes.ok) {
+        setSaveTemplateError('Failed to read screen code');
+        return;
+      }
+      const { code } = await codeRes.json() as { code: string };
+
+      const res = await fetch('/api/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmed, code }),
+      });
+      if (!res.ok) {
+        const data = await res.json() as { error?: string };
+        setSaveTemplateError(data.error ?? 'Failed to save template');
+        return;
+      }
+      const newTemplate = await res.json() as Template;
+      setTemplates((prev) => [...prev, newTemplate]);
+      setSaveTemplateOpen(false);
+    } catch {
+      setSaveTemplateError('Network error');
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
   const handleCreateScreen = async () => {
     const trimmed = newName.trim();
     if (!trimmed) return;
@@ -321,7 +402,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
       const res = await fetch(`/api/preview/${prototypeId}/screens`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: trimmed }),
+        body: JSON.stringify({ name: trimmed, templateId: selectedTemplateId }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -405,6 +486,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
                   onEditCommit={handleEditCommit}
                   onEditCancel={handleEditCancel}
                   onDuplicate={handleDuplicateScreen}
+                  onSaveAsTemplate={handleSaveAsTemplate}
                 />
               ))}
             </List>
@@ -421,7 +503,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
           size="small"
           startIcon={<AddIcon />}
           fullWidth
-          onClick={() => { setCreateError(''); setNewName(''); setCreateOpen(true); }}
+          onClick={() => { setCreateError(''); setNewName(''); setSelectedTemplateId('empty'); setCreateOpen(true); }}
           sx={{ textTransform: 'none', fontSize: 12 }}
         >
           Add screen
@@ -446,8 +528,38 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleCreateScreen(); }}
-            sx={{ mt: 1 }}
+            sx={{ mt: 1, mb: 2 }}
           />
+          {templates.length > 0 && (
+            <>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
+                Template
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                {templates.map((t) => (
+                  <Box
+                    key={t.id}
+                    onClick={() => setSelectedTemplateId(t.id)}
+                    sx={{
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      border: 1,
+                      borderColor: selectedTemplateId === t.id ? 'secondary.main' : 'divider',
+                      bgcolor: selectedTemplateId === t.id ? 'secondary.main' : 'transparent',
+                      color: selectedTemplateId === t.id ? 'secondary.contrastText' : 'text.primary',
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      '&:hover': { borderColor: 'secondary.main' },
+                    }}
+                  >
+                    {t.name}
+                  </Box>
+                ))}
+              </Box>
+            </>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
@@ -457,6 +569,39 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
             disabled={!newName.trim() || creating}
           >
             {creating ? 'Creating...' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Save as template dialog */}
+      <Dialog
+        open={saveTemplateOpen}
+        onClose={() => setSaveTemplateOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Save as template</DialogTitle>
+        <DialogContent>
+          {saveTemplateError && <Alert severity="error" sx={{ mb: 2 }}>{saveTemplateError}</Alert>}
+          <TextField
+            autoFocus
+            fullWidth
+            size="small"
+            label="Template name"
+            value={saveTemplateName}
+            onChange={(e) => setSaveTemplateName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSaveTemplateConfirm(); }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSaveTemplateOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleSaveTemplateConfirm}
+            disabled={!saveTemplateName.trim() || savingTemplate}
+          >
+            {savingTemplate ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>

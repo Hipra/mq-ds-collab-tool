@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'node:fs/promises';
 
+const TEMPLATES_DIR = path.join(process.cwd(), 'templates');
+
 export const dynamic = 'force-dynamic';
 
 interface ScreenEntry {
@@ -125,9 +127,9 @@ export async function POST(
   const protoDir = process.env.PROTOTYPES_DIR ?? path.join(process.cwd(), 'prototypes');
   const dir = path.join(protoDir, id);
 
-  let body: { name?: string };
+  let body: { name?: string; templateId?: string };
   try {
-    body = (await req.json()) as { name?: string };
+    body = (await req.json()) as { name?: string; templateId?: string };
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
@@ -159,10 +161,18 @@ export async function POST(
     // File doesn't exist — good
   }
 
-  // Write template
-  const template = `import { Box } from '@mui/material';\n\nexport default function Screen() {\n  return <Box sx={{ p: 3 }} />;\n}\n`;
+  // Resolve content: from template file or default empty
+  let content = `import { Box } from '@mui/material';\n\nexport default function Screen() {\n  return <Box sx={{ p: 3 }} />;\n}\n`;
+  if (body.templateId) {
+    try {
+      content = await fs.readFile(path.join(TEMPLATES_DIR, `${body.templateId}.jsx`), 'utf-8');
+    } catch {
+      // Template not found — fall back to empty
+    }
+  }
+
   try {
-    await fs.writeFile(filePath, template, 'utf-8');
+    await fs.writeFile(filePath, content, 'utf-8');
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message }, { status: 500 });
