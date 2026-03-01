@@ -9,19 +9,11 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
+import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import InputAdornment from '@mui/material/InputAdornment';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -32,7 +24,6 @@ import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
-import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -56,6 +47,7 @@ interface Template {
   id: string;
   name: string;
   builtIn: boolean;
+  createdAt?: string;
 }
 
 type StatusFilter = 'all' | 'draft' | 'review' | 'approved';
@@ -96,7 +88,6 @@ export default function GalleryPage() {
   // Prototypes state
   const [prototypes, setPrototypes] = useState<Prototype[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -141,21 +132,12 @@ export default function GalleryPage() {
     }
   }, [activeTab, templatesFetched]);
 
-  const filtered = useMemo(() => prototypes.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }), [prototypes, searchQuery, statusFilter]);
-
-  const filteredTemplates = useMemo(() =>
-    templates.filter((t) => t.name.toLowerCase().includes(searchQuery.toLowerCase())),
-    [templates, searchQuery]
+  const filtered = useMemo(() =>
+    prototypes.filter((p) => statusFilter === 'all' || p.status === statusFilter),
+    [prototypes, statusFilter]
   );
 
-  const handleTabChange = (_e: React.SyntheticEvent, val: ActiveTab) => {
-    setActiveTab(val);
-    setSearchQuery('');
-  };
+  const handleTabChange = (_e: React.SyntheticEvent, val: ActiveTab) => setActiveTab(val);
 
   const handleCreate = async () => {
     const trimmed = newName.trim();
@@ -239,31 +221,21 @@ export default function GalleryPage() {
 
   const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.system;
 
-  const headCellSx = {
-    py: 1,
-    color: 'text.secondary',
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    letterSpacing: '0.05em',
-    textTransform: 'uppercase' as const,
-    borderBottom: '1px solid',
-    borderColor: 'divider',
-  };
-
-  const rowSx = {
+  const cardSx = {
+    borderRadius: 2,
+    p: 2,
     cursor: 'pointer',
-    '&:hover': { bgcolor: 'action.hover' },
-    '& td': { borderBottom: '1px solid', borderColor: 'divider' },
-    '& .row-actions': { opacity: 0, transition: 'opacity 0.1s' },
-    '&:hover .row-actions': { opacity: 1 },
-  };
-
-  const staticRowSx = {
-    '& td': { borderBottom: '1px solid', borderColor: 'divider' },
-    '& .row-actions': { opacity: 0, transition: 'opacity 0.1s' },
-    '&:hover': { bgcolor: 'action.hover' },
-    '&:hover .row-actions': { opacity: 1 },
-  };
+    border: '1px solid rgba(0,0,0,0.07)',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+    transition: 'box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)' },
+    '& .card-actions': { opacity: 0, transition: 'opacity 150ms ease' },
+    '&:hover .card-actions': { opacity: 1 },
+    '[data-mui-color-scheme="dark"] &': {
+      backgroundColor: '#222222',
+      borderColor: 'rgba(255,255,255,0.08)',
+    },
+  } as const;
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -273,7 +245,7 @@ export default function GalleryPage() {
           <Typography
             variant="body2"
             component="div"
-            sx={{ fontWeight: 700, letterSpacing: '0.04em', color: 'text.primary', userSelect: 'none' }}
+            sx={{ fontWeight: 700, letterSpacing: '0.04em', color: 'inherit', userSelect: 'none' }}
           >
             mq collab
           </Typography>
@@ -303,34 +275,22 @@ export default function GalleryPage() {
           {/* ── Prototypes tab ── */}
           {activeTab === 'prototypes' && (
             <>
-              <Box sx={{ display: 'flex', gap: 2, mb: 3, alignItems: 'center', flexWrap: 'wrap' }}>
-                <TextField
-                  size="small"
-                  placeholder="Search prototypes…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon fontSize="small" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                  sx={{ minWidth: 240 }}
-                />
-                <ToggleButtonGroup
-                  value={statusFilter}
-                  exclusive
-                  onChange={(_e, val) => { if (val !== null) setStatusFilter(val); }}
-                  size="small"
-                >
-                  <ToggleButton value="all">All</ToggleButton>
-                  <ToggleButton value="draft">Draft</ToggleButton>
-                  <ToggleButton value="review">Review</ToggleButton>
-                  <ToggleButton value="approved">Approved</ToggleButton>
-                </ToggleButtonGroup>
+              <Box sx={{ display: 'flex', gap: 1, mb: 3, alignItems: 'center', flexWrap: 'wrap' }}>
+                {(['all', 'draft', 'review', 'approved'] as StatusFilter[]).map((value) => {
+                  const label = value === 'all' ? 'All' : STATUS_CONFIG[value].label;
+                  const selected = statusFilter === value;
+                  return (
+                    <Chip
+                      key={value}
+                      label={label}
+                      size="medium"
+                      onClick={() => setStatusFilter(value)}
+                      color={selected ? 'primary' : 'default'}
+                      variant={selected ? 'filled' : 'outlined'}
+                      sx={{ fontSize: '0.9rem', height: 36, px: 0.5 }}
+                    />
+                  );
+                })}
                 <Box sx={{ flex: 1 }} />
                 <Button
                   variant="contained"
@@ -361,75 +321,60 @@ export default function GalleryPage() {
               )}
 
               {!loading && filtered.length > 0 && (
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={headCellSx}>Name</TableCell>
-                        <TableCell sx={{ ...headCellSx, width: 100 }}>Status</TableCell>
-                        <TableCell sx={{ ...headCellSx, width: 120 }}>Created</TableCell>
-                        <TableCell sx={{ ...headCellSx, width: 80 }} />
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {filtered.map((proto) => {
-                        const config = STATUS_CONFIG[proto.status] ?? STATUS_CONFIG.draft;
-                        return (
-                          <TableRow
-                            key={proto.id}
-                            sx={rowSx}
-                            onClick={() => router.push(`/prototype/${proto.id}`)}
-                          >
-                            <TableCell sx={{ py: 1.25 }}>
-                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                {proto.name}
-                              </Typography>
-                            </TableCell>
-                            <TableCell sx={{ py: 1.25 }}>
-                              <Chip label={config.label} color={config.color} size="small" />
-                            </TableCell>
-                            <TableCell sx={{ py: 1.25 }}>
-                              <Typography variant="caption" color="text.secondary">
-                                {proto.createdAt ? new Date(proto.createdAt).toLocaleDateString() : '—'}
-                              </Typography>
-                            </TableCell>
-                            <TableCell sx={{ py: 1.25 }} align="right">
-                              <Box className="row-actions" sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-                                <Tooltip title="Clone">
-                                  <IconButton
-                                    size="small"
-                                    aria-label="Clone"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setCloneError('');
-                                      setCloneName(`Copy of ${proto.name}`);
-                                      setCloneTarget(proto);
-                                    }}
-                                  >
-                                    <ContentCopyIcon sx={{ fontSize: 16 }} />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Delete">
-                                  <IconButton
-                                    size="small"
-                                    aria-label="Delete"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setDeleteError('');
-                                      setDeleteTarget(proto);
-                                    }}
-                                  >
-                                    <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-                                  </IconButton>
-                                </Tooltip>
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 2 }}>
+                  {filtered.map((proto) => {
+                    const config = STATUS_CONFIG[proto.status] ?? STATUS_CONFIG.draft;
+                    return (
+                      <Card
+                        key={proto.id}
+                        elevation={0}
+                        onClick={() => router.push(`/prototype/${proto.id}`)}
+                        sx={cardSx}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.4, flex: 1, wordBreak: 'break-word' }}>
+                            {proto.name}
+                          </Typography>
+                          <Box className="card-actions" sx={{ display: 'flex', gap: 0.25, flexShrink: 0 }}>
+                            <Tooltip title="Clone">
+                              <IconButton
+                                size="small"
+                                aria-label="Clone"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCloneError('');
+                                  setCloneName(`Copy of ${proto.name}`);
+                                  setCloneTarget(proto);
+                                }}
+                              >
+                                <ContentCopyIcon sx={{ fontSize: 16 }} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete">
+                              <IconButton
+                                size="small"
+                                aria-label="Delete"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeleteError('');
+                                  setDeleteTarget(proto);
+                                }}
+                              >
+                                <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>
+                          <Chip label={config.label} color={config.color} size="small" />
+                          <Typography variant="caption" color="text.disabled">
+                            {proto.createdAt ? new Date(proto.createdAt).toLocaleDateString() : '—'}
+                          </Typography>
+                        </Box>
+                      </Card>
+                    );
+                  })}
+                </Box>
               )}
             </>
           )}
@@ -437,103 +382,77 @@ export default function GalleryPage() {
           {/* ── Templates tab ── */}
           {activeTab === 'templates' && (
             <>
-              <Box sx={{ display: 'flex', gap: 2, mb: 3, alignItems: 'center' }}>
-                <TextField
-                  size="small"
-                  placeholder="Search templates…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon fontSize="small" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                  sx={{ minWidth: 240 }}
-                />
-              </Box>
-
               {templatesLoading && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
                   <CircularProgress />
                 </Box>
               )}
 
-              {!templatesLoading && filteredTemplates.length === 0 && (
+              {!templatesLoading && templates.length === 0 && (
                 <EmptyState
                   icon={<StyleIcon sx={{ fontSize: 'inherit' }} />}
-                  title={templates.length === 0 ? 'No templates yet' : 'No results'}
-                  description={
-                    templates.length === 0
-                      ? 'Save a screen as a template from within a prototype.'
-                      : 'Try adjusting your search.'
-                  }
+                  title="No templates yet"
+                  description="Save a screen as a template from within a prototype."
                 />
               )}
 
-              {!templatesLoading && filteredTemplates.length > 0 && (
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={headCellSx}>Name</TableCell>
-                        <TableCell sx={{ ...headCellSx, width: 160 }} />
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {filteredTemplates.map((tmpl) => (
-                        <TableRow
-                          key={tmpl.id}
-                          sx={rowSx}
-                          onClick={() => router.push(`/template/${tmpl.id}`)}
-                        >
-                          <TableCell sx={{ py: 1.25 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              {tmpl.name}
-                            </Typography>
-                          </TableCell>
-                          <TableCell sx={{ py: 1.25 }} align="right">
-                            <Box className="row-actions" sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1 }}>
-                              <Tooltip title="Add to prototype">
-                                <IconButton
-                                  size="small"
-                                  aria-label="Add to prototype"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setAddToError('');
-                                    setAddToProtoId('');
-                                    setAddToTemplate(tmpl);
-                                  }}
-                                >
-                                  <PlaylistAddIcon sx={{ fontSize: 16 }} />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title={tmpl.builtIn ? 'Built-in templates cannot be deleted' : 'Delete'}>
-                                <span>
-                                  <IconButton
-                                    size="small"
-                                    aria-label="Delete template"
-                                    disabled={tmpl.builtIn}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setDeleteTemplateError('');
-                                      setDeleteTemplateTarget(tmpl);
-                                    }}
-                                  >
-                                    <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-                                  </IconButton>
-                                </span>
-                              </Tooltip>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+              {!templatesLoading && templates.length > 0 && (
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 2 }}>
+                  {templates.map((tmpl) => (
+                    <Card
+                      key={tmpl.id}
+                      elevation={0}
+                      onClick={() => router.push(`/template/${tmpl.id}`)}
+                      sx={cardSx}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.4, flex: 1, wordBreak: 'break-word' }}>
+                          {tmpl.name}
+                        </Typography>
+                        <Box className="card-actions" sx={{ display: 'flex', gap: 0.25, flexShrink: 0 }}>
+                          <Tooltip title="Add to prototype">
+                            <IconButton
+                              size="small"
+                              aria-label="Add to prototype"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAddToError('');
+                                setAddToProtoId('');
+                                setAddToTemplate(tmpl);
+                              }}
+                            >
+                              <PlaylistAddIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={tmpl.builtIn ? 'Built-in templates cannot be deleted' : 'Delete'}>
+                            <span>
+                              <IconButton
+                                size="small"
+                                aria-label="Delete template"
+                                disabled={tmpl.builtIn}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeleteTemplateError('');
+                                  setDeleteTemplateTarget(tmpl);
+                                }}
+                              >
+                                <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>
+                        {tmpl.builtIn
+                          ? <Chip label="Built-in" size="small" variant="outlined" />
+                          : <Box />}
+                        <Typography variant="caption" color="text.disabled">
+                          {tmpl.createdAt ? new Date(tmpl.createdAt).toLocaleDateString() : '—'}
+                        </Typography>
+                      </Box>
+                    </Card>
+                  ))}
+                </Box>
               )}
             </>
           )}

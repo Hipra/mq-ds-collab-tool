@@ -29,8 +29,20 @@ export function createAppTheme(config?: ThemeConfig | null) {
       MuiAppBar: {
         styleOverrides: {
           colorDefault: ({ theme: t }) => ({
-            backgroundColor: t.vars.palette.action.hover,
-            borderBottom: `1px solid ${t.vars.palette.divider}`,
+            [t.getColorSchemeSelector('light')]: {
+              backgroundColor: '#302D42',
+              color: '#fff',
+              '& .MuiTab-root': {
+                color: 'rgba(255,255,255,0.6)',
+                '&.Mui-selected': { color: '#fff' },
+              },
+              '& .MuiTabs-indicator': { backgroundColor: '#fff' },
+              '& .MuiIconButton-root': { color: 'rgba(255,255,255,0.75)' },
+            },
+            [t.getColorSchemeSelector('dark')]: {
+              backgroundColor: t.vars.palette.action.hover,
+              borderBottom: `1px solid ${t.vars.palette.divider}`,
+            },
           }),
         },
       },
@@ -54,6 +66,28 @@ export function createAppTheme(config?: ThemeConfig | null) {
           root: {
             borderRadius: 100,
             textTransform: 'none',
+            boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 4px 0px',
+            '&:hover': {
+              boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 4px 0px',
+            },
+            '&:active': {
+              boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 4px 0px',
+            },
+          },
+          sizeSmall: {
+            padding: '8px 12px',
+            fontSize: '12px',
+            fontWeight: 600,
+          },
+          sizeMedium: {
+            padding: '10px 24px',
+            fontSize: '14px',
+            fontWeight: 600,
+          },
+          sizeLarge: {
+            padding: '12px 32px',
+            fontSize: '16px',
+            fontWeight: 600,
           },
         },
       },

@@ -9,6 +9,7 @@ const TEMPLATES_DIR = path.join(process.cwd(), 'templates');
 interface TemplateMeta {
   name: string;
   builtIn: boolean;
+  createdAt?: string;
 }
 
 async function readMetadata(): Promise<Record<string, TemplateMeta>> {
@@ -42,7 +43,20 @@ function slugify(name: string): string {
  */
 export async function GET() {
   const meta = await readMetadata();
-  const templates = Object.entries(meta).map(([id, m]) => ({ id, ...m }));
+  const templates = await Promise.all(
+    Object.entries(meta).map(async ([id, m]) => {
+      let createdAt = m.createdAt;
+      if (!createdAt) {
+        try {
+          const stat = await fs.stat(path.join(TEMPLATES_DIR, `${id}.jsx`));
+          createdAt = stat.birthtime.toISOString();
+        } catch {
+          createdAt = undefined;
+        }
+      }
+      return { id, ...m, createdAt };
+    })
+  );
   templates.sort((a, b) => {
     if (a.builtIn !== b.builtIn) return a.builtIn ? -1 : 1;
     return a.name.localeCompare(b.name);
@@ -87,8 +101,9 @@ export async function POST(req: NextRequest) {
 
   await fs.writeFile(path.join(TEMPLATES_DIR, `${slug}.jsx`), code, 'utf-8');
 
-  meta[slug] = { name, builtIn: false };
+  const createdAt = new Date().toISOString();
+  meta[slug] = { name, builtIn: false, createdAt };
   await writeMetadata(meta);
 
-  return NextResponse.json({ id: slug, name, builtIn: false }, { status: 201 });
+  return NextResponse.json({ id: slug, name, builtIn: false, createdAt }, { status: 201 });
 }
