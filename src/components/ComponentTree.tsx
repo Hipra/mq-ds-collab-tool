@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import type { ComponentNode } from '@/lib/ast-inspector';
 
-const NEEDS_ARIA_LABEL = new Set(['IconButton', 'Fab', 'SpeedDial']);
+const NEEDS_ARIA_LABEL = new Set(['IconButton', 'Fab', 'SpeedDial', 'Slider', 'ToggleButton']);
 
 function hasA11yWarning(node: ComponentNode): boolean {
   if (!NEEDS_ARIA_LABEL.has(node.componentName)) return false;

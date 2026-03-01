@@ -14,7 +14,7 @@ import { MEMOQ_COLOR_GROUPS } from '@/lib/memoq-tokens';
 const KEY_PROPS = new Set(['variant', 'size', 'color', 'disabled']);
 
 /** Components that must always have aria-label or aria-labelledby. */
-const NEEDS_ARIA_LABEL = new Set(['IconButton', 'Fab', 'SpeedDial']);
+const NEEDS_ARIA_LABEL = new Set(['IconButton', 'Fab', 'SpeedDial', 'Slider', 'ToggleButton']);
 
 function isAriaProp(p: PropEntry) {
   return p.name.startsWith('aria-') || p.name === 'role';
