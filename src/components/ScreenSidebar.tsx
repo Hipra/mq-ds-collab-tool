@@ -6,6 +6,7 @@ import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -18,6 +19,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import AddIcon from '@mui/icons-material/Add';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   DndContext,
   closestCenter,
@@ -55,6 +57,7 @@ interface SortableScreenItemProps {
   onEditChange: (value: string) => void;
   onEditCommit: () => void;
   onEditCancel: () => void;
+  onDuplicate: (id: string) => void;
 }
 
 function SortableScreenItem({
@@ -67,6 +70,7 @@ function SortableScreenItem({
   onEditChange,
   onEditCommit,
   onEditCancel,
+  onDuplicate,
 }: SortableScreenItemProps) {
   const {
     attributes,
@@ -90,8 +94,10 @@ function SortableScreenItem({
         onClick={() => onSelect(screen.id)}
         onDoubleClick={() => onDoubleClick(screen.id, screen.name)}
         sx={{
-          pr: 1,
+          pr: 0.5,
           pl: 0.5,
+          '& .screen-dup-btn': { opacity: 0 },
+          '&:hover .screen-dup-btn': { opacity: 1 },
         }}
       >
         {/* Drag handle */}
@@ -138,6 +144,20 @@ function SortableScreenItem({
             primary={screen.name}
             primaryTypographyProps={{ fontSize: 13, noWrap: true }}
           />
+        )}
+
+        {!isEditing && (
+          <Tooltip title="Duplicate">
+            <IconButton
+              className="screen-dup-btn"
+              size="small"
+              aria-label="Duplicate"
+              onClick={(e) => { e.stopPropagation(); onDuplicate(screen.id); }}
+              sx={{ flexShrink: 0, p: 0.25 }}
+            >
+              <ContentCopyIcon sx={{ fontSize: 14 }} />
+            </IconButton>
+          </Tooltip>
         )}
       </ListItemButton>
     </div>
@@ -266,6 +286,32 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
     setEditValue('');
   }, []);
 
+  const handleDuplicateScreen = useCallback(
+    async (screenId: string) => {
+      try {
+        const res = await fetch(`/api/preview/${prototypeId}/screens/duplicate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ screenId }),
+        });
+        if (!res.ok) return;
+        const newScreen = (await res.json()) as Screen;
+        // Insert after source screen in local state
+        setLocalScreens((prev) => {
+          const idx = prev.findIndex((s) => s.id === screenId);
+          const updated = [...prev];
+          updated.splice(idx + 1, 0, newScreen);
+          setScreens(updated);
+          return updated;
+        });
+        setActiveScreen(newScreen.id);
+      } catch {
+        // fail silently
+      }
+    },
+    [prototypeId, setScreens, setActiveScreen]
+  );
+
   const handleCreateScreen = async () => {
     const trimmed = newName.trim();
     if (!trimmed) return;
@@ -358,6 +404,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
                   onEditChange={setEditValue}
                   onEditCommit={handleEditCommit}
                   onEditCancel={handleEditCancel}
+                  onDuplicate={handleDuplicateScreen}
                 />
               ))}
             </List>

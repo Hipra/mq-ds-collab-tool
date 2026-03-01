@@ -26,6 +26,7 @@ import Alert from '@mui/material/Alert';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
@@ -67,6 +68,10 @@ export default function GalleryPage() {
   const [deleteTarget, setDeleteTarget] = useState<Prototype | null>(null);
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [cloneTarget, setCloneTarget] = useState<Prototype | null>(null);
+  const [cloneName, setCloneName] = useState('');
+  const [cloneError, setCloneError] = useState('');
+  const [cloning, setCloning] = useState(false);
 
   useEffect(() => {
     fetch('/api/prototypes')
@@ -129,6 +134,31 @@ export default function GalleryPage() {
       setDeleteError('Network error');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleClone = async () => {
+    if (!cloneTarget) return;
+    setCloning(true);
+    setCloneError('');
+    try {
+      const res = await fetch(`/api/prototypes/${cloneTarget.id}/clone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: cloneName.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setCloneError(data.error ?? 'Failed to clone prototype');
+        return;
+      }
+      const data = await res.json();
+      setCloneTarget(null);
+      router.push(`/prototype/${data.id}`);
+    } catch {
+      setCloneError('Network error');
+    } finally {
+      setCloning(false);
     }
   };
 
@@ -226,7 +256,7 @@ export default function GalleryPage() {
                 <Card key={proto.id} variant="outlined" sx={{ position: 'relative' }}>
                   <CardActionArea onClick={() => router.push(`/prototype/${proto.id}`)}>
                     <CardContent>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 1, pr: 4 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 1, pr: 9 }}>
                         {proto.name}
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -239,18 +269,35 @@ export default function GalleryPage() {
                       </Box>
                     </CardContent>
                   </CardActionArea>
-                  <IconButton
-                    size="small"
-                    aria-label={`Delete ${proto.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteError('');
-                      setDeleteTarget(proto);
-                    }}
-                    sx={{ position: 'absolute', top: 8, right: 8 }}
-                  >
-                    <DeleteOutlineIcon fontSize="small" />
-                  </IconButton>
+                  <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
+                    <Tooltip title="Clone">
+                      <IconButton
+                        size="small"
+                        aria-label="Clone"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCloneError('');
+                          setCloneName(`Copy of ${proto.name}`);
+                          setCloneTarget(proto);
+                        }}
+                      >
+                        <ContentCopyIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton
+                        size="small"
+                        aria-label="Delete"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteError('');
+                          setDeleteTarget(proto);
+                        }}
+                      >
+                        <DeleteOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </Card>
               );
             })}
@@ -285,6 +332,37 @@ export default function GalleryPage() {
             disabled={!newName.trim() || creating}
           >
             {creating ? 'Creating...' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={cloneTarget !== null}
+        onClose={() => setCloneTarget(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Clone prototype</DialogTitle>
+        <DialogContent>
+          {cloneError && <Alert severity="error" sx={{ mb: 2 }}>{cloneError}</Alert>}
+          <TextField
+            autoFocus
+            fullWidth
+            label="New name"
+            value={cloneName}
+            onChange={(e) => setCloneName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleClone(); }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCloneTarget(null)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleClone}
+            disabled={!cloneName.trim() || cloning}
+          >
+            {cloning ? 'Cloning...' : 'Clone'}
           </Button>
         </DialogActions>
       </Dialog>
