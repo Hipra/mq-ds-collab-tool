@@ -3,13 +3,27 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useTheme } from '@mui/material/styles';
 import type { Palette } from '@mui/material/styles';
-import type { ComponentNode } from '@/lib/ast-inspector';
+import type { ComponentNode, PropEntry } from '@/lib/ast-inspector';
 import { MEMOQ_COLOR_GROUPS } from '@/lib/memoq-tokens';
 
 const KEY_PROPS = new Set(['variant', 'size', 'color', 'disabled']);
+
+/** Components that must always have aria-label or aria-labelledby. */
+const NEEDS_ARIA_LABEL = new Set(['IconButton', 'Fab', 'SpeedDial']);
+
+function isAriaProp(p: PropEntry) {
+  return p.name.startsWith('aria-') || p.name === 'role';
+}
+
+function hasA11yWarning(node: ComponentNode): boolean {
+  if (!NEEDS_ARIA_LABEL.has(node.componentName)) return false;
+  return !node.props.some((p) => p.name === 'aria-label' || p.name === 'aria-labelledby');
+}
 
 /** Reverse lookup: hex (uppercase) → token name */
 const HEX_TO_TOKEN: Record<string, string> = {};
@@ -123,17 +137,21 @@ export function PropInspector({ node }: PropInspectorProps) {
     );
   }
 
+  const ariaProps = node.props.filter(isAriaProp);
+  const a11yWarn = hasA11yWarning(node);
+
   const keyProps = node.props.filter(
     (p) =>
       KEY_PROPS.has(p.name) &&
-      (p.rawType === 'string' || p.rawType === 'boolean'),
+      (p.rawType === 'string' || p.rawType === 'boolean') &&
+      !isAriaProp(p),
   );
   const otherProps = node.props.filter(
     (p) =>
       !(
         KEY_PROPS.has(p.name) &&
         (p.rawType === 'string' || p.rawType === 'boolean')
-      ),
+      ) && !isAriaProp(p),
   );
 
   function togglePropExpansion(propName: string) {
@@ -151,19 +169,23 @@ export function PropInspector({ node }: PropInspectorProps) {
   return (
     <Box sx={{ p: 1 }}>
       {/* Component name heading */}
-      <Typography
-        sx={{
-          fontFamily: 'monospace',
-          fontSize: '14px',
-          fontWeight: 600,
-          color: 'text.primary',
-          mb: 0.5,
-        }}
-      >
-        {'<'}
-        {node.componentName}
-        {'>'}
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+        <Typography
+          sx={{
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            fontWeight: 600,
+            color: 'text.primary',
+          }}
+        >
+          {'<'}
+          {node.componentName}
+          {'>'}
+        </Typography>
+        {a11yWarn && (
+          <WarningAmberIcon sx={{ fontSize: 14, color: 'warning.main' }} />
+        )}
+      </Box>
 
       {/* Key props table */}
       {keyProps.length > 0 && (
@@ -299,6 +321,56 @@ export function PropInspector({ node }: PropInspectorProps) {
             })}
           </tbody>
         </Box>
+      )}
+
+      {/* Accessibility section */}
+      {(ariaProps.length > 0 || a11yWarn) && (
+        <>
+          <Divider sx={{ my: 0.75 }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+            <Typography
+              sx={{ fontSize: '10px', fontWeight: 600, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: 0.5 }}
+            >
+              Accessibility
+            </Typography>
+            {a11yWarn && <WarningAmberIcon sx={{ fontSize: 12, color: 'warning.main' }} />}
+          </Box>
+
+          {a11yWarn && (
+            <Typography sx={{ fontSize: '11px', color: 'warning.main', mb: 0.5, fontFamily: 'monospace' }}>
+              Missing aria-label
+            </Typography>
+          )}
+
+          {ariaProps.length > 0 && (
+            <Box
+              component="table"
+              sx={{
+                width: '100%',
+                tableLayout: 'fixed',
+                borderCollapse: 'collapse',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+              }}
+            >
+              <tbody>
+                {ariaProps.map((p) => (
+                  <Box component="tr" key={p.name}>
+                    <Box
+                      component="td"
+                      sx={{ width: '40%', pr: 1, color: 'text.secondary', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    >
+                      {p.name}:
+                    </Box>
+                    <Box component="td" sx={{ width: '60%', color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {p.rawType === 'boolean' ? 'true' : stripQuotes(p.value)}
+                    </Box>
+                  </Box>
+                ))}
+              </tbody>
+            </Box>
+          )}
+        </>
       )}
     </Box>
   );

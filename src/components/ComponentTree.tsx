@@ -3,7 +3,15 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import type { ComponentNode } from '@/lib/ast-inspector';
+
+const NEEDS_ARIA_LABEL = new Set(['IconButton', 'Fab', 'SpeedDial']);
+
+function hasA11yWarning(node: ComponentNode): boolean {
+  if (!NEEDS_ARIA_LABEL.has(node.componentName)) return false;
+  return !node.props.some((p) => p.name === 'aria-label' || p.name === 'aria-labelledby');
+}
 
 interface ComponentTreeProps {
   tree: ComponentNode[];
@@ -147,6 +155,10 @@ function TreeNode({
           ) : null}
           {hasChildren ? '>' : ' />'}
         </Typography>
+
+        {hasA11yWarning(node) && (
+          <WarningAmberIcon sx={{ fontSize: 12, color: 'warning.main', ml: 0.5, flexShrink: 0 }} />
+        )}
       </Box>
 
       {hasChildren && isExpanded &&
