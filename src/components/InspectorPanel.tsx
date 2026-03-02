@@ -55,7 +55,7 @@ function findNodeById(tree: ComponentNode[], id: string): ComponentNode | null {
 
 type TabName = 'components' | 'copy' | 'theme';
 
-const ALL_TABS: TabName[] = ['components', 'copy', 'theme'];
+const ALL_TABS: TabName[] = ['copy', 'components', 'theme'];
 
 interface InspectorPanelProps {
   prototypeId: string;
@@ -131,11 +131,11 @@ export function InspectorPanel({ prototypeId, tabs = ALL_TABS }: InspectorPanelP
             flexShrink: 0,
           }}
         >
-          {tabs.includes('components') && (
-            <Tab label="Components" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
-          )}
           {tabs.includes('copy') && (
             <Tab label="Copy" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
+          )}
+          {tabs.includes('components') && (
+            <Tab label="Components" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
           )}
           {tabs.includes('theme') && (
             <Tab label="Theme" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
