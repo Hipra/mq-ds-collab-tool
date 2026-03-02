@@ -56,6 +56,19 @@ export async function patchOverlay(
   const overlayPath = getOverlayPath(prototypeId);
   const overlay = await readOverlay(prototypeId);
 
+  // If the value is back to source, remove the overlay entry entirely
+  if (value === sourceValue) {
+    delete overlay.entries[key];
+    if (Object.keys(overlay.entries).length === 0) {
+      try {
+        await fs.unlink(overlayPath);
+      } catch { /* file may not exist */ }
+      return;
+    }
+    await fs.writeFile(overlayPath, JSON.stringify(overlay, null, 2), 'utf-8');
+    return;
+  }
+
   const now = new Date().toISOString();
   const existing = overlay.entries[key];
 

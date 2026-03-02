@@ -45,7 +45,7 @@ export async function GET(
       edits: overlay.entries[entry.key]?.edits ?? [],
     }));
 
-    const modified = entriesWithEdits.filter((e) => e.edits.length > 0).length;
+    const modified = entriesWithEdits.filter((e) => e.currentValue !== e.sourceValue).length;
 
     return NextResponse.json({
       entries: entriesWithEdits,
