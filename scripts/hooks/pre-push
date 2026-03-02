@@ -11,3 +11,7 @@ if [ $? -ne 0 ]; then
   echo "Fix the failing tests or use 'git push --no-verify' to skip."
   exit 1
 fi
+
+echo ""
+echo "💾 Memory reminder: ask Claude Code to save any new learnings before this push is done."
+echo "   'mentsd el a megtanultakat'"
