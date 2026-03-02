@@ -23,6 +23,11 @@ export const prototypeComponentOverrides: Components<Theme> = {
         '&:hover': { boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 4px 0px' },
         '&:active': { boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 4px 0px' },
       },
+      text: {
+        boxShadow: 'none',
+        '&:hover': { boxShadow: 'none' },
+        '&:active': { boxShadow: 'none' },
+      },
       sizeSmall: { padding: '8px 12px', fontSize: '12px', fontWeight: 600 },
       sizeMedium: { padding: '10px 24px', fontSize: '14px', fontWeight: 600 },
       sizeLarge: { padding: '12px 32px', fontSize: '16px', fontWeight: 600 },
