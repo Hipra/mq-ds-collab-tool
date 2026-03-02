@@ -1,5 +1,6 @@
 import { createTheme } from '@mui/material/styles';
 import type { ThemeConfig } from '@/lib/theme-config';
+import { prototypeComponentOverrides } from '@/lib/prototype-overrides';
 
 /**
  * Create the shared MUI theme with CSS variables and light/dark color schemes.
@@ -61,50 +62,7 @@ export function createAppTheme(config?: ThemeConfig | null) {
           },
         },
       },
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            borderRadius: 100,
-            textTransform: 'none',
-            boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 4px 0px',
-            '&:hover': {
-              boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 4px 0px',
-            },
-            '&:active': {
-              boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 4px 0px',
-            },
-          },
-          sizeSmall: {
-            padding: '8px 12px',
-            fontSize: '12px',
-            fontWeight: 600,
-          },
-          sizeMedium: {
-            padding: '10px 24px',
-            fontSize: '14px',
-            fontWeight: 600,
-          },
-          sizeLarge: {
-            padding: '12px 32px',
-            fontSize: '16px',
-            fontWeight: 600,
-          },
-        },
-      },
-      MuiTab: {
-        styleOverrides: {
-          root: {
-            textTransform: 'none',
-          },
-        },
-      },
-      MuiToggleButton: {
-        styleOverrides: {
-          root: {
-            textTransform: 'none',
-          },
-        },
-      },
+      ...prototypeComponentOverrides,
     },
   });
 }

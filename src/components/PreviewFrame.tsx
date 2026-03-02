@@ -25,7 +25,7 @@ type PreviewState = 'loading' | 'ready' | 'error';
  * - Responsive width: driven by Zustand previewWidth — auto fills space,
  *   fixed widths center the iframe with a gray surround
  * - Component tree: fetched from /api/preview/[id]/tree on mount and reload
- * - COMPONENT_HOVER/SELECT: updates Zustand store from iframe messages
+ * - HIGHLIGHT_TEXT: sent to iframe when component selected from Components panel
  *
  * Design decisions:
  * - sandbox="allow-scripts allow-same-origin": same-origin needed for Blob URL
@@ -46,8 +46,6 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
     previewWidth,
     activeScreenId,
     selectedComponentId,
-    setHoveredComponent,
-    setSelectedComponent,
     setComponentTree,
   } = useInspectorStore();
 
@@ -155,7 +153,7 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
     }
   }, [selectedComponentId]);
 
-  // Listen for messages from iframe (RENDER_ERROR, COMPONENT_HOVER, COMPONENT_SELECT, TEXT_CLICK)
+  // Listen for messages from iframe (RENDER_ERROR, PREVIEW_READY, TEXT_CLICK)
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (!event.data || typeof event.data !== 'object') return;
@@ -182,14 +180,6 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
         );
       }
 
-      if (event.data.type === 'COMPONENT_HOVER') {
-        setHoveredComponent(event.data.id ?? null);
-      }
-
-      if (event.data.type === 'COMPONENT_SELECT') {
-        setSelectedComponent(event.data.id ?? null);
-      }
-
       // Phase 3: forward TEXT_CLICK to copy store — highlight matching entry
       if (event.data.type === 'TEXT_CLICK') {
         const { inspectorId } = event.data as { inspectorId: string };
@@ -205,7 +195,7 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [setHoveredComponent, setSelectedComponent]);
+  }, []);
 
   // iframe onLoad: mark as loaded, send initial theme + theme config
   const handleIframeLoad = useCallback(() => {

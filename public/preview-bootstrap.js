@@ -31,25 +31,34 @@ const emotionCache = createCache({ key: 'mui', container: document.head });
 // ─── MUI theme with CSS variables + light/dark color schemes ─────────────────
 // cssVariables: true — mode switching changes CSS variable values, not component tree
 // colorSchemes: { light, dark } — enables useColorScheme() with 'light'|'dark'|'system'
-const BUTTON_OVERRIDES = {
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: { borderRadius: 100 },
-      },
-    },
-  },
-};
+// ─── Component overrides — fetched from /api/preview/component-overrides ──────
+// Single source of truth: src/lib/prototype-overrides.ts
+// Fetched at startup so all prototypes always get the latest design system overrides.
+let componentOverrides = {};
 
-const defaultTheme = createTheme({
-  cssVariables: true,
-  colorSchemeSelector: 'data',
-  colorSchemes: {
-    light: true,
-    dark: true,
-  },
-  ...BUTTON_OVERRIDES,
-});
+async function loadComponentOverrides() {
+  try {
+    const res = await fetch('/api/preview/component-overrides');
+    if (res.ok) componentOverrides = await res.json();
+  } catch {
+    // Non-critical: fall back to no overrides (MUI defaults)
+  }
+}
+
+function buildComponentsConfig() {
+  return { components: componentOverrides };
+}
+
+function buildDefaultTheme() {
+  return createTheme({
+    cssVariables: true,
+    colorSchemeSelector: 'data',
+    colorSchemes: { light: true, dark: true },
+    ...buildComponentsConfig(),
+  });
+}
+
+let defaultTheme = buildDefaultTheme();
 
 /** Build a MUI theme from ThemeConfig (sent via SET_THEME_CONFIG postMessage). */
 function buildTheme(config) {
@@ -64,7 +73,7 @@ function buildTheme(config) {
     typography: config.typography,
     shape: config.shape,
     spacing: config.spacing,
-    ...BUTTON_OVERRIDES,
+    ...buildComponentsConfig(),
   });
 }
 
@@ -452,8 +461,7 @@ function Root() {
   });
 }
 
-// ─── Inspector mode — hover/click to identify components ─────────────────────
-let inspectorEnabled = true; // start enabled per default store state
+// ─── Inspector overlay — used for HIGHLIGHT_TEXT from parent shell ────────────
 let highlightOverlay = null;
 
 function ensureOverlay() {
@@ -464,72 +472,8 @@ function ensureOverlay() {
   return highlightOverlay;
 }
 
-function findInspectorTarget(el) {
-  while (el && el !== document.body) {
-    if (el.dataset && el.dataset.inspectorId) return el;
-    el = el.parentElement;
-  }
-  return null;
-}
-
-document.addEventListener('mouseover', function(e) {
-  if (!inspectorEnabled) return;
-  const target = findInspectorTarget(e.target);
-  if (!target) {
-    const overlay = ensureOverlay();
-    overlay.style.display = 'none';
-    window.parent.postMessage({ type: 'COMPONENT_HOVER', id: null, rect: null }, '*');
-    return;
-  }
-  const rect = target.getBoundingClientRect();
-  const overlay = ensureOverlay();
-  overlay.style.top = rect.top + 'px';
-  overlay.style.left = rect.left + 'px';
-  overlay.style.width = rect.width + 'px';
-  overlay.style.height = rect.height + 'px';
-  overlay.style.display = 'block';
-  window.parent.postMessage({
-    type: 'COMPONENT_HOVER',
-    id: target.dataset.inspectorId,
-    rect: { top: rect.top, left: rect.left, width: rect.width, height: rect.height }
-  }, '*');
-}, true);
-
-document.addEventListener('mouseout', function(e) {
-  if (!inspectorEnabled) return;
-  if (e.relatedTarget && document.contains(e.relatedTarget)) return;
-  const overlay = ensureOverlay();
-  overlay.style.display = 'none';
-  window.parent.postMessage({ type: 'COMPONENT_HOVER', id: null, rect: null }, '*');
-}, true);
-
-document.addEventListener('click', function(e) {
-  if (!inspectorEnabled) return;
-  const target = findInspectorTarget(e.target);
-  if (!target) return;
-  e.preventDefault();
-  e.stopPropagation();
-  const rect = target.getBoundingClientRect();
-  const inspectorId = target.dataset.inspectorId;
-  window.parent.postMessage({
-    type: 'COMPONENT_SELECT',
-    id: inspectorId,
-    rect: { top: rect.top, left: rect.left, width: rect.width, height: rect.height }
-  }, '*');
-  // Phase 3: also send TEXT_CLICK so the shell can scroll to the Copy tab entry
-  // The shell matches inspectorId to a text entry key — key is left empty here
-  window.parent.postMessage({ type: 'TEXT_CLICK', key: '', inspectorId }, '*');
-}, true);
-
-// Listen for SET_INSPECTOR_MODE and Phase 3 HIGHLIGHT_TEXT from parent shell
+// Listen for HIGHLIGHT_TEXT from parent shell (triggered by Components panel selection)
 window.addEventListener('message', function(event) {
-  if (event.data?.type === 'SET_INSPECTOR_MODE') {
-    inspectorEnabled = !!event.data.enabled;
-    if (!inspectorEnabled && highlightOverlay) {
-      highlightOverlay.style.display = 'none';
-    }
-  }
-
   // Phase 3: highlight element from Copy tab selection
   if (event.data?.type === 'HIGHLIGHT_TEXT') {
     const id = event.data.inspectorId;
@@ -556,9 +500,13 @@ window.addEventListener('message', function(event) {
   }
 });
 
-// ─── Mount the root ───────────────────────────────────────────────────────────
+// ─── Mount the root (after loading component overrides) ───────────────────────
 const rootElement = document.getElementById('root');
 if (rootElement) {
   rootInstance = createRoot(rootElement);
-  rootInstance.render(createElement(Root));
+  // Load overrides first, then rebuild defaultTheme with them before first render
+  loadComponentOverrides().then(() => {
+    defaultTheme = buildDefaultTheme();
+    rootInstance.render(createElement(Root));
+  });
 }
