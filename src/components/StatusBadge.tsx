@@ -10,9 +10,9 @@ import Box from '@mui/material/Box';
 type Status = 'draft' | 'review' | 'approved';
 
 const STATUS_CONFIG: Record<Status, { label: string; color: 'default' | 'warning' | 'success' }> = {
-  draft:    { label: 'Draft',    color: 'default' },
-  review:   { label: 'Review',   color: 'warning' },
-  approved: { label: 'Approved', color: 'success' },
+  draft:    { label: 'Draft',    color: 'default'  },
+  review:   { label: 'Review',   color: 'warning'  },
+  approved: { label: 'Approved', color: 'success'  },
 };
 
 interface StatusBadgeProps {
@@ -82,9 +82,16 @@ export function StatusBadge({ prototypeId }: StatusBadgeProps) {
       <Chip
         label={config.label}
         color={config.color}
+        variant={status === 'draft' ? 'outlined' : 'filled'}
         size="small"
         onClick={handleClick}
-        sx={{ cursor: 'pointer' }}
+        sx={{
+          cursor: 'pointer',
+          ...(status === 'draft' && {
+            borderColor: 'rgba(255,255,255,0.5)',
+            color: 'rgba(255,255,255,0.85)',
+          }),
+        }}
         aria-controls={open ? 'status-menu' : undefined}
         aria-haspopup="true"
         aria-expanded={open ? 'true' : undefined}
