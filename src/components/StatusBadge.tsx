@@ -82,14 +82,15 @@ export function StatusBadge({ prototypeId }: StatusBadgeProps) {
       <Chip
         label={config.label}
         color={config.color}
-        variant={status === 'draft' ? 'outlined' : 'filled'}
+        variant="filled"
         size="small"
         onClick={handleClick}
         sx={{
           cursor: 'pointer',
           ...(status === 'draft' && {
-            borderColor: 'rgba(255,255,255,0.5)',
-            color: 'rgba(255,255,255,0.85)',
+            bgcolor: 'rgba(255,255,255,0.15)',
+            color: 'rgba(255,255,255,0.75)',
+            '& .MuiChip-label': { fontWeight: 400 },
           }),
         }}
         aria-controls={open ? 'status-menu' : undefined}
