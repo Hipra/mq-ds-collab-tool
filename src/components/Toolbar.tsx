@@ -132,7 +132,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
         </Tooltip>
         <Snackbar
           open={copiedClaude}
-          autoHideDuration={3000}
+          autoHideDuration={1500}
           onClose={() => setCopiedClaude(false)}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >

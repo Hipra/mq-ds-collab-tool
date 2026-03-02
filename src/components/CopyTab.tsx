@@ -398,12 +398,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Header: summary + search + actions */}
-      <Box sx={{ p: 1.5, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}>
-        {/* Summary */}
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-          {summary.total} text entries &middot; {summary.modified} modified
-        </Typography>
-
+      <Box sx={{ flexShrink: 0 }}>
         {/* Search */}
         <TextField
           size="small"
@@ -419,43 +414,17 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                   <SearchIcon fontSize="small" />
                 </InputAdornment>
               ),
+              sx: { fontSize: '0.8125rem' },
             },
           }}
-          sx={{ mb: 1 }}
+          sx={{ mb: 0.5 }}
         />
 
-        {/* Action buttons */}
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={handleExport}
-            sx={{ fontSize: '12px' }}
-          >
-            Export JSON
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<UploadIcon />}
-            onClick={() => fileInputRef.current?.click()}
-            sx={{ fontSize: '12px' }}
-          >
-            Import JSON
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json"
-            style={{ display: 'none' }}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleImport(file);
-              e.target.value = '';
-            }}
-          />
-        </Box>
+        {/* Summary */}
+        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+          {summary.total} text entries &middot; {summary.modified} modified
+        </Typography>
+
       </Box>
 
       {/* Conflicts banner */}
@@ -482,12 +451,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                             entryRefs.current[entry.key] = el;
                           }}
                           sx={{
-                            px: 1.5,
                             py: 1,
-                            borderLeft: isHighlighted ? '3px solid' : '3px solid transparent',
-                            borderLeftColor: isHighlighted ? 'primary.main' : 'transparent',
-                            bgcolor: isHighlighted ? 'action.selected' : 'transparent',
-                            transition: 'all 0.15s',
                           }}
                         >
                           {/* Action row — only visible when modified */}
@@ -592,7 +556,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                               }}
                               onBlur={handleEntryBlur}
                               helperText={`${entry.currentValue.length} chars`}
-                              sx={{ '& .MuiInputBase-input': { fontSize: '13px' } }}
+                              sx={{ '& .MuiInputBase-input': { fontSize: '0.8125rem' } }}
                               slotProps={{
                                 formHelperText: { sx: { mx: 0, fontSize: '10px' } },
                               }}
@@ -636,6 +600,43 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
             </Typography>
           </Box>
         )}
+      </Box>
+
+      {/* Footer: export / import */}
+      <Box sx={{ pt: 1.5, flexShrink: 0, display: 'flex', gap: 1 }}>
+        <Button
+          size="small"
+          variant="outlined"
+          color="secondary"
+          startIcon={<DownloadIcon />}
+          onClick={handleExport}
+          fullWidth
+          sx={{ fontSize: '12px' }}
+        >
+          Export
+        </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          color="secondary"
+          startIcon={<UploadIcon />}
+          onClick={() => fileInputRef.current?.click()}
+          fullWidth
+          sx={{ fontSize: '12px' }}
+        >
+          Import
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleImport(file);
+            e.target.value = '';
+          }}
+        />
       </Box>
     </Box>
   );

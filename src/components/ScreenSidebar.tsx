@@ -15,7 +15,6 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Alert from '@mui/material/Alert';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import AddIcon from '@mui/icons-material/Add';
@@ -107,6 +106,9 @@ function SortableScreenItem({
           pl: 0.5,
           '& .screen-dup-btn': { opacity: 0 },
           '&:hover .screen-dup-btn': { opacity: 1 },
+          borderRadius: 1,
+          '&.Mui-selected': { bgcolor: 'rgba(0,0,0,0.02)' },
+          '&.Mui-selected:hover': { bgcolor: 'rgba(0,0,0,0.02)' },
         }}
       >
         {/* Drag handle */}
@@ -151,7 +153,7 @@ function SortableScreenItem({
         ) : (
           <ListItemText
             primary={screen.name}
-            primaryTypographyProps={{ fontSize: 13, noWrap: true }}
+            primaryTypographyProps={{ fontSize: 13, noWrap: true, fontWeight: isActive ? 600 : 400 }}
           />
         )}
 
@@ -432,35 +434,12 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
         width: sidebarOpen ? 200 : 0,
         flexShrink: 0,
         overflow: 'hidden',
-        borderRight: sidebarOpen ? 1 : 0,
-        borderColor: 'divider',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'width 0.2s ease',
+        transition: 'width 0.2s ease, box-shadow 0.2s ease',
         position: 'relative',
       }}
     >
-      {/* Sidebar header with toggle */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          px: 1,
-          py: 0.5,
-          borderBottom: 1,
-          borderColor: 'divider',
-          minHeight: 40,
-        }}
-      >
-        <Typography variant="caption" sx={{ fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>
-          Screens
-        </Typography>
-        <IconButton size="small" onClick={() => setSidebarOpen(false)}>
-          <ChevronLeftIcon sx={{ fontSize: 18 }} />
-        </IconButton>
-      </Box>
-
       {/* Screen list */}
       <Box sx={{ flex: 1, overflowY: 'auto' }}>
         <DndContext
@@ -472,7 +451,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
             items={localScreens.map((s) => s.id)}
             strategy={verticalListSortingStrategy}
           >
-            <List dense disablePadding>
+            <List disablePadding>
               {localScreens.map((screen) => (
                 <SortableScreenItem
                   key={screen.id}
@@ -496,9 +475,9 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
       </Box>
 
       {/* Add screen button */}
-      <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
+      <Box>
         <Button
-          variant="text"
+          variant="outlined"
           color="secondary"
           size="small"
           startIcon={<AddIcon />}

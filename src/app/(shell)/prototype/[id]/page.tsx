@@ -29,7 +29,19 @@ export default function PrototypeViewerPage({
       }}
     >
       <Toolbar prototypeName={id} prototypeId={id} />
-      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          overflow: 'hidden',
+          bgcolor: (theme) =>
+            theme.palette.mode === 'dark'
+              ? theme.palette.grey[900]
+              : theme.palette.grey[100],
+          p: 'calc(3 * var(--mui-spacing))',
+          gap: 'calc(3 * var(--mui-spacing))',
+        }}
+      >
         <ScreenSidebar prototypeId={id} />
         <PreviewFrame prototypeId={id} />
         <InspectorPanel prototypeId={id} />

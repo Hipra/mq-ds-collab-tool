@@ -17,10 +17,13 @@ export function createAppTheme(config?: ThemeConfig | null) {
     defaultColorScheme: 'light',
     colorSchemes: config
       ? {
-          light: { palette: config.palette.light },
+          light: { palette: { text: { primary: 'rgba(59, 55, 81, 0.87)' }, ...config.palette.light } },
           dark: { palette: config.palette.dark },
         }
-      : { light: true, dark: true },
+      : {
+          light: { palette: { text: { primary: 'rgba(59, 55, 81, 0.87)' } } },
+          dark: true,
+        },
     ...(config && {
       typography: config.typography,
       shape: config.shape,

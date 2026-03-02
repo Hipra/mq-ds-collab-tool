@@ -28,6 +28,11 @@ export const prototypeComponentOverrides: Components<Theme> = {
         '&:hover': { boxShadow: 'none' },
         '&:active': { boxShadow: 'none' },
       },
+      outlined: {
+        boxShadow: 'none',
+        '&:hover': { boxShadow: 'none' },
+        '&:active': { boxShadow: 'none' },
+      },
       sizeSmall: { padding: '8px 12px', fontSize: '12px', fontWeight: 600 },
       sizeMedium: { padding: '10px 24px', fontSize: '14px', fontWeight: 600 },
       sizeLarge: { padding: '12px 32px', fontSize: '16px', fontWeight: 600 },
@@ -41,6 +46,14 @@ export const prototypeComponentOverrides: Components<Theme> = {
   MuiToggleButton: {
     styleOverrides: {
       root: { textTransform: 'none' },
+    },
+  },
+  MuiAccordionSummary: {
+    styleOverrides: {
+      content: {
+        fontWeight: 600,
+        '& .MuiTypography-root': { fontWeight: 600 },
+      },
     },
   },
 };

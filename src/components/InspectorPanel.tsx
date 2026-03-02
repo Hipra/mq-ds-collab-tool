@@ -2,8 +2,8 @@
 
 import React from 'react';
 import Box from '@mui/material/Box';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Divider from '@mui/material/Divider';
 import { useInspectorStore } from '@/stores/inspector';
 import { ComponentTree } from '@/components/ComponentTree';
@@ -110,37 +110,37 @@ export function InspectorPanel({ prototypeId, tabs = ALL_TABS }: InspectorPanelP
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
-        borderLeft: 1,
-        borderColor: 'divider',
         height: '100%',
         overflow: 'hidden',
       }}
     >
       {/* Tab header — hidden when only one tab is visible */}
       {tabs.length > 1 && (
-        <Tabs
-          value={visibleTabIndex}
-          onChange={handleTabChange}
-          variant="fullWidth"
-          textColor="secondary"
-          indicatorColor="secondary"
-          sx={{
-            borderBottom: 1,
-            borderColor: 'divider',
-            minHeight: 36,
-            flexShrink: 0,
-          }}
-        >
-          {tabs.includes('copy') && (
-            <Tab label="Copy" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
-          )}
-          {tabs.includes('components') && (
-            <Tab label="Components" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
-          )}
-          {tabs.includes('theme') && (
-            <Tab label="Theme" sx={{ minHeight: 36, py: 0, fontSize: '13px' }} />
-          )}
-        </Tabs>
+        <Box sx={{ flexShrink: 0, pb: 1.5 }}>
+          <ToggleButtonGroup
+            value={tabs[visibleTabIndex]}
+            exclusive
+            onChange={(_e, val) => {
+              if (val !== null) handleTabChange({} as React.SyntheticEvent, tabs.indexOf(val as TabName));
+            }}
+            size="small"
+            fullWidth
+            sx={{
+              '& .MuiToggleButton-root.Mui-selected': {
+                bgcolor: 'rgba(0,0,0,0.02)',
+                color: 'text.primary',
+                fontWeight: 600,
+              },
+              '& .MuiToggleButton-root.Mui-selected:hover': {
+                bgcolor: 'rgba(0,0,0,0.04)',
+              },
+            }}
+          >
+            {tabs.includes('copy') && <ToggleButton value="copy" sx={{ flex: 1 }}>Copy</ToggleButton>}
+            {tabs.includes('components') && <ToggleButton value="components" sx={{ flex: 1 }}>Components</ToggleButton>}
+            {tabs.includes('theme') && <ToggleButton value="theme" sx={{ flex: 1 }}>Theme</ToggleButton>}
+          </ToggleButtonGroup>
+        </Box>
       )}
 
       {/* Components tab — tree + prop inspector */}
