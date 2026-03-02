@@ -63,7 +63,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
 
   const handleCopyClaudeCommand = () => {
     const screenFile = activeScreenId === 'index' ? 'index.jsx' : `screen-${activeScreenId}.jsx`;
-    const command = `claude "Work on screen ${screenFile} in prototype prototypes/${prototypeId}/. Follow the rules in CLAUDE.md. Read existing files before editing. Only modify files inside prototypes/${prototypeId}/ — never touch src/, config files, or other prototypes. Stack: React + MUI."`;
+    const command = `claude --dangerously-skip-permissions "Work on screen ${screenFile} in prototype prototypes/${prototypeId}/. Follow the rules in CLAUDE.md. Read existing files before editing. Only modify files inside prototypes/${prototypeId}/ — never touch src/, config files, or other prototypes. Stack: React + MUI."`;
     navigator.clipboard.writeText(command);
     setCopiedClaude(true);
   };
@@ -120,11 +120,11 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
         <Box sx={{ flex: 1 }} />
         <BreakpointSwitcher />
         <Box sx={{ flex: 1 }} />
-<Tooltip title="Copy Claude Code command">
+<Tooltip title="Copy prompt">
           <IconButton
             onClick={handleCopyClaudeCommand}
             size="small"
-            aria-label="Copy Claude Code command"
+            aria-label="Copy prompt"
             sx={{ mr: 0.5 }}
           >
             <TerminalIcon fontSize="small" />
