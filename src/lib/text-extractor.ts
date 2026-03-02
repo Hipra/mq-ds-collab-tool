@@ -27,6 +27,19 @@ const TEXT_PROP_CATEGORIES: Record<string, TextEntry['category']> = {
   'aria-label': 'accessibility',
 };
 
+// HTML elements that may carry visible text — processed alongside uppercase components.
+const TEXT_BEARING_HTML_ELEMENTS = new Set([
+  'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'strong', 'em', 'b', 'i', 'small', 'label', 'a', 'li',
+  'th', 'td', 'dt', 'dd', 'caption', 'figcaption',
+]);
+
+// Object property names treated as text in top-level data arrays.
+const DATA_ARRAY_TEXT_PROPS = new Set([
+  'label', 'title', 'text', 'description', 'heading', 'content',
+  'placeholder', 'tooltip', 'caption', 'subtitle', 'name',
+]);
+
 function resolveJsxName(nameNode: any): string {
   if (nameNode.type === 'JSXIdentifier') {
     return nameNode.name;
@@ -66,11 +79,10 @@ export function extractTextEntries(sourceCode: string, filePath: string): TextEn
         const opening = nodePath.node.openingElement;
         const nameNode = opening.name;
 
-        // Only process uppercase (MUI/React) components
-        const isUppercase =
-          nameNode.type === 'JSXIdentifier' && /^[A-Z]/.test(nameNode.name);
+        const isUppercase = nameNode.type === 'JSXIdentifier' && /^[A-Z]/.test(nameNode.name);
+        const isTextBearingHtml = nameNode.type === 'JSXIdentifier' && TEXT_BEARING_HTML_ELEMENTS.has(nameNode.name);
 
-        if (!isUppercase) {
+        if (!isUppercase && !isTextBearingHtml) {
           return;
         }
 
@@ -142,15 +154,101 @@ export function extractTextEntries(sourceCode: string, filePath: string): TextEn
       exit(nodePath: any) {
         const opening = nodePath.node.openingElement;
         const nameNode = opening.name;
-        const isUppercase =
-          nameNode.type === 'JSXIdentifier' && /^[A-Z]/.test(nameNode.name);
+        const isUppercase = nameNode.type === 'JSXIdentifier' && /^[A-Z]/.test(nameNode.name);
+        const isTextBearingHtml = nameNode.type === 'JSXIdentifier' && TEXT_BEARING_HTML_ELEMENTS.has(nameNode.name);
 
-        if (isUppercase) {
+        if (isUppercase || isTextBearingHtml) {
           pathStack.pop();
         }
       },
     },
+
+    // Extract string literals from top-level const array-of-objects declarations.
+    // e.g. const TOOLBAR_ITEMS = [{ id: 'bold', label: 'Bold', ... }, ...]
+    // Key format: "VARNAME_index_propName" (no line/col — distinguishable from JSX keys)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    VariableDeclaration(nodePath: any) {
+      // Only process top-level declarations (direct children of Program)
+      if (nodePath.parent?.type !== 'Program') return;
+
+      for (const declarator of nodePath.node.declarations) {
+        if (declarator.type !== 'VariableDeclarator') continue;
+        if (declarator.id?.type !== 'Identifier') continue;
+        if (declarator.init?.type !== 'ArrayExpression') continue;
+
+        const varName: string = declarator.id.name;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        declarator.init.elements.forEach((element: any, index: number) => {
+          if (!element || element.type !== 'ObjectExpression') return;
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          for (const prop of element.properties) {
+            if (prop.type !== 'ObjectProperty' && prop.type !== 'Property') continue;
+            const propName: string | null =
+              prop.key?.type === 'Identifier' ? prop.key.name :
+              prop.key?.type === 'StringLiteral' ? prop.key.value : null;
+            if (!propName || !DATA_ARRAY_TEXT_PROPS.has(propName)) continue;
+            if (prop.value?.type !== 'StringLiteral') continue;
+
+            const sourceValue: string = prop.value.value;
+            if (!sourceValue.trim()) continue;
+
+            const key = `${varName}_${index}_${propName}`;
+            entries.push({
+              key,
+              componentName: varName,
+              componentPath: varName,
+              propName,
+              category: 'visible',
+              sourceValue,
+              currentValue: sourceValue,
+              sourceLine: prop.value.loc?.start.line ?? 0,
+              inspectorId: '', // data entries don't map to a single DOM element
+            });
+          }
+        });
+      }
+    },
   });
+
+  // Second pass: find the JSX render position of each data array variable.
+  // TOOLBAR_ITEMS is defined at line ~20 but rendered at line ~87 via .map().
+  // Use the render line for sorting so entries follow visual order, not definition order.
+  const varRenderLines: Record<string, number> = {};
+  traverse(ast, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    JSXExpressionContainer(nodePath: any) {
+      const expr = nodePath.node.expression;
+      if (
+        expr?.type === 'CallExpression' &&
+        expr.callee?.type === 'MemberExpression' &&
+        expr.callee.object?.type === 'Identifier' &&
+        expr.callee.property?.name === 'map'
+      ) {
+        const varName: string = expr.callee.object.name;
+        const line: number = nodePath.node.loc?.start.line ?? 0;
+        if (line > 0 && !(varName in varRenderLines)) {
+          varRenderLines[varName] = line;
+        }
+      }
+    },
+  });
+
+  // Apply render lines to data array entries
+  for (const entry of entries) {
+    const parts = entry.key.split('_');
+    if (parts.length >= 3) {
+      const maybeLine = parseInt(parts[parts.length - 3], 10);
+      if (isNaN(maybeLine)) {
+        // Data array entry — update sourceLine to render position if found
+        const varName = parts.slice(0, parts.length - 2).join('_');
+        if (varRenderLines[varName]) {
+          entry.sourceLine = varRenderLines[varName];
+        }
+      }
+    }
+  }
 
   return entries;
 }

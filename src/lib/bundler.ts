@@ -13,8 +13,8 @@ import { injectInspectorIds } from './inspector-plugin';
  * Runs a Babel pre-pass (injectInspectorIds) before esbuild to inject
  * data-inspector-id attributes on all MUI components for Phase 2 inspection.
  */
-export async function bundlePrototype(filePath: string): Promise<string> {
-  const contents = await readFile(filePath, 'utf-8');
+export async function bundlePrototype(filePath: string, sourceContent?: string): Promise<string> {
+  const contents = sourceContent ?? await readFile(filePath, 'utf-8');
 
   // Handle missing default export — Claude Code sometimes generates named exports only.
   const normalizedContents = ensureDefaultExport(contents);

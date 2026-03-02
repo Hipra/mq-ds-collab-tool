@@ -7,7 +7,6 @@ import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Collapse from '@mui/material/Collapse';
 import Tooltip from '@mui/material/Tooltip';
-import Divider from '@mui/material/Divider';
 import Alert from '@mui/material/Alert';
 import List from '@mui/material/List';
 import ListItemText from '@mui/material/ListItemText';
@@ -16,8 +15,6 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import RestoreIcon from '@mui/icons-material/Restore';
 import CheckIcon from '@mui/icons-material/Check';
 import HistoryIcon from '@mui/icons-material/History';
@@ -50,6 +47,26 @@ function postToPreview(message: object) {
   iframe?.contentWindow?.postMessage(message, '*');
 }
 
+/**
+ * Returns true if the entry comes from a top-level data array (not a JSX element).
+ * Data array key format: "VARNAME_index_propName" — third-from-last segment is NOT numeric.
+ * JSX key format: "ComponentName_line_col_propName" — both line and col are numeric.
+ */
+function isDataArrayEntry(entry: CopyEntryWithHistory): boolean {
+  const parts = entry.key.split('_');
+  if (parts.length < 3) return false;
+  const maybeLine = parseInt(parts[parts.length - 3], 10);
+  return isNaN(maybeLine);
+}
+
+/** For data array entries, derive a display label that includes the index: "[0] label" */
+function getEntryDisplayPropName(entry: CopyEntryWithHistory): string {
+  if (!isDataArrayEntry(entry)) return entry.propName;
+  const parts = entry.key.split('_');
+  const index = parseInt(parts[parts.length - 2], 10);
+  return `[${index}] ${entry.propName}`;
+}
+
 /** Build the full override map from all modified entries */
 function buildOverrideMap(entries: CopyEntryWithHistory[]): Record<string, Record<string, string>> {
   const overrides: Record<string, Record<string, string>> = {};
@@ -62,12 +79,6 @@ function buildOverrideMap(entries: CopyEntryWithHistory[]): Record<string, Recor
   return overrides;
 }
 
-/** Category label mapping */
-const CATEGORY_LABELS: Record<string, string> = {
-  visible: 'Visible Text',
-  placeholder: 'Placeholder',
-  accessibility: 'Accessibility',
-};
 
 /** Debounce a function */
 function useDebounce<T extends (...args: Parameters<T>) => void>(fn: T, delay: number): T {
@@ -100,14 +111,12 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
     conflicts,
     summary,
     searchQuery,
-    collapsedGroups,
     highlightedKey,
     loading,
     setEntries,
     updateEntry,
     resetEntry,
     setSearchQuery,
-    toggleGroup,
     setHighlightedKey,
     setLoading,
     resolveConflict,
@@ -160,7 +169,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
     }
   }, [highlightedKey]);
 
-  // Debounced PATCH to API
+  // Debounced PATCH to API (for JSX text entries — live DOM override)
   const patchEntry = useDebounce(
     useCallback(
       async (key: string, value: string, sourceValue: string) => {
@@ -179,30 +188,56 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
     500
   );
 
+  // Debounced PATCH + RELOAD for data array entries (labels come from JS arrays, not static JSX)
+  const patchDataEntry = useDebounce(
+    useCallback(
+      async (key: string, value: string, sourceValue: string) => {
+        try {
+          await fetch(`/api/preview/${prototypeId}/copy`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, value, sourceValue }),
+          });
+          // Reload the bundle so the data array change is reflected in the preview
+          postToPreview({ type: 'RELOAD' });
+        } catch {
+          // Silently ignore
+        }
+      },
+      [prototypeId]
+    ),
+    500
+  );
+
   const handleEntryChange = useCallback(
     (entry: CopyEntryWithHistory, newValue: string) => {
       updateEntry(entry.key, newValue);
-      patchEntry(entry.key, newValue, entry.sourceValue);
-      // Build fresh override map from store after update
-      // Use updated entries directly to avoid stale closure
-      const currentEntries = useCopyStore.getState().entries;
-      const overrides = buildOverrideMap(currentEntries);
-      postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides });
+      if (isDataArrayEntry(entry)) {
+        // Data array entries are baked into the bundle — reload preview after patch
+        patchDataEntry(entry.key, newValue, entry.sourceValue);
+      } else {
+        patchEntry(entry.key, newValue, entry.sourceValue);
+        const currentEntries = useCopyStore.getState().entries;
+        const overrides = buildOverrideMap(currentEntries);
+        postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides });
+      }
     },
-    [updateEntry, patchEntry]
+    [updateEntry, patchEntry, patchDataEntry]
   );
 
   const handleResetEntry = useCallback(
     (entry: CopyEntryWithHistory) => {
       resetEntry(entry.key);
-      // Reset value in API
-      patchEntry(entry.key, entry.sourceValue, entry.sourceValue);
-      // Rebuild overrides after reset and send to iframe
-      const currentEntries = useCopyStore.getState().entries;
-      const overrides = buildOverrideMap(currentEntries);
-      postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides });
+      if (isDataArrayEntry(entry)) {
+        patchDataEntry(entry.key, entry.sourceValue, entry.sourceValue);
+      } else {
+        patchEntry(entry.key, entry.sourceValue, entry.sourceValue);
+        const currentEntries = useCopyStore.getState().entries;
+        const overrides = buildOverrideMap(currentEntries);
+        postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides });
+      }
     },
-    [resetEntry, patchEntry]
+    [resetEntry, patchEntry, patchDataEntry]
   );
 
   const handleEntryFocus = useCallback((entry: CopyEntryWithHistory) => {
@@ -268,15 +303,10 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
     );
   }, [entries, searchQuery]);
 
-  // Group filtered entries by componentName
-  const groupedEntries = useMemo(() => {
-    const groups: Record<string, CopyEntryWithHistory[]> = {};
-    for (const entry of filteredEntries) {
-      if (!groups[entry.componentName]) groups[entry.componentName] = [];
-      groups[entry.componentName].push(entry);
-    }
-    return groups;
-  }, [filteredEntries]);
+  const sortedEntries = useMemo(
+    () => [...filteredEntries].sort((a, b) => a.sourceLine - b.sourceLine),
+    [filteredEntries]
+  );
 
   // Export as JSON
   const handleExport = useCallback(() => {
@@ -382,19 +412,6 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
 
         {/* Action buttons */}
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          {summary.modified > 0 && (
-            <Button
-              size="small"
-              variant="outlined"
-              color="success"
-              startIcon={approving ? <CircularProgress size={14} /> : <CheckIcon />}
-              onClick={handleApproveAll}
-              disabled={approving}
-              sx={{ fontSize: '12px' }}
-            >
-              Approve all
-            </Button>
-          )}
           <Button
             size="small"
             variant="outlined"
@@ -435,71 +452,16 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
         </Alert>
       )}
 
-      {/* Entry groups */}
+      {/* Flat entry list */}
       <Box sx={{ flex: 1, overflow: 'auto' }}>
-        {Object.entries(groupedEntries).map(([componentName, groupEntries]) => {
-          const isCollapsed = collapsedGroups.has(componentName);
-          const componentPath = groupEntries[0]?.componentPath ?? componentName;
-
-          // Sub-group by category
-          const byCategory: Record<string, CopyEntryWithHistory[]> = {};
-          for (const entry of groupEntries) {
-            if (!byCategory[entry.category]) byCategory[entry.category] = [];
-            byCategory[entry.category].push(entry);
-          }
+        {sortedEntries.map((entry) => {
+          const isModified = entry.currentValue !== entry.sourceValue;
+          const isHighlighted = highlightedKey === entry.key;
+          const histExpanded = expandedHistory.has(entry.key);
+          const conflict = conflicts.find((c) => c.key === entry.key);
+          const isMultiline = entry.sourceValue.includes('\n') || entry.sourceValue.length > 80;
 
           return (
-            <Box key={componentName}>
-              {/* Group header */}
-              <Tooltip title={componentPath} placement="right">
-                <Box
-                  onClick={() => toggleGroup(componentName)}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    px: 1.5,
-                    py: 0.75,
-                    cursor: 'pointer',
-                    bgcolor: 'grey.100',
-                    '&:hover': { bgcolor: 'grey.200' },
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 2,
-                    borderBottom: 1,
-                    borderColor: 'divider',
-                  }}
-                >
-                  {isCollapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}
-                  <Typography variant="caption" fontWeight="bold" sx={{ ml: 0.5, flex: 1 }}>
-                    {componentName}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {groupEntries.length}
-                  </Typography>
-                </Box>
-              </Tooltip>
-
-              {/* Entries */}
-              <Collapse in={!isCollapsed}>
-                {Object.entries(byCategory).map(([category, catEntries]) => (
-                  <Box key={category}>
-                    {/* Category sub-header */}
-                    <Typography
-                      variant="caption"
-                      color="text.disabled"
-                      sx={{ px: 2, py: 0.25, display: 'block', fontSize: '10px', textTransform: 'uppercase', letterSpacing: 0.5 }}
-                    >
-                      {CATEGORY_LABELS[category] ?? category}
-                    </Typography>
-
-                    {catEntries.map((entry) => {
-                      const isModified = entry.currentValue !== entry.sourceValue;
-                      const isHighlighted = highlightedKey === entry.key;
-                      const histExpanded = expandedHistory.has(entry.key);
-                      const conflict = conflicts.find((c) => c.key === entry.key);
-                      const isMultiline = entry.sourceValue.includes('\n') || entry.sourceValue.length > 80;
-
-                      return (
                         <Box
                           key={entry.key}
                           ref={(el: HTMLDivElement | null) => {
@@ -514,10 +476,9 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                             transition: 'all 0.15s',
                           }}
                         >
-                          {/* Entry label row */}
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                            {/* Modified indicator dot */}
-                            {isModified && (
+                          {/* Action row — only visible when modified */}
+                          {isModified && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                               <Box
                                 sx={{
                                   width: 8,
@@ -528,24 +489,14 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                                   flexShrink: 0,
                                 }}
                               />
-                            )}
-                            <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-                              {entry.propName}
-                            </Typography>
-                            {/* History toggle */}
-                            {isModified && entry.edits.length > 0 && (
-                              <Tooltip title="Edit history">
-                                <IconButton
-                                  size="small"
-                                  onClick={() => toggleHistory(entry.key)}
-                                  sx={{ p: 0.25 }}
-                                >
-                                  <HistoryIcon sx={{ fontSize: 14 }} />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                            {/* Approve button — write to source */}
-                            {isModified && (
+                              <Box sx={{ flex: 1 }} />
+                              {entry.edits.length > 0 && (
+                                <Tooltip title="Edit history">
+                                  <IconButton size="small" onClick={() => toggleHistory(entry.key)} sx={{ p: 0.25 }}>
+                                    <HistoryIcon sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
                               <Tooltip title="Approve — write to source">
                                 <IconButton
                                   size="small"
@@ -556,20 +507,13 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                                   <CheckIcon sx={{ fontSize: 14 }} color="success" />
                                 </IconButton>
                               </Tooltip>
-                            )}
-                            {/* Reset button */}
-                            {isModified && (
                               <Tooltip title="Reset to original">
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleResetEntry(entry)}
-                                  sx={{ p: 0.25 }}
-                                >
+                                <IconButton size="small" onClick={() => handleResetEntry(entry)} sx={{ p: 0.25 }}>
                                   <RestoreIcon sx={{ fontSize: 14 }} />
                                 </IconButton>
                               </Tooltip>
-                            )}
-                          </Box>
+                            </Box>
+                          )}
 
                           {/* Conflict display */}
                           {conflict ? (
@@ -634,6 +578,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                               }}
                               onBlur={handleEntryBlur}
                               helperText={`${entry.currentValue.length} chars`}
+                              sx={{ '& .MuiInputBase-input': { fontSize: '13px' } }}
                               slotProps={{
                                 formHelperText: { sx: { mx: 0, fontSize: '10px' } },
                               }}
@@ -666,18 +611,11 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                             </Box>
                           </Collapse>
                         </Box>
-                      );
-                    })}
-                    <Divider />
-                  </Box>
-                ))}
-              </Collapse>
-            </Box>
           );
         })}
 
         {/* Empty search state */}
-        {searchQuery && Object.keys(groupedEntries).length === 0 && (
+        {searchQuery && sortedEntries.length === 0 && (
           <Box sx={{ p: 2, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
               No entries match &quot;{searchQuery}&quot;

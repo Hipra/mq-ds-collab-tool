@@ -12,9 +12,16 @@ const traverse: (ast: any, visitors: any) => void = typeof _traverse === 'functi
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const generate: (ast: any, opts?: any) => { code: string } = typeof _generate === 'function' ? _generate : (_generate as any).default;
 
+// HTML elements that may carry visible text — also get data-inspector-id injected.
+const TEXT_BEARING_HTML_ELEMENTS = new Set([
+  'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'strong', 'em', 'b', 'i', 'small', 'label', 'a', 'li',
+  'th', 'td', 'dt', 'dd', 'caption', 'figcaption',
+]);
+
 /**
  * Babel pre-pass that injects `data-inspector-id` attributes onto all MUI (uppercase)
- * JSX components in the source file.
+ * JSX components and text-bearing HTML elements in the source file.
  *
  * This runs BEFORE esbuild so the data-* attributes are present in the compiled output.
  * React passes data-* props through to the DOM, where they appear as data-inspector-id
@@ -38,8 +45,10 @@ export function injectInspectorIds(sourceCode: string, filePath: string): string
     JSXOpeningElement(path: any) {
       const nameNode = path.node.name;
 
-      // Skip lowercase (HTML) elements — only instrument MUI/capitalized components
-      if (nameNode.type === 'JSXIdentifier' && /^[a-z]/.test(nameNode.name)) return;
+      // Skip lowercase HTML elements that don't carry text content
+      if (nameNode.type === 'JSXIdentifier' && /^[a-z]/.test(nameNode.name)) {
+        if (!TEXT_BEARING_HTML_ELEMENTS.has(nameNode.name)) return;
+      }
 
       const componentName =
         nameNode.type === 'JSXIdentifier'
