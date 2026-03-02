@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "entries": {
+    "DialogTitle_65_21_children": {
+      "editedValue": "Settings",
+      "editedAt": "2026-03-02T13:37:56.001Z",
+      "sourceValueAtEdit": "Settings",
+      "edits": [
+        {
+          "value": "Setting",
+          "timestamp": "2026-03-02T13:37:53.846Z"
+        },
+        {
+          "value": "Settings",
+          "timestamp": "2026-03-02T13:37:56.001Z"
+        }
+      ]
+    }
+  }
+}
