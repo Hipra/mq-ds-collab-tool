@@ -269,7 +269,7 @@ export default function GalleryPage() {
       </AppBar>
 
       {/* ── Content ── */}
-      <Box sx={{ flex: 1, overflow: 'auto', bgcolor: 'background.default' }}>
+      <Box sx={{ flex: 1, overflow: 'auto' }}>
         <Box sx={{ px: 3, py: 3 }}>
 
           {/* ── Prototypes tab ── */}

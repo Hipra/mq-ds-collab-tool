@@ -85,14 +85,7 @@ export function StatusBadge({ prototypeId }: StatusBadgeProps) {
         variant="filled"
         size="small"
         onClick={handleClick}
-        sx={{
-          cursor: 'pointer',
-          ...(status === 'draft' && {
-            bgcolor: 'rgba(255,255,255,0.15)',
-            color: 'rgba(255,255,255,0.75)',
-            '& .MuiChip-label': { fontWeight: 400 },
-          }),
-        }}
+        sx={{ cursor: 'pointer' }}
         aria-controls={open ? 'status-menu' : undefined}
         aria-haspopup="true"
         aria-expanded={open ? 'true' : undefined}

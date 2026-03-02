@@ -13,13 +13,7 @@ import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import MenuIcon from '@mui/icons-material/Menu';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import TerminalIcon from '@mui/icons-material/Terminal';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import { useRouter } from 'next/navigation';
@@ -57,33 +51,12 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
   const { mode, cycleMode } = useThemeStore();
   const { togglePanel, panelOpen, sidebarOpen, toggleSidebar, activeScreenId } = useInspectorStore();
   const [copiedClaude, setCopiedClaude] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
-  const [deleting, setDeleting] = useState(false);
 
   const handleCopyClaudeCommand = () => {
     const screenFile = activeScreenId === 'index' ? 'index.jsx' : `screen-${activeScreenId}.jsx`;
     const command = `claude --dangerously-skip-permissions "Work on screen ${screenFile} in prototype prototypes/${prototypeId}/. Follow the rules in CLAUDE.md. Read existing files before editing. Only modify files inside prototypes/${prototypeId}/ — never touch src/, config files, or other prototypes. Stack: React + MUI."`;
     navigator.clipboard.writeText(command);
     setCopiedClaude(true);
-  };
-
-  const handleDelete = async () => {
-    setDeleting(true);
-    setDeleteError('');
-    try {
-      const res = await fetch(`/api/prototypes/${prototypeId}`, { method: 'DELETE' });
-      if (!res.ok) {
-        const data = await res.json();
-        setDeleteError(data.error ?? 'Failed to delete prototype');
-        return;
-      }
-      router.push('/');
-    } catch {
-      setDeleteError('Network error');
-    } finally {
-      setDeleting(false);
-    }
   };
 
   const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.system;
@@ -107,16 +80,6 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
         <Box sx={{ ml: 1 }}>
           <StatusBadge prototypeId={prototypeId} />
         </Box>
-        <Tooltip title="Delete prototype">
-          <IconButton
-            onClick={() => { setDeleteError(''); setDeleteOpen(true); }}
-            size="small"
-            aria-label="Delete prototype"
-            sx={{ ml: 0.5 }}
-          >
-            <DeleteOutlineIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
         <Box sx={{ flex: 1 }} />
         <BreakpointSwitcher />
         <Box sx={{ flex: 1 }} />
@@ -173,31 +136,6 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
         </Tooltip>
       </MuiToolbar>
 
-      <Dialog
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>Delete prototype?</DialogTitle>
-        <DialogContent>
-          {deleteError && <Alert severity="error" sx={{ mb: 2 }}>{deleteError}</Alert>}
-          <Typography>
-            <strong>{prototypeName}</strong> will be permanently deleted. This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteOpen(false)}>Cancel</Button>
-          <Button
-            color="error"
-            variant="contained"
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {deleting ? 'Deleting...' : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </AppBar>
   );
 }

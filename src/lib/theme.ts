@@ -33,22 +33,26 @@ export function createAppTheme(config?: ThemeConfig | null) {
       MuiAppBar: {
         styleOverrides: {
           colorDefault: ({ theme: t }) => ({
+            color: t.vars.palette.text.primary,
+            borderBottom: `1px solid ${t.vars.palette.divider}`,
             [t.getColorSchemeSelector('light')]: {
-              backgroundColor: '#302D42',
-              color: '#fff',
-              '& .MuiTab-root': {
-                color: 'rgba(255,255,255,0.6)',
-                '&.Mui-selected': { color: '#fff' },
-              },
-              '& .MuiTabs-indicator': { backgroundColor: '#fff' },
-              '& .MuiIconButton-root': { color: 'rgba(255,255,255,0.75)' },
+              backgroundColor: t.vars.palette.grey[100],
             },
             [t.getColorSchemeSelector('dark')]: {
-              backgroundColor: t.vars.palette.action.hover,
-              borderBottom: `1px solid ${t.vars.palette.divider}`,
+              backgroundColor: t.vars.palette.grey[900],
             },
           }),
         },
+      },
+      MuiCssBaseline: {
+        styleOverrides: `
+          [data-mui-color-scheme="light"] body {
+            background-color: var(--mui-palette-grey-100);
+          }
+          [data-mui-color-scheme="dark"] body {
+            background-color: var(--mui-palette-grey-900);
+          }
+        `,
       },
       MuiListItemButton: {
         styleOverrides: {

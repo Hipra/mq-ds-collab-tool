@@ -1,36 +1,106 @@
 'use client';
 
-import React from 'react';
-import Button from '@mui/material/Button';
-import ButtonGroup from '@mui/material/ButtonGroup';
+import React, { useState, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import InputBase from '@mui/material/InputBase';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import LockIcon from '@mui/icons-material/Lock';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 import { useInspectorStore } from '@/stores/inspector';
-
-const BREAKPOINTS = [
-  { label: 'Auto', width: 'auto' as const },
-  { label: 'md (900)', width: 900 },
-  { label: 'lg (1200)', width: 1200 },
-  { label: 'xl (1536)', width: 1536 },
-] as const;
 
 export function BreakpointSwitcher() {
   const { previewWidth, setPreviewWidth } = useInspectorStore();
+  const isAuto = previewWidth === 'auto';
+  const [inputValue, setInputValue] = useState(isAuto ? '' : String(previewWidth));
+
+  // Sync input when store changes externally
+  useEffect(() => {
+    if (previewWidth !== 'auto') {
+      setInputValue(String(previewWidth));
+    }
+  }, [previewWidth]);
+
+  const handleToggle = () => {
+    if (isAuto) {
+      const px = parseInt(inputValue) || 1280;
+      setInputValue(String(px));
+      setPreviewWidth(px);
+    } else {
+      setPreviewWidth('auto');
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '');
+    setInputValue(val);
+  };
+
+  const handleCommit = () => {
+    const px = parseInt(inputValue);
+    if (px >= 320 && px <= 3840) {
+      setPreviewWidth(px);
+    } else if (!px) {
+      setPreviewWidth('auto');
+    }
+  };
 
   return (
-    <ButtonGroup size="small" variant="outlined" color="secondary" aria-label="Preview breakpoint selector">
-      {BREAKPOINTS.map(({ label, width }) => {
-        const isActive = previewWidth === width;
-        return (
-          <Button
-            key={label}
-            variant={isActive ? 'contained' : 'outlined'}
-            onClick={() => setPreviewWidth(width)}
-            aria-pressed={isActive}
-            sx={{ textTransform: 'none' }}
-          >
-            {label}
-          </Button>
-        );
-      })}
-    </ButtonGroup>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 1,
+        overflow: 'hidden',
+        height: 28,
+      }}
+    >
+      <InputBase
+        value={isAuto ? 'Auto' : inputValue}
+        onChange={handleChange}
+        onBlur={handleCommit}
+        onKeyDown={(e) => { if (e.key === 'Enter') handleCommit(); }}
+        disabled={isAuto}
+        inputProps={{ 'aria-label': 'Preview width in pixels' }}
+        endAdornment={
+          !isAuto && (
+            <Box component="span" sx={{ color: 'text.disabled', fontSize: '0.75rem', pr: 0.5 }}>
+              px
+            </Box>
+          )
+        }
+        sx={{
+          fontSize: '0.8125rem',
+          px: 1,
+          width: 80,
+          '& .MuiInputBase-input': {
+            p: 0,
+            textAlign: 'center',
+            color: isAuto ? 'text.secondary' : 'text.primary',
+          },
+        }}
+      />
+      <Tooltip title={isAuto ? 'Lock width' : 'Reset to auto'}>
+        <IconButton
+          size="small"
+          onClick={handleToggle}
+          sx={{
+            borderRadius: 0,
+            borderLeft: '1px solid',
+            borderColor: 'divider',
+            height: 28,
+            width: 28,
+            color: isAuto ? 'text.disabled' : 'secondary.main',
+          }}
+        >
+          {isAuto
+            ? <LockOpenIcon sx={{ fontSize: 14 }} />
+            : <LockIcon sx={{ fontSize: 14 }} />
+          }
+        </IconButton>
+      </Tooltip>
+    </Box>
   );
 }
