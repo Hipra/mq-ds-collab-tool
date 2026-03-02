@@ -46,7 +46,7 @@ interface InspectorActions {
 export const useInspectorStore = create<InspectorState & InspectorActions>((set) => ({
   // Panel defaults
   panelOpen: true,
-  activeTab: 'components',
+  activeTab: 'copy',
 
   // Inspector defaults
   selectedComponentId: null,
