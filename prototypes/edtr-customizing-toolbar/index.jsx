@@ -106,7 +106,12 @@ export default function Prototype() {
         onClose={handleCancel}
         slotProps={{ paper: { sx: { width: 600, maxWidth: 600 } } }}
       >
-        <DialogTitle>Settings</DialogTitle>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          Settings
+          <IconButton size="small" onClick={handleCancel}>
+            <MqIcon name="remove" size={20} />
+          </IconButton>
+        </DialogTitle>
 
         <DialogContent dividers>
           <Accordion
