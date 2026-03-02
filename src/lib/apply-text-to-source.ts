@@ -156,6 +156,7 @@ export function applyTextEditsToSource(source: string, edits: TextEdit[]): strin
 
     // Replace string literals in top-level const array-of-objects declarations.
     // Key format: "VARNAME_index_propName" — parsed via parseDataKey.
+    // Supports nested arrays: [[{label:'A'}],[{label:'B'}]] — flattened to index 0,1,...
     VariableDeclaration: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       enter(nodePath: any) {
@@ -168,8 +169,20 @@ export function applyTextEditsToSource(source: string, edits: TextEdit[]): strin
 
           const varName: string = declarator.id.name;
 
+          // Recursively collect all ObjectExpression nodes (handles nested arrays)
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          declarator.init.elements.forEach((element: any, index: number) => {
+          function collectObjects(arrayExpr: any): any[] {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const result: any[] = [];
+            for (const el of arrayExpr.elements) {
+              if (!el) continue;
+              if (el.type === 'ObjectExpression') result.push(el);
+              else if (el.type === 'ArrayExpression') result.push(...collectObjects(el));
+            }
+            return result;
+          }
+
+          collectObjects(declarator.init).forEach((element: any, index: number) => {
             if (!element || element.type !== 'ObjectExpression') return;
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

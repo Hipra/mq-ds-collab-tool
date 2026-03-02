@@ -67,16 +67,27 @@ function getEntryDisplayPropName(entry: CopyEntryWithHistory): string {
   return `[${index}] ${entry.propName}`;
 }
 
-/** Build the full override map from all modified entries */
+/** Build the full override map from all modified JSX entries (inspector-id based) */
 function buildOverrideMap(entries: CopyEntryWithHistory[]): Record<string, Record<string, string>> {
   const overrides: Record<string, Record<string, string>> = {};
   for (const e of entries) {
-    if (e.currentValue !== e.sourceValue) {
+    if (!isDataArrayEntry(e) && e.currentValue !== e.sourceValue) {
       if (!overrides[e.inspectorId]) overrides[e.inspectorId] = {};
       overrides[e.inspectorId][e.propName] = e.currentValue;
     }
   }
   return overrides;
+}
+
+/** Build text-content override map for data array entries (e.g. TOOLBAR_GROUPS labels) */
+function buildTextContentOverrideMap(entries: CopyEntryWithHistory[]): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const e of entries) {
+    if (isDataArrayEntry(e) && e.currentValue !== e.sourceValue) {
+      result[e.sourceValue] = e.currentValue;
+    }
+  }
+  return result;
 }
 
 
@@ -144,12 +155,11 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
         setEntries(data.entries ?? [], data.conflicts ?? [], data.summary ?? { total: 0, modified: 0 }, editsMap);
 
         // If any entries are already modified, send overrides to iframe
-        const modifiedEntries: CopyEntryWithHistory[] = (data.entries ?? []).filter(
-          (e: CopyEntryWithHistory) => e.currentValue !== e.sourceValue
-        );
-        if (modifiedEntries.length > 0) {
-          const overrides = buildOverrideMap(data.entries ?? []);
-          postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides });
+        const allEntries: CopyEntryWithHistory[] = data.entries ?? [];
+        const hasModified = allEntries.some((e: CopyEntryWithHistory) => e.currentValue !== e.sourceValue);
+        if (hasModified) {
+          postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides: buildOverrideMap(allEntries) });
+          postToPreview({ type: 'SET_TEXT_CONTENT_OVERRIDES', overrides: buildTextContentOverrideMap(allEntries) });
         }
       }
     } catch {
@@ -188,17 +198,16 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
     500
   );
 
-  // Debounced PATCH + RELOAD for data array entries (labels come from JS arrays, not static JSX)
-  const patchDataEntry = useDebounce(
+  // Debounced PATCH + RELOAD for data array entry reset (need clean bundle without overlay)
+  const patchDataEntryReset = useDebounce(
     useCallback(
-      async (key: string, value: string, sourceValue: string) => {
+      async (key: string, sourceValue: string) => {
         try {
           await fetch(`/api/preview/${prototypeId}/copy`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key, value, sourceValue }),
+            body: JSON.stringify({ key, value: sourceValue, sourceValue }),
           });
-          // Reload the bundle so the data array change is reflected in the preview
           postToPreview({ type: 'RELOAD' });
         } catch {
           // Silently ignore
@@ -213,31 +222,36 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
     (entry: CopyEntryWithHistory, newValue: string) => {
       updateEntry(entry.key, newValue);
       if (isDataArrayEntry(entry)) {
-        // Data array entries are baked into the bundle — reload preview after patch
-        patchDataEntry(entry.key, newValue, entry.sourceValue);
+        // Data array entries: persist overlay, update live via text-content DOM patching (no reload)
+        patchEntry(entry.key, newValue, entry.sourceValue);
+        const currentEntries = useCopyStore.getState().entries;
+        postToPreview({ type: 'SET_TEXT_CONTENT_OVERRIDES', overrides: buildTextContentOverrideMap(currentEntries) });
       } else {
         patchEntry(entry.key, newValue, entry.sourceValue);
         const currentEntries = useCopyStore.getState().entries;
-        const overrides = buildOverrideMap(currentEntries);
-        postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides });
+        postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides: buildOverrideMap(currentEntries) });
       }
     },
-    [updateEntry, patchEntry, patchDataEntry]
+    [updateEntry, patchEntry]
   );
 
   const handleResetEntry = useCallback(
     (entry: CopyEntryWithHistory) => {
       resetEntry(entry.key);
       if (isDataArrayEntry(entry)) {
-        patchDataEntry(entry.key, entry.sourceValue, entry.sourceValue);
+        // Clear text content override immediately (best-effort DOM revert for current session)
+        const currentEntries = useCopyStore.getState().entries;
+        postToPreview({ type: 'SET_TEXT_CONTENT_OVERRIDES', overrides: buildTextContentOverrideMap(currentEntries) });
+        // Also PATCH + RELOAD so the bundle is clean (handles the case where the
+        // bundle was loaded with this value already baked in from a previous session)
+        patchDataEntryReset(entry.key, entry.sourceValue);
       } else {
         patchEntry(entry.key, entry.sourceValue, entry.sourceValue);
         const currentEntries = useCopyStore.getState().entries;
-        const overrides = buildOverrideMap(currentEntries);
-        postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides });
+        postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides: buildOverrideMap(currentEntries) });
       }
     },
-    [resetEntry, patchEntry, patchDataEntry]
+    [resetEntry, patchEntry, patchDataEntryReset]
   );
 
   const handleEntryFocus = useCallback((entry: CopyEntryWithHistory) => {

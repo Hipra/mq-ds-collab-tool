@@ -498,7 +498,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
       {/* Add screen button */}
       <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
         <Button
-          variant="outlined"
+          variant="text"
           color="secondary"
           size="small"
           startIcon={<AddIcon />}

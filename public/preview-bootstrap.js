@@ -53,7 +53,10 @@ function buildDefaultTheme() {
   return createTheme({
     cssVariables: true,
     colorSchemeSelector: 'data',
-    colorSchemes: { light: true, dark: true },
+    colorSchemes: {
+      light: { palette: { text: { primary: 'rgba(59, 55, 81, 0.87)' } } },
+      dark: true,
+    },
     ...buildComponentsConfig(),
   });
 }
@@ -67,7 +70,7 @@ function buildTheme(config) {
     cssVariables: true,
     colorSchemeSelector: 'data',
     colorSchemes: {
-      light: { palette: config.palette.light },
+      light: { palette: { text: { primary: 'rgba(59, 55, 81, 0.87)' }, ...config.palette.light } },
       dark: { palette: config.palette.dark },
     },
     typography: config.typography,
@@ -81,6 +84,10 @@ function buildTheme(config) {
 // Carries the current text override map from Root down to TextOverrideApplier
 // without prop-drilling through the prototype component tree.
 const TextOverrideContext = createContext({});
+
+// Carries text-content-based overrides for data array entries (e.g. TOOLBAR_GROUPS labels).
+// Format: { [originalText]: newText } — targeted by text content, not data-inspector-id.
+const TextContentOverrideContext = createContext({});
 
 // ─── Bundle URL from <meta> tag ──────────────────────────────────────────────
 // document.currentScript is always null inside type="module" scripts (browser spec),
@@ -260,6 +267,62 @@ function TextOverrideApplier() {
   return null; // renders nothing — only applies DOM overrides
 }
 
+// ─── TextContentOverrideApplier — live DOM patching for data array entries ───
+// Data array labels (e.g. TOOLBAR_GROUPS) are rendered via {item.label} expressions,
+// not static JSXText, so they have no unique data-inspector-id to target.
+// Instead we match by text content: walk all text nodes, replace those that match
+// an original value. _textContentApplied tracks applied values so incremental edits
+// ("Undo" → "U" → "Un") work correctly even without a React re-render in between.
+const _textContentApplied = new Map(); // Map<originalValue, currentlyAppliedValue>
+
+function TextContentOverrideApplier() {
+  const overrides = useContext(TextContentOverrideContext);
+
+  useEffect(() => {
+    // Build reverse map: appliedValue → originalValue (needed for incremental edits)
+    const reverseMap = new Map();
+    for (const [orig, applied] of _textContentApplied.entries()) {
+      reverseMap.set(applied, orig);
+    }
+
+    function applyOverrides() {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      let node = walker.nextNode();
+      while (node) {
+        const raw = node.nodeValue;
+        if (raw) {
+          const trimmed = raw.trim();
+          if (trimmed) {
+            // If DOM currently shows a previously-applied value, resolve back to original
+            const effectiveOriginal = reverseMap.has(trimmed) ? reverseMap.get(trimmed) : trimmed;
+            if (effectiveOriginal in overrides) {
+              const newVal = overrides[effectiveOriginal];
+              if (newVal !== trimmed) {
+                node.nodeValue = raw.replace(trimmed, newVal);
+                _textContentApplied.set(effectiveOriginal, newVal);
+                reverseMap.delete(trimmed);
+                reverseMap.set(newVal, effectiveOriginal);
+              }
+            }
+            // Note: reset operations use RELOAD for a clean revert, not handled here.
+          }
+        }
+        node = walker.nextNode();
+      }
+    }
+
+    applyOverrides();
+
+    const rootEl = document.getElementById('root');
+    if (!rootEl) return;
+    const observer = new MutationObserver(() => requestAnimationFrame(applyOverrides));
+    observer.observe(rootEl, { childList: true, subtree: true, characterData: false });
+    return () => observer.disconnect();
+  }, [overrides]);
+
+  return null;
+}
+
 /** Read the current DOM value for a given prop type */
 function _readValue(el, propName) {
   if (propName === 'children') {
@@ -323,7 +386,7 @@ function _applyValue(el, propName, value) {
 }
 
 // ─── App shell — wraps prototype in ThemeProvider + CacheProvider + ErrorBoundary ─
-function PreviewApp({ Component, errorBoundaryKey, onRetry, textOverrides, theme }) {
+function PreviewApp({ Component, errorBoundaryKey, onRetry, textOverrides, textContentOverrides, theme }) {
   return createElement(
     CacheProvider,
     { value: emotionCache },
@@ -333,17 +396,22 @@ function PreviewApp({ Component, errorBoundaryKey, onRetry, textOverrides, theme
       createElement(CssBaseline),
       createElement(ThemeListener),
       createElement(
-        TextOverrideContext.Provider,
-        { value: textOverrides },
-        createElement(TextOverrideApplier),
+        TextContentOverrideContext.Provider,
+        { value: textContentOverrides },
+        createElement(TextContentOverrideApplier),
         createElement(
-          ErrorBoundary,
-          {
-            FallbackComponent: ErrorFallback,
-            resetKeys: [errorBoundaryKey],
-            onReset: onRetry,
-          },
-          createElement(Component)
+          TextOverrideContext.Provider,
+          { value: textOverrides },
+          createElement(TextOverrideApplier),
+          createElement(
+            ErrorBoundary,
+            {
+              FallbackComponent: ErrorFallback,
+              resetKeys: [errorBoundaryKey],
+              onReset: onRetry,
+            },
+            createElement(Component)
+          )
         )
       )
     )
@@ -360,6 +428,7 @@ function Root() {
   });
   // Phase 3: text overrides — Record<inspectorId, Record<propName, string>>
   const [textOverrides, setTextOverrides] = useState({});
+  const [textContentOverrides, setTextContentOverrides] = useState({});
   // Phase 4: theme config
   const [themeConfig, setThemeConfig] = useState(null);
   const theme = useMemo(() => buildTheme(themeConfig), [themeConfig]);
@@ -410,9 +479,13 @@ function Root() {
           return { ...prev, bundleVersion: nextVersion };
         });
       }
-      // Phase 3: apply text overrides from Copy tab
+      // Phase 3: apply text overrides from Copy tab (inspector-id based, JSX entries)
       if (event.data?.type === 'SET_TEXT_OVERRIDES') {
         setTextOverrides(event.data.overrides ?? {});
+      }
+      // Data array entries (e.g. TOOLBAR_GROUPS labels) — text content based
+      if (event.data?.type === 'SET_TEXT_CONTENT_OVERRIDES') {
+        setTextContentOverrides(event.data.overrides ?? {});
       }
       // Phase 4: apply theme config
       if (event.data?.type === 'SET_THEME_CONFIG') {
@@ -457,6 +530,7 @@ function Root() {
     errorBoundaryKey: state.errorBoundaryKey,
     onRetry: handleRetry,
     textOverrides,
+    textContentOverrides,
     theme,
   });
 }

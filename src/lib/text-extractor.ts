@@ -165,6 +165,7 @@ export function extractTextEntries(sourceCode: string, filePath: string): TextEn
 
     // Extract string literals from top-level const array-of-objects declarations.
     // e.g. const TOOLBAR_ITEMS = [{ id: 'bold', label: 'Bold', ... }, ...]
+    // Also supports nested arrays: const GROUPS = [[{ label: 'Bold' }], [{ label: 'Undo' }]]
     // Key format: "VARNAME_index_propName" (no line/col — distinguishable from JSX keys)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     VariableDeclaration(nodePath: any) {
@@ -178,8 +179,22 @@ export function extractTextEntries(sourceCode: string, filePath: string): TextEn
 
         const varName: string = declarator.id.name;
 
+        // Recursively collect all ObjectExpression nodes from potentially nested arrays
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        declarator.init.elements.forEach((element: any, index: number) => {
+        function collectObjects(arrayExpr: any): any[] {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const result: any[] = [];
+          for (const el of arrayExpr.elements) {
+            if (!el) continue;
+            if (el.type === 'ObjectExpression') result.push(el);
+            else if (el.type === 'ArrayExpression') result.push(...collectObjects(el));
+          }
+          return result;
+        }
+
+        const objects = collectObjects(declarator.init);
+
+        objects.forEach((element: any, index: number) => {
           if (!element || element.type !== 'ObjectExpression') return;
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -212,11 +227,58 @@ export function extractTextEntries(sourceCode: string, filePath: string): TextEn
     },
   });
 
-  // Second pass: find the JSX render position of each data array variable.
-  // TOOLBAR_ITEMS is defined at line ~20 but rendered at line ~87 via .map().
-  // Use the render line for sorting so entries follow visual order, not definition order.
+  // Second pass: build alias map + find the JSX render position of each data array variable.
+  //
+  // Data arrays are often rendered via a derived variable, not directly. Common patterns:
+  //   const ITEMS = [{...}]
+  //   const ALL = ITEMS.flat()               → ALL aliases ITEMS
+  //   const [items, setItems] = useState(ITEMS) → items aliases ITEMS
+  //   const derived = ITEMS                  → derived aliases ITEMS
+  //
+  // We resolve these alias chains so that `items.map(...)` in JSX is attributed
+  // to ITEMS, giving ITEMS entries the correct render line for visual sorting.
   const varRenderLines: Record<string, number> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const aliasMap: Record<string, string> = {};
+
   traverse(ast, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    VariableDeclarator(nodePath: any) {
+      const id = nodePath.node.id;
+      const init = nodePath.node.init;
+      if (!init) return;
+
+      // const X = Y  (simple alias)
+      if (id.type === 'Identifier' && init.type === 'Identifier') {
+        aliasMap[id.name] = init.name;
+        return;
+      }
+
+      // const X = Y.flat() / Y.flat(n) / Y.slice() / Y.concat(...)
+      if (
+        id.type === 'Identifier' &&
+        init.type === 'CallExpression' &&
+        init.callee?.type === 'MemberExpression' &&
+        init.callee.object?.type === 'Identifier' &&
+        ['flat', 'slice', 'concat', 'filter', 'map'].includes(init.callee.property?.name)
+      ) {
+        aliasMap[id.name] = init.callee.object.name;
+        return;
+      }
+
+      // const [X, setX] = useState(Y) / useReducer(fn, Y)
+      if (
+        id.type === 'ArrayPattern' &&
+        id.elements[0]?.type === 'Identifier' &&
+        init.type === 'CallExpression' &&
+        init.callee?.type === 'Identifier' &&
+        ['useState', 'useReducer'].includes(init.callee.name) &&
+        init.arguments[0]?.type === 'Identifier'
+      ) {
+        aliasMap[id.elements[0].name] = init.arguments[0].name;
+      }
+    },
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     JSXExpressionContainer(nodePath: any) {
       const expr = nodePath.node.expression;
@@ -226,7 +288,13 @@ export function extractTextEntries(sourceCode: string, filePath: string): TextEn
         expr.callee.object?.type === 'Identifier' &&
         expr.callee.property?.name === 'map'
       ) {
-        const varName: string = expr.callee.object.name;
+        // Resolve alias chain: groups → TOOLBAR_GROUPS, items → ITEMS, etc.
+        let varName: string = expr.callee.object.name;
+        const seen = new Set<string>();
+        while (aliasMap[varName] && !seen.has(varName)) {
+          seen.add(varName);
+          varName = aliasMap[varName];
+        }
         const line: number = nodePath.node.loc?.start.line ?? 0;
         if (line > 0 && !(varName in varRenderLines)) {
           varRenderLines[varName] = line;
@@ -235,17 +303,17 @@ export function extractTextEntries(sourceCode: string, filePath: string): TextEn
     },
   });
 
-  // Apply render lines to data array entries
+  // Apply render lines to data array entries.
+  // If the render line was found (direct or via alias), use it for visual sorting.
+  // If not found (uncommon indirect patterns), sort to the end — better than
+  // sorting to the definition line which is always near the top of the file.
   for (const entry of entries) {
     const parts = entry.key.split('_');
     if (parts.length >= 3) {
       const maybeLine = parseInt(parts[parts.length - 3], 10);
       if (isNaN(maybeLine)) {
-        // Data array entry — update sourceLine to render position if found
         const varName = parts.slice(0, parts.length - 2).join('_');
-        if (varRenderLines[varName]) {
-          entry.sourceLine = varRenderLines[varName];
-        }
+        entry.sourceLine = varRenderLines[varName] ?? Number.MAX_SAFE_INTEGER;
       }
     }
   }
