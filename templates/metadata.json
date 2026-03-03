@@ -1,6 +1,7 @@
 {
-  "template-1": {
-    "name": "Template 1",
-    "builtIn": false
+  "dialog-template": {
+    "name": "Dialog template",
+    "builtIn": false,
+    "createdAt": "2026-03-02T16:02:55.165Z"
   }
 }

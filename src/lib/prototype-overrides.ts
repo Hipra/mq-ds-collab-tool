@@ -17,42 +17,36 @@ export const prototypeComponentOverrides: Components<Theme> = {
   MuiButton: {
     styleOverrides: {
       root: {
-        borderRadius: 100,
-        textTransform: 'none',
-        boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 4px 0px',
-        '&:hover': { boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 4px 0px' },
-        '&:active': { boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 4px 0px' },
-      },
-      text: {
-        boxShadow: 'none',
-        '&:hover': { boxShadow: 'none' },
-        '&:active': { boxShadow: 'none' },
-      },
-      outlined: {
-        boxShadow: 'none',
-        '&:hover': { boxShadow: 'none' },
-        '&:active': { boxShadow: 'none' },
-      },
-      sizeSmall: { padding: '8px 12px', fontSize: '12px', fontWeight: 600 },
-      sizeMedium: { padding: '10px 24px', fontSize: '14px', fontWeight: 600 },
-      sizeLarge: { padding: '12px 32px', fontSize: '16px', fontWeight: 600 },
-    },
-  },
-  MuiTab: {
-    styleOverrides: {
-      root: { textTransform: 'none' },
-    },
-  },
-  MuiToggleButton: {
-    styleOverrides: {
-      root: { textTransform: 'none' },
-    },
-  },
-  MuiAccordionSummary: {
-    styleOverrides: {
-      content: {
+        borderRadius: '999px',
+        verticalAlign: 'middle',
         fontWeight: 600,
-        '& .MuiTypography-root': { fontWeight: 600 },
+        minWidth: 64,
+      },
+      sizeSmall: {
+        padding: '8px 12px',
+        fontSize: '12px',
+        lineHeight: 1.3,
+        letterSpacing: '0.4px',
+      },
+      sizeMedium: {
+        padding: '10px 24px',
+        fontSize: '14px',
+        lineHeight: 1.3,
+        letterSpacing: '0.15px',
+      },
+      sizeLarge: {
+        padding: '12px 32px',
+        fontSize: '16px',
+        lineHeight: 1.5,
+        letterSpacing: '0.15px',
+      },
+    },
+  },
+  MuiChip: {
+    styleOverrides: {
+      root: {
+        // shape.borderRadius = 4 — token nem referálható JSON-safe kontextusban
+        borderRadius: 4,
       },
     },
   },

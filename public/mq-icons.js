@@ -30,7 +30,7 @@ async function fetchSvg(name) {
   return text;
 }
 
-const PALETTE_COLORS = ['primary', 'secondary', 'error', 'warning', 'info', 'success'];
+const PALETTE_COLORS = ['primary', 'secondary', 'error', 'warning', 'info', 'success', 'neutral'];
 
 function resolveColor(color) {
   if (PALETTE_COLORS.includes(color)) return `${color}.main`;

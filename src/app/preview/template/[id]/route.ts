@@ -14,9 +14,9 @@ export async function GET(
       'react-dom': 'https://esm.sh/react-dom@19',
       'react-dom/client': 'https://esm.sh/react-dom@19/client',
       '@mui/material':
-        'https://esm.sh/@mui/material@6?external=react,react-dom,@emotion/react,@emotion/styled',
+        'https://esm.sh/@mui/material@7?external=react,react-dom,@emotion/react,@emotion/styled',
       '@mui/material/styles':
-        'https://esm.sh/@mui/material@6/styles?external=react,react-dom,@emotion/react,@emotion/styled',
+        'https://esm.sh/@mui/material@7/styles?external=react,react-dom,@emotion/react,@emotion/styled',
       '@emotion/react': 'https://esm.sh/@emotion/react@11?external=react',
       '@emotion/styled':
         'https://esm.sh/@emotion/styled@11?external=react,@emotion/react',
@@ -34,6 +34,9 @@ export async function GET(
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Template: ${escapeHtml(id)}</title>
   <meta name="bundle-url" content="${escapeHtml(bundleUrl)}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script type="importmap">${importMap}</script>
 </head>
 <body>

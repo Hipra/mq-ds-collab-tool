@@ -63,7 +63,7 @@ export function BreakpointSwitcher() {
         onBlur={handleCommit}
         onKeyDown={(e) => { if (e.key === 'Enter') handleCommit(); }}
         disabled={isAuto}
-        inputProps={{ 'aria-label': 'Preview width in pixels' }}
+        slotProps={{ input: { 'aria-label': 'Preview width in pixels' } }}
         endAdornment={
           !isAuto && (
             <Box component="span" sx={{ color: 'text.disabled', fontSize: '0.75rem', pr: 0.5 }}>

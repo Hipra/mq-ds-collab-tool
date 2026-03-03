@@ -148,7 +148,7 @@ function SortableScreenItem({
             autoFocus
             onClick={(e) => e.stopPropagation()}
             sx={{ flex: 1 }}
-            inputProps={{ style: { fontSize: 13 } }}
+            slotProps={{ input: { style: { fontSize: 13 } } }}
           />
         ) : (
           <ListItemText

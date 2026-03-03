@@ -73,6 +73,7 @@ function buildTheme(config) {
       light: { palette: { text: { primary: 'rgba(59, 55, 81, 0.87)' }, ...config.palette.light } },
       dark: { palette: config.palette.dark },
     },
+    shadows: config.shadows,
     typography: config.typography,
     shape: config.shape,
     spacing: config.spacing,

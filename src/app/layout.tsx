@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'MQ DS Collab Tool',
@@ -22,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={inter.className}>
       <head>
         {/* Body background: use MUI CSS variable after hydration, hardcoded #121212 for dark mode before hydration */}
         <style>{`

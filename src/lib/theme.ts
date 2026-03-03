@@ -1,5 +1,5 @@
 import { createTheme } from '@mui/material/styles';
-import type { ThemeConfig } from '@/lib/theme-config';
+import { MUI_DEFAULTS, type ThemeConfig } from '@/lib/theme-config';
 import { prototypeComponentOverrides } from '@/lib/prototype-overrides';
 
 /**
@@ -17,15 +17,14 @@ export function createAppTheme(config?: ThemeConfig | null) {
     defaultColorScheme: 'light',
     colorSchemes: config
       ? {
-          light: { palette: { text: { primary: 'rgba(59, 55, 81, 0.87)' }, ...config.palette.light } },
+          light: { palette: config.palette.light },
           dark: { palette: config.palette.dark },
         }
-      : {
-          light: { palette: { text: { primary: 'rgba(59, 55, 81, 0.87)' } } },
-          dark: true,
-        },
+      : { light: true, dark: true },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    shadows: (config?.shadows ?? MUI_DEFAULTS.shadows) as any,
+    typography: config ? config.typography : MUI_DEFAULTS.typography,
     ...(config && {
-      typography: config.typography,
       shape: config.shape,
       spacing: config.spacing,
     }),
