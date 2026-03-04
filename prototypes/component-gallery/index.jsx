@@ -30,6 +30,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Menu,
   MenuItem,
   Pagination,
   Paper,
@@ -107,6 +108,8 @@ export default function ComponentGallery() {
   const [radio, setRadio] = useState('a');
   const [sw, setSw] = useState(true);
   const [sel, setSel] = useState('option1');
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [menuDenseAnchor, setMenuDenseAnchor] = useState(null);
 
   return (
     <Box sx={{ p: 5, maxWidth: 1000, mx: 'auto' }}>
@@ -266,6 +269,10 @@ export default function ComponentGallery() {
             />
           </Group>
         ))}
+        <Group label="sizes (outlined) — compact DS padding">
+          <TextField variant="outlined" label="Small" size="small" placeholder="small · 32px" sx={{ width: 200 }} />
+          <TextField variant="outlined" label="Medium" size="medium" placeholder="medium · 40px" sx={{ width: 200 }} />
+        </Group>
         <Group label="multiline">
           <TextField label="Multiline" multiline rows={3} sx={{ width: 320 }} />
         </Group>
@@ -405,7 +412,7 @@ export default function ComponentGallery() {
                 }
                 onClick={() => setAccordion(expanded ? null : i)}
               >
-                <Typography>{label}</Typography>
+                {label}
               </AccordionSummary>
               <AccordionDetails>
                 <Typography variant="body2">
@@ -443,6 +450,50 @@ export default function ComponentGallery() {
               {size}
             </ToggleButton>
           ))}
+        </Group>
+      </Section>
+
+      {/* ── Menu / MenuItem ── */}
+      <Section title="Menu / MenuItem">
+        <Group label="basic menu — shadow[4] + border + secondary selected">
+          <Button
+            variant="outlined"
+            size="small"
+            endIcon={<MqIcon name="chevron_down" size={16} />}
+            onClick={(e) => setMenuAnchor(e.currentTarget)}
+          >
+            Open menu
+          </Button>
+          <Menu
+            anchorEl={menuAnchor}
+            open={Boolean(menuAnchor)}
+            onClose={() => setMenuAnchor(null)}
+          >
+            <MenuItem onClick={() => setMenuAnchor(null)}>Option 1</MenuItem>
+            <MenuItem selected onClick={() => setMenuAnchor(null)}>Selected item</MenuItem>
+            <MenuItem onClick={() => setMenuAnchor(null)}>Option 3</MenuItem>
+            <MenuItem disabled>Disabled item</MenuItem>
+          </Menu>
+        </Group>
+        <Group label="dense">
+          <Button
+            variant="outlined"
+            size="small"
+            endIcon={<MqIcon name="chevron_down" size={16} />}
+            onClick={(e) => setMenuDenseAnchor(e.currentTarget)}
+          >
+            Open dense menu
+          </Button>
+          <Menu
+            anchorEl={menuDenseAnchor}
+            open={Boolean(menuDenseAnchor)}
+            onClose={() => setMenuDenseAnchor(null)}
+            MenuListProps={{ dense: true }}
+          >
+            <MenuItem onClick={() => setMenuDenseAnchor(null)}>Dense item 1</MenuItem>
+            <MenuItem selected onClick={() => setMenuDenseAnchor(null)}>Dense selected</MenuItem>
+            <MenuItem onClick={() => setMenuDenseAnchor(null)}>Dense item 3</MenuItem>
+          </Menu>
         </Group>
       </Section>
 
@@ -592,12 +643,17 @@ export default function ComponentGallery() {
 
       {/* ── Tooltip ── */}
       <Section title="Tooltip">
-        <Group label="placements">
+        <Group label="placements (arrow is now default — no prop needed)">
           {['top', 'right', 'bottom', 'left'].map((p) => (
-            <Tooltip key={p} title={`Tooltip on ${p}`} placement={p} arrow>
+            <Tooltip key={p} title={`Tooltip on ${p}`} placement={p}>
               <Button variant="outlined" size="small">{p}</Button>
             </Tooltip>
           ))}
+        </Group>
+        <Group label="arrow={false} explicit override">
+          <Tooltip title="Arrow disabled" arrow={false}>
+            <Button variant="outlined" size="small">no arrow</Button>
+          </Tooltip>
         </Group>
       </Section>
 
