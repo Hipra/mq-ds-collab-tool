@@ -1,46 +1,70 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import createCache from '@emotion/cache';
+import { CacheProvider } from '@emotion/react';
+import { useServerInsertedHTML } from 'next/navigation';
 import { createAppTheme } from '@/lib/theme';
-import { useThemeConfigStore } from '@/stores/theme-config';
+
+const shellTheme = createAppTheme();
 
 /**
- * App shell layout — wraps all shell pages with MUI ThemeProvider.
+ * Emotion SSR registry for Next.js App Router.
  *
- * The theme is dynamically built from the global ThemeConfig store so that
- * palette changes in the Theme tab are reflected in the shell app as well.
- * Fetches config on mount so the correct palette is available immediately,
- * not only when the ThemeTab mounts.
+ * Next.js App Router SSRs Client Components. Without this registry, Emotion
+ * injects <style> tags inline in the React tree during SSR, causing a
+ * hydration mismatch because the client renders differently.
+ *
+ * This intercepts Emotion insertions and uses useServerInsertedHTML to flush
+ * them into <head> during SSR, matching client behavior.
  */
+function EmotionRegistry({ children }: { children: React.ReactNode }) {
+  const [{ cache, flush }] = useState(() => {
+    const c = createCache({ key: 'css' });
+    c.compat = true;
+    const prevInsert = c.insert.bind(c);
+    let inserted: string[] = [];
+    c.insert = (...args: Parameters<typeof prevInsert>) => {
+      const result = prevInsert(...args);
+      const name = args[1]?.name;
+      if (name && c.inserted[name] !== undefined && !inserted.includes(name)) {
+        inserted.push(name);
+      }
+      return result;
+    };
+    const flushFn = () => { const prev = inserted; inserted = []; return prev; };
+    return { cache: c, flush: flushFn };
+  });
+
+  useServerInsertedHTML(() => {
+    const names = flush();
+    if (names.length === 0) return null;
+    const styles = names.map((name) => cache.inserted[name]).join('');
+    return (
+      <style
+        key={cache.key}
+        data-emotion={`${cache.key} ${names.join(' ')}`}
+        dangerouslySetInnerHTML={{ __html: styles }}
+      />
+    );
+  });
+
+  return <CacheProvider value={cache}>{children}</CacheProvider>;
+}
+
 export default function ShellLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const config = useThemeConfigStore((s) => s.config);
-  const loading = useThemeConfigStore((s) => s.loading);
-  const setConfig = useThemeConfigStore((s) => s.setConfig);
-  const setLoading = useThemeConfigStore((s) => s.setLoading);
-  const theme = useMemo(() => createAppTheme(config), [config]);
-
-  useEffect(() => {
-    fetch('/api/theme')
-      .then((res) => res.json())
-      .then((data) => {
-        setConfig(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [setConfig, setLoading]);
-
-  if (loading) return null;
-
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      {children}
-    </ThemeProvider>
+    <EmotionRegistry>
+      <ThemeProvider theme={shellTheme}>
+        <CssBaseline />
+        {children}
+      </ThemeProvider>
+    </EmotionRegistry>
   );
 }
