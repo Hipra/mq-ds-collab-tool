@@ -460,11 +460,11 @@ export default function GalleryPage() {
             autoFocus fullWidth label="Prototype name" value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); }}
-            sx={{ mt: 1 }}
+            slotProps={{ input: { notched: false, color: 'secondary' } }}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
+          <Button variant="text" color="secondary" onClick={() => setCreateOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleCreate} disabled={!newName.trim() || creating}>
             {creating ? 'Creating…' : 'Create'}
           </Button>
@@ -480,11 +480,11 @@ export default function GalleryPage() {
             autoFocus fullWidth label="New name" value={cloneName}
             onChange={(e) => setCloneName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleClone(); }}
-            sx={{ mt: 1 }}
+            slotProps={{ input: { notched: false, color: 'secondary' } }}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCloneTarget(null)}>Cancel</Button>
+          <Button variant="text" color="secondary" onClick={() => setCloneTarget(null)}>Cancel</Button>
           <Button variant="contained" onClick={handleClone} disabled={!cloneName.trim() || cloning}>
             {cloning ? 'Cloning…' : 'Clone'}
           </Button>
@@ -501,7 +501,7 @@ export default function GalleryPage() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button variant="text" color="secondary" onClick={() => setDeleteTarget(null)}>Cancel</Button>
           <Button color="error" variant="contained" onClick={handleDelete} disabled={deleting}>
             {deleting ? 'Deleting…' : 'Delete'}
           </Button>
@@ -518,7 +518,7 @@ export default function GalleryPage() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTemplateTarget(null)}>Cancel</Button>
+          <Button variant="text" color="secondary" onClick={() => setDeleteTemplateTarget(null)}>Cancel</Button>
           <Button color="error" variant="contained" onClick={handleDeleteTemplate} disabled={deletingTemplate}>
             {deletingTemplate ? 'Deleting…' : 'Delete'}
           </Button>
@@ -552,7 +552,7 @@ export default function GalleryPage() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAddToTemplate(null)}>Cancel</Button>
+          <Button variant="text" color="secondary" onClick={() => setAddToTemplate(null)}>Cancel</Button>
           <Button variant="contained" onClick={handleAddToPrototype} disabled={!addToProtoId || addToLoading}>
             {addToLoading ? 'Adding…' : 'Add screen'}
           </Button>
