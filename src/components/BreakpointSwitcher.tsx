@@ -5,8 +5,7 @@ import Box from '@mui/material/Box';
 import InputBase from '@mui/material/InputBase';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import LockIcon from '@mui/icons-material/Lock';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
+import MqIcon from '@/components/MqIcon';
 import { useInspectorStore } from '@/stores/inspector';
 
 export function BreakpointSwitcher() {
@@ -96,8 +95,8 @@ export function BreakpointSwitcher() {
           }}
         >
           {isAuto
-            ? <LockOpenIcon sx={{ fontSize: 14 }} />
-            : <LockIcon sx={{ fontSize: 14 }} />
+            ? <MqIcon name="unlock" size={14} />
+            : <MqIcon name="lock" size={14} />
           }
         </IconButton>
       </Tooltip>

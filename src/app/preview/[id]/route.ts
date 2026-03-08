@@ -27,16 +27,25 @@ export async function GET(
     ? `/api/preview/${id}/bundle?screen=${screen}`
     : `/api/preview/${id}/bundle`;
 
+  const MUI_CDN = 'https://esm.sh/@mui/material@7?external=react,react-dom,@emotion/react,@emotion/styled';
+
   const importMap = JSON.stringify({
     imports: {
       react: 'https://esm.sh/react@19',
       'react/jsx-runtime': 'https://esm.sh/react@19/jsx-runtime',
       'react-dom': 'https://esm.sh/react-dom@19',
       'react-dom/client': 'https://esm.sh/react-dom@19/client',
-      '@mui/material':
-        'https://esm.sh/@mui/material@7?external=react,react-dom,@emotion/react,@emotion/styled',
+      // @mui/material → DS wrapper bundle: prototypes get DS-styled components
+      // transparently via bare import. Components the DS doesn't wrap fall through
+      // via `export * from '@mui/material'` inside the bundle, which resolves to
+      // the real CDN via the scope below (avoiding circular dependency).
+      '@mui/material': '/api/preview/ds-components',
       '@mui/material/styles':
         'https://esm.sh/@mui/material@7/styles?external=react,react-dom,@emotion/react,@emotion/styled',
+      '@mui/material/locale':
+        'https://esm.sh/@mui/material@7/locale?external=react,react-dom,@emotion/react,@emotion/styled',
+      '@mui/material/Typography':
+        'https://esm.sh/@mui/material@7/Typography?external=react,react-dom,@emotion/react,@emotion/styled',
       '@emotion/react': 'https://esm.sh/@emotion/react@11?external=react',
       '@emotion/styled':
         'https://esm.sh/@emotion/styled@11?external=react,@emotion/react',
@@ -44,6 +53,17 @@ export async function GET(
       'react-error-boundary':
         'https://esm.sh/react-error-boundary@5?external=react',
       '@mq/icons': '/mq-icons.js',
+    },
+    // Scope: when the DS components bundle itself imports @mui/material,
+    // resolve to the real CDN (not back to itself — that would be circular).
+    scopes: {
+      '/api/preview/ds-components': {
+        '@mui/material': MUI_CDN,
+        '@mui/material/styles':
+          'https://esm.sh/@mui/material@7/styles?external=react,react-dom,@emotion/react,@emotion/styled',
+        '@mui/material/locale':
+          'https://esm.sh/@mui/material@7/locale?external=react,react-dom,@emotion/react,@emotion/styled',
+      },
     },
   });
 
@@ -61,7 +81,7 @@ export async function GET(
 </head>
 <body>
   <div id="root"></div>
-  <script type="module" src="/preview-bootstrap.js"></script>
+  <script type="module" src="/preview-bootstrap.js?v=${Date.now()}"></script>
 </body>
 </html>`;
 

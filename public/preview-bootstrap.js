@@ -20,7 +20,6 @@ import { createElement, useState, useEffect, useCallback, useContext, createCont
 import createCache from '@emotion/cache';
 import { CacheProvider } from '@emotion/react';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { useColorScheme } from '@mui/material/styles';
 import { ErrorBoundary } from 'react-error-boundary';
 
 // ─── Emotion cache targeting THIS iframe's document.head ──────────────────────
@@ -28,58 +27,46 @@ import { ErrorBoundary } from 'react-error-boundary';
 // not the iframe's. Styles would render in the parent, not the preview.
 const emotionCache = createCache({ key: 'mui', container: document.head });
 
-// ─── MUI theme with CSS variables + light/dark color schemes ─────────────────
-// cssVariables: true — mode switching changes CSS variable values, not component tree
-// colorSchemes: { light, dark } — enables useColorScheme() with 'light'|'dark'|'system'
-// ─── Component overrides — fetched from /api/preview/component-overrides ──────
-// Single source of truth: src/lib/prototype-overrides.ts
-// Fetched at startup so all prototypes always get the latest design system overrides.
-let componentOverrides = {};
+// ─── memoQ Design System theme — imported from /api/preview/ds-theme ─────────
+// The DS theme provides palette, typography, shadows, and component styleOverrides.
+// Component defaultProps are no longer injected here — prototypes receive actual DS
+// wrapper components via the @mui/material importmap alias (/api/preview/ds-components),
+// so the wrappers themselves apply the correct props (e.g. color="secondary").
+//
+// IMPORTANT: We do NOT use cssVariables: true here. In CSS-variables mode, palette values
+// in styleOverrides callbacks become 'var(--mui-palette-xxx)' strings instead of actual
+// colors, which breaks DS overrides that call alpha(theme.palette.secondary.main, 0.08).
+// Dark/light mode is handled via React state + re-render instead.
+let dsThemeOptions = null;
 
-async function loadComponentOverrides() {
+async function loadDSTheme() {
   try {
-    const res = await fetch('/api/preview/component-overrides');
-    if (res.ok) componentOverrides = await res.json();
-  } catch {
-    // Non-critical: fall back to no overrides (MUI defaults)
+    const mod = await import('/api/preview/ds-theme');
+    dsThemeOptions = mod.dsThemeOptions ?? null;
+  } catch (err) {
+    // Non-critical: fall back to MUI defaults if DS theme fails to load
+    console.warn('[DS] theme load failed:', err);
   }
 }
 
-function buildComponentsConfig() {
-  return { components: componentOverrides };
-}
+/** Build a plain MUI theme for the given mode using DS options. */
+function buildThemeForMode(mode, customPalette) {
+  const resolvedMode = mode === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : (mode || 'light');
 
-function buildDefaultTheme() {
+  const dsPalette = dsThemeOptions?.palettes[resolvedMode] ?? {};
+  const palette = customPalette ? { ...dsPalette, ...customPalette } : dsPalette;
+
   return createTheme({
-    cssVariables: true,
-    colorSchemeSelector: 'data',
-    colorSchemes: {
-      light: { palette: { text: { primary: 'rgba(59, 55, 81, 0.87)' } } },
-      dark: true,
-    },
-    ...buildComponentsConfig(),
+    palette: { ...palette, mode: resolvedMode },
+    components: dsThemeOptions?.components ?? {},
+    ...(dsThemeOptions?.typography && { typography: dsThemeOptions.typography }),
+    ...(dsThemeOptions?.shadows && { shadows: dsThemeOptions.shadows }),
   });
 }
 
-let defaultTheme = buildDefaultTheme();
-
-/** Build a MUI theme from ThemeConfig (sent via SET_THEME_CONFIG postMessage). */
-function buildTheme(config) {
-  if (!config) return defaultTheme;
-  return createTheme({
-    cssVariables: true,
-    colorSchemeSelector: 'data',
-    colorSchemes: {
-      light: { palette: { text: { primary: 'rgba(59, 55, 81, 0.87)' }, ...config.palette.light } },
-      dark: { palette: config.palette.dark },
-    },
-    shadows: config.shadows,
-    typography: config.typography,
-    shape: config.shape,
-    spacing: config.spacing,
-    ...buildComponentsConfig(),
-  });
-}
+let defaultTheme = buildThemeForMode('light', null);
 
 // ─── Text override context — Phase 3 copy editing ────────────────────────────
 // Carries the current text override map from Root down to TextOverrideApplier
@@ -181,29 +168,7 @@ function ErrorFallback({ error, resetErrorBoundary }) {
   );
 }
 
-// ─── ThemeListener — registers postMessage handler for SET_THEME ──────────────
-// This is a React component so it can use useColorScheme() (a hook).
-// The bootstrap script needs to update the theme mode from outside React, so we
-// store a ref to setMode that can be called from the postMessage listener.
-function ThemeListener() {
-  const { setMode } = useColorScheme();
-
-  useEffect(() => {
-    function handleMessage(event) {
-      if (event.data?.type === 'SET_THEME') {
-        const mode = event.data.mode;
-        if (mode === 'light' || mode === 'dark' || mode === 'system') {
-          setMode(mode);
-        }
-      }
-    }
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [setMode]);
-
-  return null; // renders nothing — only registers the listener
-}
+// ThemeListener removed — mode is now managed as React state in Root (no cssVariables needed).
 
 // ─── TextOverrideApplier — applies text overrides to DOM after each render ────
 // Uses a MutationObserver to re-apply overrides whenever React re-renders, since
@@ -395,7 +360,6 @@ function PreviewApp({ Component, errorBoundaryKey, onRetry, textOverrides, textC
       ThemeProvider,
       { theme: theme || defaultTheme },
       createElement(CssBaseline),
-      createElement(ThemeListener),
       createElement(
         TextContentOverrideContext.Provider,
         { value: textContentOverrides },
@@ -430,9 +394,10 @@ function Root() {
   // Phase 3: text overrides — Record<inspectorId, Record<propName, string>>
   const [textOverrides, setTextOverrides] = useState({});
   const [textContentOverrides, setTextContentOverrides] = useState({});
-  // Phase 4: theme config
-  const [themeConfig, setThemeConfig] = useState(null);
-  const theme = useMemo(() => buildTheme(themeConfig), [themeConfig]);
+  // Theme: mode state + optional palette override from ThemeTab
+  const [themeMode, setThemeMode] = useState('light');
+  const [customPalette, setCustomPalette] = useState(null);
+  const theme = useMemo(() => buildThemeForMode(themeMode, customPalette), [themeMode, customPalette]);
 
   const load = useCallback(async (version) => {
     const url = version > 0 ? `${bundleUrl}?t=${Date.now()}` : bundleUrl;
@@ -488,9 +453,17 @@ function Root() {
       if (event.data?.type === 'SET_TEXT_CONTENT_OVERRIDES') {
         setTextContentOverrides(event.data.overrides ?? {});
       }
-      // Phase 4: apply theme config
+      // SET_THEME: mode switching (light/dark/system) — re-render with new mode
+      if (event.data?.type === 'SET_THEME') {
+        const mode = event.data.mode;
+        if (mode === 'light' || mode === 'dark' || mode === 'system') {
+          setThemeMode(mode);
+        }
+      }
+      // SET_THEME_CONFIG: custom palette from ThemeTab
       if (event.data?.type === 'SET_THEME_CONFIG') {
-        setThemeConfig(event.data.config ?? null);
+        const config = event.data.config;
+        setCustomPalette(config?.palette?.light ?? null);
       }
     }
 
@@ -575,13 +548,13 @@ window.addEventListener('message', function(event) {
   }
 });
 
-// ─── Mount the root (after loading component overrides) ───────────────────────
+// ─── Mount the root (after loading DS theme) ─────────────────────────────────
 const rootElement = document.getElementById('root');
 if (rootElement) {
   rootInstance = createRoot(rootElement);
-  // Load overrides first, then rebuild defaultTheme with them before first render
-  loadComponentOverrides().then(() => {
-    defaultTheme = buildDefaultTheme();
+  // Load DS theme + proto overrides, then rebuild defaultTheme before first render
+  loadDSTheme().then(() => {
+    defaultTheme = buildThemeForMode('light', null);
     rootInstance.render(createElement(Root));
   });
 }

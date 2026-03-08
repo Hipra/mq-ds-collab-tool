@@ -1,74 +1,94 @@
 import { createTheme } from '@mui/material/styles';
-import { MUI_DEFAULTS, type ThemeConfig } from '@/lib/theme-config';
-import { prototypeComponentOverrides } from '@/lib/prototype-overrides';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+import * as dsOverrides from '../ds/safe-styleoverrides';
+
+// DS theme functions — NormalModuleReplacementPlugin handles their @/ imports
+// (e.g. @/colors → DS_SRC/colors, @/theme → safe-theme.ts, etc.)
+import { createPalette } from '../../../memoq.web.design/src/theme/palette';
+import { createTypography } from '../../../memoq.web.design/src/theme/typography';
+import { createShadows } from '../../../memoq.web.design/src/theme/shadows';
 
 /**
- * Create the shared MUI theme with CSS variables and light/dark color schemes.
+ * Create the shared MUI theme using DS palette, typography, and shadows
+ * directly from the memoQ Design System source.
  *
- * Accepts an optional ThemeConfig to apply custom palette, typography, shape,
- * and spacing from the theme editor. Used by both the app shell and
- * conceptually by the iframe bootstrap (preview-bootstrap.js).
+ * CSS variables + colorSchemes mode is preserved so that useColorScheme()
+ * (dark mode toggle) continues to work.
  */
-export function createAppTheme(config?: ThemeConfig | null) {
+export function createAppTheme() {
   return createTheme({
     cssVariables: {
       colorSchemeSelector: 'data-mui-color-scheme',
     },
     defaultColorScheme: 'light',
-    colorSchemes: config
-      ? {
-          light: { palette: config.palette.light },
-          dark: { palette: config.palette.dark },
-        }
-      : { light: true, dark: true },
+    colorSchemes: {
+      light: { palette: createPalette({ mode: 'light' }) },
+      dark: { palette: createPalette({ mode: 'dark' }) },
+    },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    shadows: (config?.shadows ?? MUI_DEFAULTS.shadows) as any,
-    typography: config ? config.typography : MUI_DEFAULTS.typography,
-    ...(config && {
-      shape: config.shape,
-      spacing: config.spacing,
-    }),
+    shadows: createShadows() as any,
+    typography: createTypography(),
     components: {
+      // DS styleOverrides — same set as /api/preview/ds-theme (esbuild route)
+      ...dsOverrides,
+      // MUI v7 fix: inject padding via the dedicated 'input' slot so it wins
+      // over the DS root nested selector (same specificity, later injection wins).
+      MuiOutlinedInput: {
+        ...(dsOverrides.MuiOutlinedInput as object),
+        styleOverrides: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ...(dsOverrides.MuiOutlinedInput as any)?.styleOverrides,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          input: ({ ownerState }: { ownerState: any }) => {
+            const sm = ownerState.size === 'small';
+            const hasStart = Boolean(ownerState.startAdornment);
+            const hasEnd = Boolean(ownerState.endAdornment);
+            if (sm) {
+              if (hasStart && hasEnd) return { padding: '8px 0 8px 8px' };
+              if (hasStart)           return { padding: '8px 12px 8px 8px' };
+              if (hasEnd)             return { padding: '8px 0 8px 14px' };
+              return { padding: '8px 14px' };
+            }
+            if (hasStart && hasEnd) return { padding: '10px 0 10px 8px' };
+            if (hasStart)           return { padding: '10px 12px 10px 8px' };
+            if (hasEnd)             return { padding: '10px 0 10px 14px' };
+            return { padding: '10px 14px' };
+          },
+        },
+      },
+      // App shell overrides — take precedence over DS defaults
       MuiAppBar: {
         styleOverrides: {
-          colorDefault: ({ theme: t }) => ({
+          root: ({ theme: t }) => ({
+            border: 'none',
+            boxShadow: t.shadows[2],
             color: t.vars.palette.text.primary,
-            borderBottom: `1px solid ${t.vars.palette.divider}`,
-            [t.getColorSchemeSelector('light')]: {
-              backgroundColor: t.vars.palette.grey[100],
-            },
-            [t.getColorSchemeSelector('dark')]: {
-              backgroundColor: t.vars.palette.grey[900],
-            },
+            backgroundColor: t.vars.palette.background.default,
           }),
         },
       },
-      MuiCssBaseline: {
-        styleOverrides: `
-          [data-mui-color-scheme="light"] body {
-            background-color: var(--mui-palette-grey-100);
-          }
-          [data-mui-color-scheme="dark"] body {
-            background-color: var(--mui-palette-grey-900);
-          }
-        `,
-      },
-      MuiListItemButton: {
+      MuiToolbar: {
         styleOverrides: {
           root: {
-            '&.Mui-selected': {
-              backgroundColor: 'rgba(var(--mui-palette-secondary-mainChannel) / 0.08)',
-            },
-            '&.Mui-selected:hover': {
-              backgroundColor: 'rgba(var(--mui-palette-secondary-mainChannel) / 0.12)',
-            },
-            '& .MuiTouchRipple-child': {
-              backgroundColor: 'var(--mui-palette-secondary-main)',
+            '&.MuiToolbar-dense': {
+              height: '40px',
+              minHeight: '40px',
             },
           },
         },
       },
-      ...prototypeComponentOverrides,
+      MuiListItemButton: {
+        styleOverrides: {
+          root: ({ theme: t }) => ({
+            '&.Mui-selected': {
+              backgroundColor: t.vars.palette.action.selected,
+              '&:hover': {
+                backgroundColor: t.vars.palette.action.hover,
+              },
+            },
+          }),
+        },
+      },
     },
   });
 }

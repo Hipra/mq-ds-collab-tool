@@ -2,37 +2,30 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
-import MuiToolbar from '@mui/material/Toolbar';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
 import Card from '@mui/material/Card';
-import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
 import Alert from '@mui/material/Alert';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
-import Divider from '@mui/material/Divider';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
-import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
-import WebIcon from '@mui/icons-material/Web';
-import StyleIcon from '@mui/icons-material/Style';
+import MqIcon from '@/components/MqIcon';
+import {
+  AppBar,
+  Typography,
+  TextField,
+  Chip,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
+} from '@memoq/memoq.web.design';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
 
 interface Prototype {
@@ -60,9 +53,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: 'default' | 'warning
 };
 
 const MODE_CONFIG: Record<ThemeMode, { icon: React.ReactNode; label: string }> = {
-  light: { icon: <LightModeIcon fontSize="small" />, label: 'Light mode' },
-  dark: { icon: <DarkModeIcon fontSize="small" />, label: 'Dark mode' },
-  system: { icon: <SettingsBrightnessIcon fontSize="small" />, label: 'System mode' },
+  light: { icon: <MqIcon name="sun" size={20} />, label: 'Light mode' },
+  dark: { icon: <MqIcon name="moon" size={20} />, label: 'Dark mode' },
+  system: { icon: <MqIcon name="system_theme" size={20} />, label: 'System mode' },
 };
 
 function EmptyState({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
@@ -240,8 +233,7 @@ export default function GalleryPage() {
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* ── AppBar ── */}
-      <AppBar position="static" color="default" elevation={0}>
-        <MuiToolbar variant="dense" disableGutters sx={{ px: 2.5, minHeight: 48 }}>
+      <AppBar position="static" variant="dense" sx={{ '& .MuiToolbar-gutters': { px: 2.5 } }}>
           <Typography
             variant="body2"
             component="div"
@@ -255,7 +247,6 @@ export default function GalleryPage() {
               {modeConfig.icon}
             </IconButton>
           </Tooltip>
-        </MuiToolbar>
         <Box sx={{ px: 1.5 }}>
           <Tabs
             value={activeTab}
@@ -295,7 +286,7 @@ export default function GalleryPage() {
                 <Button
                   variant="contained"
                   size="small"
-                  startIcon={<AddIcon />}
+                  startIcon={<MqIcon name="plus" size={16} />}
                   onClick={() => { setNewName(''); setCreateError(''); setCreateOpen(true); }}
                 >
                   New prototype
@@ -310,7 +301,7 @@ export default function GalleryPage() {
 
               {!loading && filtered.length === 0 && (
                 <EmptyState
-                  icon={<WebIcon sx={{ fontSize: 'inherit' }} />}
+                  icon={<MqIcon name="artboard" size={20} />}
                   title={prototypes.length === 0 ? 'No prototypes yet' : 'No results'}
                   description={
                     prototypes.length === 0
@@ -347,7 +338,7 @@ export default function GalleryPage() {
                                   setCloneTarget(proto);
                                 }}
                               >
-                                <ContentCopyIcon sx={{ fontSize: 16 }} />
+                                <MqIcon name="copy_clone" size={16} />
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="Delete">
@@ -360,7 +351,7 @@ export default function GalleryPage() {
                                   setDeleteTarget(proto);
                                 }}
                               >
-                                <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                                <MqIcon name="trash" size={16} />
                               </IconButton>
                             </Tooltip>
                           </Box>
@@ -390,7 +381,7 @@ export default function GalleryPage() {
 
               {!templatesLoading && templates.length === 0 && (
                 <EmptyState
-                  icon={<StyleIcon sx={{ fontSize: 'inherit' }} />}
+                  icon={<MqIcon name="palette" size={20} />}
                   title="No templates yet"
                   description="Save a screen as a template from within a prototype."
                 />
@@ -421,7 +412,7 @@ export default function GalleryPage() {
                                 setAddToTemplate(tmpl);
                               }}
                             >
-                              <PlaylistAddIcon sx={{ fontSize: 16 }} />
+                              <MqIcon name="list_numbered" size={16} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={tmpl.builtIn ? 'Built-in templates cannot be deleted' : 'Delete'}>
@@ -436,7 +427,7 @@ export default function GalleryPage() {
                                   setDeleteTemplateTarget(tmpl);
                                 }}
                               >
-                                <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                                <MqIcon name="trash" size={16} />
                               </IconButton>
                             </span>
                           </Tooltip>

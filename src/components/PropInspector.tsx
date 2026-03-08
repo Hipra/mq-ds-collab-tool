@@ -5,7 +5,7 @@ import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import MqIcon from "@/components/MqIcon";
 import { useTheme } from '@mui/material/styles';
 import type { Palette } from '@mui/material/styles';
 import type { ComponentNode, PropEntry } from '@/lib/ast-inspector';
@@ -183,7 +183,7 @@ export function PropInspector({ node }: PropInspectorProps) {
           {'>'}
         </Typography>
         {a11yWarn && (
-          <WarningAmberIcon sx={{ fontSize: 14, color: 'warning.main' }} />
+          <MqIcon name="alert" size={16} />
         )}
       </Box>
 
@@ -333,7 +333,7 @@ export function PropInspector({ node }: PropInspectorProps) {
             >
               Accessibility
             </Typography>
-            {a11yWarn && <WarningAmberIcon sx={{ fontSize: 12, color: 'warning.main' }} />}
+            {a11yWarn && <MqIcon name="alert" size={16} />}
           </Box>
 
           {a11yWarn && (

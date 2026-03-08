@@ -2,29 +2,29 @@
 
 import React, { use, useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import AppBar from '@mui/material/AppBar';
+import { AppBar, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, Divider } from "@memoq/memoq.web.design";
 import Box from '@mui/material/Box';
-import MuiToolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
+
+
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import Button from '@mui/material/Button';
+
 import CircularProgress from '@mui/material/CircularProgress';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
+
+
+
+
 import Alert from '@mui/material/Alert';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
-import Divider from '@mui/material/Divider';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
-import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
+
+import MqIcon from "@/components/MqIcon";
+
+
+
+
+
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
 import { useThemeConfigStore } from '@/stores/theme-config';
 import { useInspectorStore } from '@/stores/inspector';
@@ -39,9 +39,9 @@ interface Prototype {
 }
 
 const MODE_CONFIG: Record<ThemeMode, { icon: React.ReactNode; label: string }> = {
-  light: { icon: <LightModeIcon fontSize="small" />, label: 'Light mode' },
-  dark: { icon: <DarkModeIcon fontSize="small" />, label: 'Dark mode' },
-  system: { icon: <SettingsBrightnessIcon fontSize="small" />, label: 'System mode' },
+  light: { icon: <MqIcon name="sun" size={20} />, label: 'Light mode' },
+  dark: { icon: <MqIcon name="moon" size={20} />, label: 'Dark mode' },
+  system: { icon: <MqIcon name="system_theme" size={20} />, label: 'System mode' },
 };
 
 export default function TemplateDetailPage({
@@ -183,11 +183,10 @@ export default function TemplateDetailPage({
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* ── AppBar ── */}
-      <AppBar position="static" color="default" elevation={0}>
-        <MuiToolbar variant="dense" disableGutters sx={{ px: 1.5, minHeight: 48, gap: 1 }}>
+      <AppBar position="static" variant="dense" sx={{ '& .MuiToolbar-gutters': { px: 1.5, gap: 1 } }}>
           <Tooltip title="Back to dashboard">
             <IconButton size="small" onClick={() => router.push('/')} aria-label="Back">
-              <ArrowBackIcon fontSize="small" />
+              <MqIcon name="arrow_left" size={20} />
             </IconButton>
           </Tooltip>
           <Typography
@@ -207,7 +206,7 @@ export default function TemplateDetailPage({
           </Button>
           <Tooltip title={panelOpen ? 'Hide inspector' : 'Show inspector'}>
             <IconButton onClick={togglePanel} size="small" aria-label="Toggle inspector">
-              <ViewSidebarIcon fontSize="small" />
+              <MqIcon name="sidebar" size={20} />
             </IconButton>
           </Tooltip>
           <Tooltip title={modeConfig.label}>
@@ -215,7 +214,6 @@ export default function TemplateDetailPage({
               {modeConfig.icon}
             </IconButton>
           </Tooltip>
-        </MuiToolbar>
       </AppBar>
 
       {/* ── Main: preview + inspector ── */}

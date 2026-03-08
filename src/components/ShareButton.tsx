@@ -9,9 +9,9 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import ShareIcon from '@mui/icons-material/Share';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
+import MqIcon from "@/components/MqIcon";
+
+
 
 interface ShareButtonProps {
   prototypeId: string;
@@ -65,7 +65,7 @@ export function ShareButton({ prototypeId }: ShareButtonProps) {
           aria-label="Share prototype"
           sx={{ mr: 0.5 }}
         >
-          <ShareIcon fontSize="small" />
+          <MqIcon name="export" size={20} />
         </IconButton>
       </Tooltip>
       <Popover
@@ -95,7 +95,7 @@ export function ShareButton({ prototypeId }: ShareButtonProps) {
                 variant="contained"
                 size="small"
                 onClick={handleCopy}
-                startIcon={copied ? <CheckIcon /> : <ContentCopyIcon />}
+                startIcon={copied ? <MqIcon name="check" size={20} /> : <MqIcon name="copy_clone" size={20} />}
                 sx={{ flexShrink: 0 }}
               >
                 {copied ? 'Copied' : 'Copy'}

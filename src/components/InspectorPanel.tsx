@@ -2,9 +2,7 @@
 
 import React from 'react';
 import Box from '@mui/material/Box';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import Divider from '@mui/material/Divider';
+import { ToggleButton, ToggleButtonGroup, Divider } from '@memoq/memoq.web.design';
 import { useInspectorStore } from '@/stores/inspector';
 import { ComponentTree } from '@/components/ComponentTree';
 import { PropInspector } from '@/components/PropInspector';

@@ -14,12 +14,12 @@ import ListItem from '@mui/material/ListItem';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
-import SearchIcon from '@mui/icons-material/Search';
-import RestoreIcon from '@mui/icons-material/Restore';
-import CheckIcon from '@mui/icons-material/Check';
-import HistoryIcon from '@mui/icons-material/History';
-import DownloadIcon from '@mui/icons-material/Download';
-import UploadIcon from '@mui/icons-material/Upload';
+import MqIcon from "@/components/MqIcon";
+
+
+
+
+
 import { useCopyStore } from '@/stores/copy';
 import { useInspectorStore } from '@/stores/inspector';
 import type { CopyEntryWithHistory } from '@/stores/copy';
@@ -411,7 +411,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
+                  <MqIcon name="search" size={20} />
                 </InputAdornment>
               ),
               sx: { fontSize: '0.8125rem' },
@@ -471,7 +471,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                               {entry.edits.length > 0 && (
                                 <Tooltip title="Edit history">
                                   <IconButton size="small" onClick={() => toggleHistory(entry.key)} sx={{ p: 0.25 }}>
-                                    <HistoryIcon sx={{ fontSize: 14 }} />
+                                    <MqIcon name="history" size={20} />
                                   </IconButton>
                                 </Tooltip>
                               )}
@@ -482,12 +482,12 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                                   disabled={approving}
                                   sx={{ p: 0.25 }}
                                 >
-                                  <CheckIcon sx={{ fontSize: 14 }} color="success" />
+                                  <MqIcon name="check" size={20} />
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title="Reset to original">
                                 <IconButton size="small" onClick={() => handleResetEntry(entry)} sx={{ p: 0.25 }}>
-                                  <RestoreIcon sx={{ fontSize: 14 }} />
+                                  <MqIcon name="reload" size={20} />
                                 </IconButton>
                               </Tooltip>
                             </Box>
@@ -608,7 +608,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
           size="small"
           variant="outlined"
           color="secondary"
-          startIcon={<DownloadIcon />}
+          startIcon={<MqIcon name="download" size={20} />}
           onClick={handleExport}
           fullWidth
           sx={{ fontSize: '12px' }}
@@ -619,7 +619,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
           size="small"
           variant="outlined"
           color="secondary"
-          startIcon={<UploadIcon />}
+          startIcon={<MqIcon name="upload" size={20} />}
           onClick={() => fileInputRef.current?.click()}
           fullWidth
           sx={{ fontSize: '12px' }}

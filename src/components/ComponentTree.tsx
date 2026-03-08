@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import MqIcon from "@/components/MqIcon";
 import type { ComponentNode } from '@/lib/ast-inspector';
 
 const NEEDS_ARIA_LABEL = new Set(['IconButton', 'Fab', 'SpeedDial', 'Slider', 'ToggleButton']);
@@ -157,7 +157,7 @@ function TreeNode({
         </Typography>
 
         {hasA11yWarning(node) && (
-          <WarningAmberIcon sx={{ fontSize: 12, color: 'warning.main', ml: 0.5, flexShrink: 0 }} />
+          <MqIcon name="alert" size={16} />
         )}
       </Box>
 

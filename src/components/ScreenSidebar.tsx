@@ -9,17 +9,9 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
 import Alert from '@mui/material/Alert';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import AddIcon from '@mui/icons-material/Add';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
+import MqIcon from '@/components/MqIcon';
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@memoq/memoq.web.design';
 import {
   DndContext,
   closestCenter,
@@ -125,7 +117,7 @@ function SortableScreenItem({
             flexShrink: 0,
           }}
         >
-          <DragIndicatorIcon sx={{ fontSize: 16 }} />
+          <MqIcon name="move" size={16} />
         </Box>
 
         {isEditing ? (
@@ -167,7 +159,7 @@ function SortableScreenItem({
                 onClick={(e) => { e.stopPropagation(); onDuplicate(screen.id); }}
                 sx={{ flexShrink: 0, p: 0.25 }}
               >
-                <ContentCopyIcon sx={{ fontSize: 14 }} />
+                <MqIcon name="copy_clone" size={14} />
               </IconButton>
             </Tooltip>
             <Tooltip title="Save as template">
@@ -178,7 +170,7 @@ function SortableScreenItem({
                 onClick={(e) => { e.stopPropagation(); onSaveAsTemplate(screen.id, screen.name); }}
                 sx={{ flexShrink: 0, p: 0.25 }}
               >
-                <BookmarkAddIcon sx={{ fontSize: 14 }} />
+                <MqIcon name="bookmark" size={14} />
               </IconButton>
             </Tooltip>
           </>
@@ -480,7 +472,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
           variant="outlined"
           color="secondary"
           size="small"
-          startIcon={<AddIcon />}
+          startIcon={<MqIcon name="plus" size={16} />}
           fullWidth
           onClick={() => { setCreateError(''); setNewName(''); setSelectedTemplateId('empty'); setCreateOpen(true); }}
           sx={{ textTransform: 'none', fontSize: 12 }}
