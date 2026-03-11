@@ -10,6 +10,9 @@ import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Divider from '@mui/material/Divider';
 import MqIcon from '@/components/MqIcon';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@memoq/memoq.web.design';
 import {
@@ -55,8 +58,7 @@ interface SortableScreenItemProps {
   onEditChange: (value: string) => void;
   onEditCommit: () => void;
   onEditCancel: () => void;
-  onDuplicate: (id: string) => void;
-  onSaveAsTemplate: (id: string, name: string) => void;
+  onMenuOpen: (event: React.MouseEvent<HTMLButtonElement>, screenId: string, screenName: string) => void;
 }
 
 function SortableScreenItem({
@@ -69,8 +71,7 @@ function SortableScreenItem({
   onEditChange,
   onEditCommit,
   onEditCancel,
-  onDuplicate,
-  onSaveAsTemplate,
+  onMenuOpen,
 }: SortableScreenItemProps) {
   const {
     attributes,
@@ -150,30 +151,17 @@ function SortableScreenItem({
         )}
 
         {!isEditing && (
-          <>
-            <Tooltip title="Duplicate">
-              <IconButton
-                className="screen-dup-btn"
-                size="small"
-                aria-label="Duplicate"
-                onClick={(e) => { e.stopPropagation(); onDuplicate(screen.id); }}
-                sx={{ flexShrink: 0, p: 0.25 }}
-              >
-                <MqIcon name="copy_clone" size={14} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Save as template">
-              <IconButton
-                className="screen-dup-btn"
-                size="small"
-                aria-label="Save as template"
-                onClick={(e) => { e.stopPropagation(); onSaveAsTemplate(screen.id, screen.name); }}
-                sx={{ flexShrink: 0, p: 0.25 }}
-              >
-                <MqIcon name="bookmark" size={14} />
-              </IconButton>
-            </Tooltip>
-          </>
+          <Tooltip title="More options">
+            <IconButton
+              className="screen-dup-btn"
+              size="small"
+              aria-label="Screen options"
+              onClick={(e) => { e.stopPropagation(); onMenuOpen(e, screen.id, screen.name); }}
+              sx={{ flexShrink: 0, p: 0.25 }}
+            >
+              <MqIcon name="more_vertical" size={18} />
+            </IconButton>
+          </Tooltip>
         )}
       </ListItemButton>
     </div>
@@ -212,6 +200,15 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [saveTemplateError, setSaveTemplateError] = useState('');
 
+  // Screen options menu
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [menuScreenId, setMenuScreenId] = useState<string | null>(null);
+  const [menuScreenName, setMenuScreenName] = useState<string>('');
+
+  // Delete confirm dialog
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
   const { sidebarOpen, setSidebarOpen, activeScreenId, setActiveScreen, setScreens } = useInspectorStore();
 
   const sensors = useSensors(
@@ -229,13 +226,19 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
           const data = (await res.json()) as Screen[];
           setLocalScreens(data);
           setScreens(data);
+          // Auto-select first screen if the current activeScreenId is not in the list
+          // (e.g. prototype has no index.jsx and store defaulted to 'index')
+          const currentId = useInspectorStore.getState().activeScreenId;
+          if (data.length > 0 && !data.find((s) => s.id === currentId)) {
+            setActiveScreen(data[0].id);
+          }
         }
       } catch {
         // Screen list is non-critical — fail silently
       }
     };
     fetchScreens();
-  }, [prototypeId, setScreens]);
+  }, [prototypeId, setScreens, setActiveScreen]);
 
   // Fetch templates on mount
   useEffect(() => {
@@ -328,13 +331,14 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
         if (!res.ok) return;
         const newScreen = (await res.json()) as Screen;
         // Insert after source screen in local state
+        let updatedScreens: Screen[] = [];
         setLocalScreens((prev) => {
           const idx = prev.findIndex((s) => s.id === screenId);
-          const updated = [...prev];
-          updated.splice(idx + 1, 0, newScreen);
-          setScreens(updated);
-          return updated;
+          updatedScreens = [...prev];
+          updatedScreens.splice(idx + 1, 0, newScreen);
+          return updatedScreens;
         });
+        setScreens(updatedScreens);
         setActiveScreen(newScreen.id);
       } catch {
         // fail silently
@@ -343,12 +347,50 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
     [prototypeId, setScreens, setActiveScreen]
   );
 
+  const handleMenuOpen = useCallback((event: React.MouseEvent<HTMLButtonElement>, screenId: string, screenName: string) => {
+    setMenuAnchor(event.currentTarget);
+    setMenuScreenId(screenId);
+    setMenuScreenName(screenName);
+  }, []);
+
+  const handleMenuClose = useCallback(() => {
+    setMenuAnchor(null);
+    setMenuScreenId(null);
+    setMenuScreenName('');
+  }, []);
+
   const handleSaveAsTemplate = useCallback(async (screenId: string, screenName: string) => {
     setSaveTemplateScreenId(screenId);
     setSaveTemplateName(screenName);
     setSaveTemplateError('');
     setSaveTemplateOpen(true);
   }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteTargetId) return;
+    try {
+      const res = await fetch(
+        `/api/preview/${prototypeId}/screens?screenId=${encodeURIComponent(deleteTargetId)}`,
+        { method: 'DELETE' }
+      );
+      if (!res.ok) return;
+      let updatedScreens: Screen[] = [];
+      setLocalScreens((prev) => {
+        updatedScreens = prev.filter((s) => s.id !== deleteTargetId);
+        return updatedScreens;
+      });
+      setScreens(updatedScreens);
+      // Navigate away if we deleted the active screen
+      if (activeScreenId === deleteTargetId) {
+        setActiveScreen(updatedScreens[0]?.id ?? 'index');
+      }
+    } catch {
+      // fail silently
+    } finally {
+      setDeleteConfirmOpen(false);
+      setDeleteTargetId(null);
+    }
+  }, [deleteTargetId, prototypeId, activeScreenId, setScreens, setActiveScreen]);
 
   const handleSaveTemplateConfirm = async () => {
     const trimmed = saveTemplateName.trim();
@@ -456,8 +498,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
                   onEditChange={setEditValue}
                   onEditCommit={handleEditCommit}
                   onEditCancel={handleEditCancel}
-                  onDuplicate={handleDuplicateScreen}
-                  onSaveAsTemplate={handleSaveAsTemplate}
+                  onMenuOpen={handleMenuOpen}
                 />
               ))}
             </List>
@@ -488,7 +529,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>New screen</DialogTitle>
+        <DialogTitle onClose={() => setCreateOpen(false)}>New screen</DialogTitle>
         <DialogContent>
           {createError && <Alert severity="error" sx={{ mb: 2 }}>{createError}</Alert>}
           <TextField
@@ -544,6 +585,83 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
         </DialogActions>
       </Dialog>
 
+      {/* Screen options menu */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        slotProps={{ paper: { sx: { minWidth: 180 } } }}
+      >
+        <MenuItem
+          dense
+          onClick={() => {
+            const id = menuScreenId;
+            handleMenuClose();
+            if (id) handleDuplicateScreen(id);
+          }}
+        >
+          <MqIcon name="copy_clone" size={16} />
+          <Box component="span" sx={{ ml: 1.5 }}>Duplicate</Box>
+        </MenuItem>
+        <MenuItem
+          dense
+          onClick={() => {
+            const id = menuScreenId;
+            const name = menuScreenName;
+            handleMenuClose();
+            if (id) handleSaveAsTemplate(id, name);
+          }}
+        >
+          <MqIcon name="bookmark" size={16} />
+          <Box component="span" sx={{ ml: 1.5 }}>Save as template</Box>
+        </MenuItem>
+        {localScreens.length >= 2 && [
+          <Divider key="divider" />,
+          <MenuItem
+            key="delete"
+            dense
+            onClick={() => {
+              const id = menuScreenId;
+              handleMenuClose();
+              if (id) { setDeleteTargetId(id); setDeleteConfirmOpen(true); }
+            }}
+            sx={{ color: 'error.main' }}
+          >
+            <MqIcon name="delete" size={16} />
+            <Box component="span" sx={{ ml: 1.5 }}>Delete screen</Box>
+          </MenuItem>,
+        ]}
+      </Menu>
+
+      {/* Delete screen confirm dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={() => { setDeleteConfirmOpen(false); setDeleteTargetId(null); }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle onClose={() => { setDeleteConfirmOpen(false); setDeleteTargetId(null); }}>Delete screen?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            This will permanently delete the screen file. This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="text"
+            color="secondary"
+            onClick={() => { setDeleteConfirmOpen(false); setDeleteTargetId(null); }}
+          >
+            Cancel
+          </Button>
+          <Button variant="contained" color="error" onClick={handleDeleteConfirm}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Save as template dialog */}
       <Dialog
         open={saveTemplateOpen}
@@ -551,7 +669,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Save as template</DialogTitle>
+        <DialogTitle onClose={() => setSaveTemplateOpen(false)}>Save as template</DialogTitle>
         <DialogContent>
           {saveTemplateError && <Alert severity="error" sx={{ mb: 2 }}>{saveTemplateError}</Alert>}
           <TextField
