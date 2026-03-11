@@ -1,0 +1,72 @@
+{
+  "nodes": [
+    {
+      "id": "screen-dialog-template",
+      "type": "screenNode",
+      "position": {
+        "x": -166.131830948585,
+        "y": -21.460384775561835
+      },
+      "data": {
+        "screenId": "dialog-template",
+        "screenName": "Settings dialog",
+        "prototypeId": "demo-prototype",
+        "status": "draft",
+        "purpose": "this is the goal",
+        "copyTone": "reassuring"
+      },
+      "measured": {
+        "width": 200,
+        "height": 88
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "screen-main-copy",
+      "type": "screenNode",
+      "position": {
+        "x": 152.28214501255482,
+        "y": 24.5955363711809
+      },
+      "data": {
+        "screenId": "main-copy",
+        "screenName": "Random screen",
+        "prototypeId": "demo-prototype",
+        "status": "draft",
+        "copyTone": "urgent",
+        "purpose": "",
+        "userIntent": "",
+        "notes": ""
+      },
+      "measured": {
+        "width": 200,
+        "height": 68
+      },
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "type": "labeled",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#64b5f6",
+        "width": 16,
+        "height": 16
+      },
+      "data": {
+        "label": "",
+        "triggerType": "click",
+        "isPrimary": false
+      },
+      "source": "screen-dialog-template",
+      "sourceHandle": "right",
+      "target": "screen-main-copy",
+      "targetHandle": "left",
+      "id": "xy-edge__screen-dialog-templateright-screen-main-copyleft",
+      "selected": false
+    }
+  ]
+}

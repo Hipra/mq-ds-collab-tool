@@ -59,7 +59,7 @@ export default function FlowPage({
         <Box sx={{ flex: 1 }} />
 
         <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
-          Double-click canvas to add comment
+          Click a screen to annotate · Select an arrow to set trigger type
         </Typography>
       </AppBar>
 

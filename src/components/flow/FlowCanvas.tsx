@@ -24,6 +24,8 @@ import {
 import { ScreenNode, type ScreenNodeData } from './ScreenNode';
 import { CommentNode } from './CommentNode';
 import { LabeledEdge } from './LabeledEdge';
+import { AnnotationPanel } from './AnnotationPanel';
+import { FlowContext } from './FlowContext';
 
 const nodeTypes: NodeTypes = {
   screenNode: ScreenNode,
@@ -36,8 +38,8 @@ const edgeTypes: EdgeTypes = {
 
 const DEFAULT_EDGE_OPTIONS = {
   type: 'labeled',
-  markerEnd: { type: MarkerType.ArrowClosed, color: '#90caf9', width: 16, height: 16 },
-  data: { label: '' },
+  markerEnd: { type: MarkerType.ArrowClosed, color: '#64b5f6', width: 16, height: 16 },
+  data: { label: '', triggerType: 'click', isPrimary: false },
 };
 
 function autoLayout(
@@ -89,6 +91,24 @@ function mergeNodes(
   return result;
 }
 
+const OVERLAY_BTN: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 5,
+  padding: '5px 10px',
+  borderRadius: 6,
+  border: '1px solid #e0e0e0',
+  backgroundColor: '#fff',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+  fontSize: 12,
+  fontWeight: 500,
+  color: '#444',
+  cursor: 'pointer',
+  transition: 'box-shadow 0.15s, background-color 0.15s',
+  whiteSpace: 'nowrap',
+};
+
+
 interface FlowCanvasProps {
   prototypeId: string;
 }
@@ -96,10 +116,18 @@ interface FlowCanvasProps {
 function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const { fitView, screenToFlowPosition } = useReactFlow();
+  const { fitView, screenToFlowPosition, getNodes, getEdges } = useReactFlow();
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialised = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const [annotationOpen, setAnnotationOpen] = useState(false);
+
+  const selectedScreenNode = nodes.find((n) => n.selected && n.type === 'screenNode') ?? null;
+
+  useEffect(() => {
+    setAnnotationOpen(!!selectedScreenNode);
+  }, [selectedScreenNode]);
 
   // Load on mount
   useEffect(() => {
@@ -148,6 +176,11 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
     [prototypeId],
   );
 
+  // Save that reads current state from internal store (used by AnnotationPanel)
+  const triggerSave = useCallback(() => {
+    save(getNodes() as Node[], getEdges() as Edge[]);
+  }, [getNodes, getEdges, save]);
+
   const handleNodesChange = useCallback(
     (changes: Parameters<typeof onNodesChange>[0]) => {
       onNodesChange(changes);
@@ -175,7 +208,6 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
     [setEdges, save, nodes],
   );
 
-  // Add comment at center of visible canvas area
   const handleAddComment = useCallback(() => {
     const bounds = containerRef.current?.getBoundingClientRect();
     const cx = bounds ? bounds.left + bounds.width / 2 : 400;
@@ -195,62 +227,80 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
     });
   }, [screenToFlowPosition, setNodes, save, edges]);
 
-  return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={handleNodesChange}
-        onEdgesChange={handleEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
-        fitView
-        deleteKeyCode="Delete"
-        multiSelectionKeyCode="Shift"
-        minZoom={0.15}
-        maxZoom={2}
-        proOptions={{ hideAttribution: true }}
-      >
-        <Background gap={20} size={1} color="#e8eaed" />
-        <Controls
-          style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.10)', border: '1px solid #e0e0e0' }}
-        />
-        <MiniMap
-          nodeColor={(n) => n.type === 'commentNode' ? '#ffe082' : '#e8eaf6'}
-          style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.10)', border: '1px solid #e0e0e0' }}
-        />
-      </ReactFlow>
+return (
+    <FlowContext.Provider value={{ triggerSave }}>
+      <style>{`
+        .react-flow__node-screenNode .react-flow__handle {
+          opacity: 0;
+          transition: opacity 0.15s;
+        }
+        .react-flow__node-screenNode.selected .react-flow__handle,
+        .react-flow__node-screenNode .react-flow__handle:hover {
+          opacity: 1;
+        }
+      `}</style>
+      <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={handleNodesChange}
+          onEdgesChange={handleEdgesChange}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
+          fitView
+          deleteKeyCode="Delete"
+          multiSelectionKeyCode="Shift"
+          minZoom={0.15}
+          maxZoom={2}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background gap={20} size={1} color="#e8eaed" />
+          <Controls
+            style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.10)', border: '1px solid #e0e0e0' }}
+          />
+          <MiniMap
+            nodeColor={(n) => {
+              if (n.type === 'commentNode') return '#ffe082';
+    return '#e8eaf6';
+            }}
+            style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.10)', border: '1px solid #e0e0e0' }}
+          />
+        </ReactFlow>
 
-      {/* Add comment button */}
-      <button
-        onClick={handleAddComment}
-        style={{
-          position: 'absolute',
-          top: 12,
-          right: 12,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          padding: '6px 12px',
-          borderRadius: 6,
-          border: '1px solid #e0e0e0',
-          backgroundColor: '#fff',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-          fontSize: 12,
-          fontWeight: 500,
-          color: '#444',
-          cursor: 'pointer',
-          transition: 'box-shadow 0.15s',
-          zIndex: 10,
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.14)')}
-        onMouseLeave={(e) => (e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)')}
-      >
-        💬 Add comment
-      </button>
-    </div>
+        {/* Canvas toolbar — top left */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: 12,
+            display: 'flex',
+            gap: 6,
+            zIndex: 10,
+          }}
+        >
+          <button
+            onClick={handleAddComment}
+            style={OVERLAY_BTN}
+            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.14)')}
+            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)')}
+          >
+            💬 Comment
+          </button>
+
+        </div>
+
+        {/* Annotation panel — appears when a screen node is selected */}
+        {annotationOpen && selectedScreenNode && (
+          <AnnotationPanel
+            key={selectedScreenNode.id}
+            nodeId={selectedScreenNode.id}
+            onClose={() => setAnnotationOpen(false)}
+          />
+        )}
+      </div>
+    </FlowContext.Provider>
   );
 }
 

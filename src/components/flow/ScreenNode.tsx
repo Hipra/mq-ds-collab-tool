@@ -9,6 +9,11 @@ export interface ScreenNodeData extends Record<string, unknown> {
   screenName: string;
   prototypeId: string;
   status: 'draft' | 'review' | 'approved';
+  // UX writer annotations
+  purpose?: string;
+  userIntent?: string;
+  copyTone?: string;
+  notes?: string;
 }
 
 export type ScreenNodeType = Node<ScreenNodeData, 'screenNode'>;
@@ -17,6 +22,14 @@ const STATUS_CONFIG = {
   draft:    { label: 'Draft',    color: '#757575', bg: '#f5f5f5', border: '#e0e0e0' },
   review:   { label: 'Review',   color: '#1565c0', bg: '#e3f2fd', border: '#90caf9' },
   approved: { label: 'Approved', color: '#2e7d32', bg: '#e8f5e9', border: '#a5d6a7' },
+};
+
+const TONE_COLORS: Record<string, string> = {
+  reassuring:  '#4caf50',
+  instructive: '#1976d2',
+  celebratory: '#f57c00',
+  urgent:      '#d32f2f',
+  neutral:     '#9e9e9e',
 };
 
 const HANDLE_STYLE: React.CSSProperties = {
@@ -33,6 +46,8 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
   const setActiveScreen = useInspectorStore((s) => s.setActiveScreen);
 
   const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.draft;
+  const hasNotes = !!(data.purpose || data.userIntent || data.notes);
+  const toneColor = data.copyTone ? TONE_COLORS[data.copyTone] ?? '#9e9e9e' : null;
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -46,21 +61,20 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
         width: 200,
         borderRadius: 8,
         backgroundColor: '#fff',
-        border: selected ? '2px solid #1976d2' : '1.5px solid #e0e0e0',
+        border: selected ? '2px solid #1976d2' : `1.5px solid ${toneColor ?? '#e0e0e0'}`,
         boxShadow: selected
           ? '0 0 0 3px rgba(25,118,210,0.12), 0 2px 10px rgba(0,0,0,0.08)'
           : '0 1px 6px rgba(0,0,0,0.06)',
-        overflow: 'hidden',
         userSelect: 'none',
         transition: 'box-shadow 0.15s, border-color 0.15s',
       }}
     >
-      <Handle type="target" position={Position.Top}    style={{ ...HANDLE_STYLE, top: -5 }} />
-      <Handle type="source" position={Position.Bottom} style={{ ...HANDLE_STYLE, bottom: -5 }} />
-      <Handle type="source" position={Position.Right}  style={{ ...HANDLE_STYLE, right: -5 }} />
-      <Handle type="target" position={Position.Left}   style={{ ...HANDLE_STYLE, left: -5 }} />
+      <Handle id="top"    type="target" position={Position.Top}    style={{ ...HANDLE_STYLE, top: -5 }} />
+      <Handle id="bottom" type="source" position={Position.Bottom} style={{ ...HANDLE_STYLE, bottom: -5 }} />
+      <Handle id="right"  type="source" position={Position.Right}  style={{ ...HANDLE_STYLE, right: -5 }} />
+      <Handle id="left"   type="target" position={Position.Left}   style={{ ...HANDLE_STYLE, left: -5 }} />
 
-      <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 5 }}>
         {/* Name row */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
           <span style={{
@@ -75,30 +89,61 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
             {screenName}
           </span>
 
-          {/* Open in prototype link */}
-          <button
-            onClick={handleOpen}
-            className="nodrag"
-            title="Open in prototype"
-            style={{
-              border: 'none',
-              background: 'none',
-              cursor: 'pointer',
-              padding: '2px 4px',
-              borderRadius: 4,
-              color: '#1976d2',
-              fontSize: 11,
-              fontWeight: 500,
-              flexShrink: 0,
-              opacity: 0.7,
-              transition: 'opacity 0.15s',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
-          >
-            Open ↗
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+            {/* Notes indicator dot */}
+            {hasNotes && (
+              <div
+                title="Has UX notes"
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  backgroundColor: '#1976d2',
+                  opacity: 0.6,
+                }}
+              />
+            )}
+
+            {/* Open link */}
+            <button
+              onClick={handleOpen}
+              className="nodrag"
+              title="Open in prototype"
+              style={{
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                padding: '2px 4px',
+                borderRadius: 4,
+                color: '#1976d2',
+                fontSize: 11,
+                fontWeight: 500,
+                opacity: 0.7,
+                transition: 'opacity 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+            >
+              Open
+            </button>
+          </div>
         </div>
+
+        {/* Purpose preview */}
+        {data.purpose && (
+          <p style={{
+            margin: 0,
+            fontSize: 11,
+            color: '#777',
+            lineHeight: 1.4,
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+          }}>
+            {data.purpose}
+          </p>
+        )}
 
         {/* Status badge */}
         <div style={{
