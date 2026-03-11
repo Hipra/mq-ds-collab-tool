@@ -94,47 +94,59 @@ export function LabeledEdge({
                 minWidth: 60,
               }}
             />
-          ) : data?.label ? (
-            <div
-              style={{
-                backgroundColor: '#fff',
-                border: `1px solid ${selected ? '#1976d2' : '#ddd'}`,
-                borderRadius: 4,
-                padding: '2px 6px',
-                fontSize: 11,
-                color: '#555',
-                cursor: 'pointer',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-              }}
-            >
-              {data.label}
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+              {/* Label (if any) */}
+              {data?.label && (
+                <div
+                  style={{
+                    backgroundColor: '#fff',
+                    border: `1px solid ${selected ? '#1976d2' : '#ddd'}`,
+                    borderRadius: 4,
+                    padding: '2px 6px',
+                    fontSize: 11,
+                    color: '#555',
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                  }}
+                >
+                  {data.label}
+                </div>
+              )}
+
+              {/* Actions: visible when selected */}
               {selected && (
-                <span
-                  onClick={handleDeleteEdge}
-                  style={{ color: '#ef5350', cursor: 'pointer', lineHeight: 1 }}
-                  title="Delete edge"
-                >×</span>
+                <div style={{ display: 'flex', gap: 2 }}>
+                  <button
+                    onClick={handleDoubleClick}
+                    title="Edit label"
+                    style={{
+                      width: 20, height: 20, borderRadius: 4,
+                      border: '1px solid #ddd', backgroundColor: '#fff',
+                      fontSize: 11, color: '#888', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: 0,
+                    }}
+                  >
+                    ✎
+                  </button>
+                  <button
+                    onClick={handleDeleteEdge}
+                    title="Delete connection"
+                    style={{
+                      width: 20, height: 20, borderRadius: 4,
+                      border: '1px solid #ffcdd2', backgroundColor: '#fff',
+                      fontSize: 13, color: '#ef5350', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: 0, fontWeight: 700, lineHeight: 1,
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
               )}
             </div>
-          ) : selected ? (
-            <div
-              style={{
-                width: 20, height: 20, borderRadius: '50%',
-                backgroundColor: '#fff',
-                border: '1px solid #ddd',
-                fontSize: 12, color: '#aaa',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-              }}
-              title="Double-click to add label"
-            >
-              +
-            </div>
-          ) : null}
+          )}
         </div>
       </EdgeLabelRenderer>
     </>
