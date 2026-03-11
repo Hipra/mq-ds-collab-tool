@@ -2,9 +2,10 @@
 
 import '@xyflow/react/dist/style.css';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ReactFlow,
+  ReactFlowProvider,
   Background,
   Controls,
   MiniMap,
@@ -39,47 +40,49 @@ const DEFAULT_EDGE_OPTIONS = {
   data: { label: '' },
 };
 
-// Auto-arrange screens in a horizontal row, 260px apart
-function autoLayout(screens: { id: string; name: string }[], prototypeId: string): Node[] {
+function autoLayout(
+  screens: { id: string; name: string }[],
+  prototypeId: string,
+  status: ScreenNodeData['status'],
+): Node[] {
   return screens.map((s, i) => ({
     id: `screen-${s.id}`,
     type: 'screenNode',
-    position: { x: i * 280, y: 0 },
-    data: { screenId: s.id, screenName: s.name, prototypeId } satisfies ScreenNodeData,
+    position: { x: i * 260, y: 0 },
+    data: { screenId: s.id, screenName: s.name, prototypeId, status } satisfies ScreenNodeData,
   }));
 }
 
-// Merge saved node positions with current screen list:
-// - Screens that have saved positions keep them
-// - New screens (not in saved state) get auto-placed to the right of existing nodes
 function mergeNodes(
   saved: Node[],
   screens: { id: string; name: string }[],
   prototypeId: string,
+  status: ScreenNodeData['status'],
 ): Node[] {
   const savedMap = new Map(saved.map((n) => [n.id, n]));
-
-  const maxX = saved.filter((n) => n.type === 'screenNode').reduce((m, n) => Math.max(m, n.position.x), -280);
+  const maxX = saved
+    .filter((n) => n.type === 'screenNode')
+    .reduce((m, n) => Math.max(m, n.position.x), -260);
 
   const result: Node[] = [...saved.filter((n) => n.type === 'commentNode')];
 
-  let newX = maxX + 280;
+  let newX = maxX + 260;
   for (const screen of screens) {
     const nodeId = `screen-${screen.id}`;
     const existing = savedMap.get(nodeId);
     if (existing) {
       result.push({
         ...existing,
-        data: { ...existing.data, screenName: screen.name, prototypeId },
+        data: { ...existing.data, screenName: screen.name, prototypeId, status },
       });
     } else {
       result.push({
         id: nodeId,
         type: 'screenNode',
         position: { x: newX, y: 0 },
-        data: { screenId: screen.id, screenName: screen.name, prototypeId } satisfies ScreenNodeData,
+        data: { screenId: screen.id, screenName: screen.name, prototypeId, status } satisfies ScreenNodeData,
       });
-      newX += 280;
+      newX += 260;
     }
   }
 
@@ -93,44 +96,43 @@ interface FlowCanvasProps {
 function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const { fitView } = useReactFlow();
+  const { fitView, screenToFlowPosition } = useReactFlow();
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialised = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Load saved flow + screen list on mount
+  // Load on mount
   useEffect(() => {
     async function load() {
-      const [flowRes, screensRes] = await Promise.all([
+      const [flowRes, screensRes, statusRes] = await Promise.all([
         fetch(`/api/flow/${prototypeId}`),
         fetch(`/api/preview/${prototypeId}/screens`),
+        fetch(`/api/preview/${prototypeId}/status`),
       ]);
 
       const flow = flowRes.ok ? await flowRes.json() : { nodes: [], edges: [] };
       const screens: { id: string; name: string }[] = screensRes.ok ? await screensRes.json() : [];
+      const statusData = statusRes.ok ? await statusRes.json() : {};
+      const status = (['draft', 'review', 'approved'].includes(statusData.status)
+        ? statusData.status
+        : 'draft') as ScreenNodeData['status'];
 
       const savedNodes: Node[] = flow.nodes ?? [];
       const savedEdges: Edge[] = flow.edges ?? [];
 
-      let finalNodes: Node[];
-      if (savedNodes.filter((n: Node) => n.type === 'screenNode').length === 0) {
-        // No saved layout — auto-place all screens
-        finalNodes = autoLayout(screens, prototypeId);
-      } else {
-        finalNodes = mergeNodes(savedNodes, screens, prototypeId);
-      }
+      const finalNodes =
+        savedNodes.filter((n: Node) => n.type === 'screenNode').length === 0
+          ? autoLayout(screens, prototypeId, status)
+          : mergeNodes(savedNodes, screens, prototypeId, status);
 
       setNodes(finalNodes);
       setEdges(savedEdges);
       initialised.current = true;
-
-      // Fit view after first render
-      requestAnimationFrame(() => fitView({ padding: 0.15, duration: 400 }));
+      requestAnimationFrame(() => fitView({ padding: 0.2, duration: 400 }));
     }
-
     load();
   }, [prototypeId, setNodes, setEdges, fitView]);
 
-  // Debounced auto-save
   const save = useCallback(
     (ns: Node[], es: Edge[]) => {
       if (!initialised.current) return;
@@ -149,7 +151,6 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
   const handleNodesChange = useCallback(
     (changes: Parameters<typeof onNodesChange>[0]) => {
       onNodesChange(changes);
-      // save is triggered by the state update — use a small defer
       setNodes((ns) => { save(ns, edges); return ns; });
     },
     [onNodesChange, setNodes, save, edges],
@@ -174,91 +175,84 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
     [setEdges, save, nodes],
   );
 
-  // Double-click on canvas background → add comment
-  const onPaneDoubleClick = useCallback(
-    (event: React.MouseEvent) => {
-      const bounds = (event.currentTarget as HTMLElement).getBoundingClientRect();
-      // Convert screen coords to flow coords
-      const x = event.clientX - bounds.left - 80;
-      const y = event.clientY - bounds.top - 40;
+  // Add comment at center of visible canvas area
+  const handleAddComment = useCallback(() => {
+    const bounds = containerRef.current?.getBoundingClientRect();
+    const cx = bounds ? bounds.left + bounds.width / 2 : 400;
+    const cy = bounds ? bounds.top + bounds.height / 2 : 300;
+    const pos = screenToFlowPosition({ x: cx, y: cy });
 
-      const newNode: Node = {
-        id: `comment-${Date.now()}`,
-        type: 'commentNode',
-        position: { x, y },
-        data: { text: '' },
-      };
-
-      setNodes((ns) => {
-        const next = [...ns, newNode];
-        save(next, edges);
-        return next;
-      });
-    },
-    [setNodes, save, edges],
-  );
+    const newNode: Node = {
+      id: `comment-${Date.now()}`,
+      type: 'commentNode',
+      position: pos,
+      data: { text: '' },
+    };
+    setNodes((ns) => {
+      const next = [...ns, newNode];
+      save(next, edges);
+      return next;
+    });
+  }, [screenToFlowPosition, setNodes, save, edges]);
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
         onConnect={onConnect}
-        onPaneClick={undefined}
-        onDoubleClick={onPaneDoubleClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
         fitView
         deleteKeyCode="Delete"
         multiSelectionKeyCode="Shift"
-        selectionKeyCode="Shift"
-        minZoom={0.2}
+        minZoom={0.15}
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
       >
         <Background gap={20} size={1} color="#e8eaed" />
         <Controls
-          style={{
-            borderRadius: 8,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-            border: '1px solid #e0e0e0',
-          }}
+          style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.10)', border: '1px solid #e0e0e0' }}
         />
         <MiniMap
-          nodeColor={(node) => node.type === 'commentNode' ? '#ffe082' : '#c5cae9'}
-          style={{
-            borderRadius: 8,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-            border: '1px solid #e0e0e0',
-          }}
+          nodeColor={(n) => n.type === 'commentNode' ? '#ffe082' : '#e8eaf6'}
+          style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.10)', border: '1px solid #e0e0e0' }}
         />
       </ReactFlow>
 
-      {/* Hint overlay */}
-      <div style={{
-        position: 'absolute',
-        bottom: 16,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        backgroundColor: 'rgba(0,0,0,0.45)',
-        color: '#fff',
-        fontSize: 11,
-        padding: '4px 12px',
-        borderRadius: 20,
-        pointerEvents: 'none',
-        whiteSpace: 'nowrap',
-      }}>
-        Double-click canvas to add comment · Drag handle to connect screens · Delete key removes selected
-      </div>
+      {/* Add comment button */}
+      <button
+        onClick={handleAddComment}
+        style={{
+          position: 'absolute',
+          top: 12,
+          right: 12,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '6px 12px',
+          borderRadius: 6,
+          border: '1px solid #e0e0e0',
+          backgroundColor: '#fff',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+          fontSize: 12,
+          fontWeight: 500,
+          color: '#444',
+          cursor: 'pointer',
+          transition: 'box-shadow 0.15s',
+          zIndex: 10,
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.14)')}
+        onMouseLeave={(e) => (e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)')}
+      >
+        💬 Add comment
+      </button>
     </div>
   );
 }
-
-// ReactFlow requires a ReactFlowProvider — wrap here
-import { ReactFlowProvider } from '@xyflow/react';
 
 export function FlowCanvas({ prototypeId }: FlowCanvasProps) {
   return (
