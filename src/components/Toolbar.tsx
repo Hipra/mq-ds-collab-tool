@@ -90,7 +90,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
           aria-label="Flow canvas"
           sx={{ mr: 0.5 }}
         >
-          <MqIcon name="flow" size={20} />
+          <MqIcon name="workflow" size={20} />
         </IconButton>
       </Tooltip>
 
