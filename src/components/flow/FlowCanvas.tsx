@@ -26,6 +26,7 @@ import { CommentNode } from './CommentNode';
 import { LabeledEdge } from './LabeledEdge';
 import { AnnotationPanel } from './AnnotationPanel';
 import { FlowContext } from './FlowContext';
+import { ScreenshotCapturer } from './ScreenshotCapturer';
 
 const nodeTypes: NodeTypes = {
   screenNode: ScreenNode,
@@ -50,7 +51,7 @@ function autoLayout(
   return screens.map((s, i) => ({
     id: `screen-${s.id}`,
     type: 'screenNode',
-    position: { x: i * 260, y: 0 },
+    position: { x: i * 340, y: 0 },
     data: { screenId: s.id, screenName: s.name, prototypeId, status } satisfies ScreenNodeData,
   }));
 }
@@ -64,7 +65,7 @@ function mergeNodes(
   const savedMap = new Map(saved.map((n) => [n.id, n]));
   const maxX = saved
     .filter((n) => n.type === 'screenNode')
-    .reduce((m, n) => Math.max(m, n.position.x), -260);
+    .reduce((m, n) => Math.max(m, n.position.x), -340);
 
   const result: Node[] = [...saved.filter((n) => n.type === 'commentNode')];
 
@@ -84,7 +85,7 @@ function mergeNodes(
         position: { x: newX, y: 0 },
         data: { screenId: screen.id, screenName: screen.name, prototypeId, status } satisfies ScreenNodeData,
       });
-      newX += 260;
+      newX += 340;
     }
   }
 
@@ -122,6 +123,13 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [annotationOpen, setAnnotationOpen] = useState(false);
+  const [thumbnailVersions, setThumbnailVersions] = useState<Record<string, number>>({});
+  // captureProgress: null = not yet started, { done, total } = in progress or done
+  const [captureProgress, setCaptureProgress] = useState<{ done: number; total: number } | null>(null);
+
+  const handleCaptureProgress = useCallback((done: number, total: number) => {
+    setCaptureProgress({ done, total });
+  }, []);
 
   const selectedScreenNode = nodes.find((n) => n.selected && n.type === 'screenNode') ?? null;
 
@@ -160,6 +168,26 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
     }
     load();
   }, [prototypeId, setNodes, setEdges, fitView]);
+
+  // Subscribe to SSE for thumbnail updates — when a .png changes, bump its version
+  useEffect(() => {
+    const eventSource = new EventSource('/api/watch');
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data as string) as { file: string };
+        if (data.file.includes(`/${prototypeId}/thumbnails/`) && data.file.endsWith('.png')) {
+          const match = data.file.match(/thumbnails\/([^/]+)\.png$/);
+          if (match) {
+            const screenId = match[1];
+            setThumbnailVersions((prev) => ({ ...prev, [screenId]: Date.now() }));
+          }
+        }
+      } catch {
+        // Ignore malformed SSE messages
+      }
+    };
+    return () => eventSource.close();
+  }, [prototypeId]);
 
   const save = useCallback(
     (ns: Node[], es: Edge[]) => {
@@ -228,7 +256,7 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
   }, [screenToFlowPosition, setNodes, save, edges]);
 
 return (
-    <FlowContext.Provider value={{ triggerSave }}>
+    <FlowContext.Provider value={{ triggerSave, thumbnailVersions }}>
       <style>{`
         .react-flow__node-screenNode .react-flow__handle {
           opacity: 0;
@@ -291,6 +319,32 @@ return (
 
         </div>
 
+        {/* Screenshot capture progress badge */}
+        {captureProgress !== null && captureProgress.done < captureProgress.total && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              zIndex: 10,
+              padding: '5px 10px',
+              borderRadius: 6,
+              border: '1px solid #e0e0e0',
+              backgroundColor: '#fff',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+              fontSize: 12,
+              fontWeight: 500,
+              color: '#444',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+            }}
+          >
+            <span style={{ fontSize: 14 }}>📸</span>
+            Previews: {captureProgress.done}/{captureProgress.total}
+          </div>
+        )}
+
         {/* Annotation panel — appears when a screen node is selected */}
         {annotationOpen && selectedScreenNode && (
           <AnnotationPanel
@@ -300,6 +354,12 @@ return (
           />
         )}
       </div>
+
+      {/* Hidden off-screen iframes for screenshot capture */}
+      <ScreenshotCapturer
+        prototypeId={prototypeId}
+        onProgress={handleCaptureProgress}
+      />
     </FlowContext.Provider>
   );
 }

@@ -199,7 +199,7 @@ export default function TemplateDetailPage({
           <Button
             size="small"
             variant="contained"
-            startIcon={<PlaylistAddIcon />}
+            startIcon={<MqIcon name="add" size={16} />}
             onClick={openAddTo}
           >
             Add to prototype

@@ -509,6 +509,40 @@ function Root() {
   });
 }
 
+// ─── Screenshot capture — triggered by TAKE_SCREENSHOT postMessage ───────────
+let html2canvasPromise = null;
+
+function loadHtml2Canvas() {
+  if (html2canvasPromise) return html2canvasPromise;
+  html2canvasPromise = new Promise((resolve, reject) => {
+    if (window.html2canvas) { resolve(window.html2canvas); return; }
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload = () => resolve(window.html2canvas);
+    script.onerror = () => { html2canvasPromise = null; reject(new Error('html2canvas load failed')); };
+    document.head.appendChild(script);
+  });
+  return html2canvasPromise;
+}
+
+async function captureScreenshot() {
+  try {
+    const h2c = await loadHtml2Canvas();
+    const target = document.body;
+    if (!target) return;
+    const canvas = await h2c(target, {
+      useCORS: true,
+      scale: 1,
+      logging: false,
+      backgroundColor: null,
+    });
+    const dataUrl = canvas.toDataURL('image/png');
+    window.parent.postMessage({ type: 'SCREENSHOT_DATA', dataUrl }, '*');
+  } catch {
+    // Screenshot capture failed — ignore silently
+  }
+}
+
 // ─── Inspector overlay — used for HIGHLIGHT_TEXT from parent shell ────────────
 let highlightOverlay = null;
 
@@ -520,8 +554,12 @@ function ensureOverlay() {
   return highlightOverlay;
 }
 
-// Listen for HIGHLIGHT_TEXT from parent shell (triggered by Components panel selection)
+// Listen for HIGHLIGHT_TEXT and TAKE_SCREENSHOT from parent shell
 window.addEventListener('message', function(event) {
+  if (event.data?.type === 'TAKE_SCREENSHOT') {
+    captureScreenshot();
+  }
+
   // Phase 3: highlight element from Copy tab selection
   if (event.data?.type === 'HIGHLIGHT_TEXT') {
     const id = event.data.inspectorId;

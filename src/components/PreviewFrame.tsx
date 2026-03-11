@@ -121,10 +121,11 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
       try {
         const data = JSON.parse(event.data) as { file: string };
         // Only reload if the changed file belongs to this prototype
-        // Skip non-source files (metadata, overlay) — they don't affect rendering
+        // Skip non-source files (metadata, overlay, thumbnails) — they don't affect rendering
         const nonSourceFiles = ['metadata.json', 'copy-overlay.json'];
         const isNonSource = nonSourceFiles.some((f) => data.file.endsWith(f));
-        if (data.file.includes(prototypeId) && !isNonSource) {
+        const isThumbnail = data.file.endsWith('.png');
+        if (data.file.includes(prototypeId) && !isNonSource && !isThumbnail) {
           sendReloadToIframe();
           // Re-fetch the component tree after reload
           fetchTree();

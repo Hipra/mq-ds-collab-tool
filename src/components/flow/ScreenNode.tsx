@@ -1,8 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { useInspectorStore } from '@/stores/inspector';
+import { useFlowContext } from './FlowContext';
 
 export interface ScreenNodeData extends Record<string, unknown> {
   screenId: string;
@@ -44,6 +46,16 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
   const { screenId, screenName, prototypeId, status } = data;
   const router = useRouter();
   const setActiveScreen = useInspectorStore((s) => s.setActiveScreen);
+  const { thumbnailVersions } = useFlowContext();
+
+  const version = thumbnailVersions[screenId] ?? 0;
+  const thumbnailSrc = `/api/preview/${prototypeId}/thumbnail?screen=${screenId}&t=${version}`;
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+
+  // Reset error state when version changes so we retry the new thumbnail
+  useEffect(() => {
+    setThumbnailFailed(false);
+  }, [version]);
 
   const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.draft;
   const hasNotes = !!(data.purpose || data.userIntent || data.notes);
@@ -58,7 +70,7 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
   return (
     <div
       style={{
-        width: 200,
+        width: 280,
         borderRadius: 8,
         backgroundColor: '#fff',
         border: selected ? '2px solid #1976d2' : `1.5px solid ${toneColor ?? '#e0e0e0'}`,
@@ -74,9 +86,65 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
       <Handle id="right"  type="source" position={Position.Right}  style={{ ...HANDLE_STYLE, right: -5 }} />
       <Handle id="left"   type="target" position={Position.Left}   style={{ ...HANDLE_STYLE, left: -5 }} />
 
+      {/* Thumbnail area */}
+      <div
+        style={{
+          width: '100%',
+          height: 168,
+          borderRadius: '6px 6px 0 0',
+          overflow: 'hidden',
+          backgroundColor: '#f0f2f5',
+          flexShrink: 0,
+        }}
+      >
+        {!thumbnailFailed ? (
+          <img
+            src={thumbnailSrc}
+            alt=""
+            onError={() => setThumbnailFailed(true)}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'top',
+              display: 'block',
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#bdbdbd',
+              fontSize: 11,
+              fontFamily: 'sans-serif',
+            }}
+          >
+            No preview
+          </div>
+        )}
+      </div>
+
       <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 5 }}>
         {/* Name row */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+          {/* Notes indicator dot */}
+          {hasNotes && (
+            <div
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                backgroundColor: '#1976d2',
+                opacity: 0.6,
+                flexShrink: 0,
+              }}
+            />
+          )}
+
           <span style={{
             fontSize: 13,
             fontWeight: 600,
@@ -90,25 +158,10 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
           </span>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-            {/* Notes indicator dot */}
-            {hasNotes && (
-              <div
-                title="Has UX notes"
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  backgroundColor: '#1976d2',
-                  opacity: 0.6,
-                }}
-              />
-            )}
-
             {/* Open link */}
             <button
               onClick={handleOpen}
               className="nodrag"
-              title="Open in prototype"
               style={{
                 border: 'none',
                 background: 'none',
@@ -124,7 +177,7 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
               onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
             >
-              Open
+              Open prototype
             </button>
           </div>
         </div>
