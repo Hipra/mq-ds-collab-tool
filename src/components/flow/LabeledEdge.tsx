@@ -63,10 +63,12 @@ export function LabeledEdge({
         id={id}
         path={edgePath}
         markerEnd={markerEnd}
+        interactionWidth={20}
         style={{ stroke: strokeColor, strokeWidth, cursor: 'pointer' }}
       />
 
       <EdgeLabelRenderer>
+        {/* Label at midpoint */}
         <div
           style={{
             position: 'absolute',
@@ -75,6 +77,31 @@ export function LabeledEdge({
           }}
           className="nodrag nopan"
           onDoubleClick={handleDoubleClick}
+        >
+          {!editing && data?.label && (
+            <div style={{
+              backgroundColor: '#fff',
+              border: `1px solid ${selected ? '#1976d2' : '#ddd'}`,
+              borderRadius: 4,
+              padding: '2px 6px',
+              fontSize: 11,
+              color: '#555',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+            }}>
+              {data.label}
+            </div>
+          )}
+        </div>
+
+        {/* Action buttons: offset ABOVE midpoint to avoid being hidden by nodes */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -100%) translate(${labelX}px,${labelY - 6}px)`,
+            pointerEvents: 'all',
+            zIndex: 9999,
+          }}
+          className="nodrag nopan"
         >
           {editing ? (
             <input
@@ -94,59 +121,37 @@ export function LabeledEdge({
                 minWidth: 60,
               }}
             />
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              {/* Label (if any) */}
-              {data?.label && (
-                <div
-                  style={{
-                    backgroundColor: '#fff',
-                    border: `1px solid ${selected ? '#1976d2' : '#ddd'}`,
-                    borderRadius: 4,
-                    padding: '2px 6px',
-                    fontSize: 11,
-                    color: '#555',
-                    cursor: 'pointer',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-                  }}
-                >
-                  {data.label}
-                </div>
-              )}
-
-              {/* Actions: visible when selected */}
-              {selected && (
-                <div style={{ display: 'flex', gap: 2 }}>
-                  <button
-                    onClick={handleDoubleClick}
-                    title="Edit label"
-                    style={{
-                      width: 20, height: 20, borderRadius: 4,
-                      border: '1px solid #ddd', backgroundColor: '#fff',
-                      fontSize: 11, color: '#888', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      padding: 0,
-                    }}
-                  >
-                    ✎
-                  </button>
-                  <button
-                    onClick={handleDeleteEdge}
-                    title="Delete connection"
-                    style={{
-                      width: 20, height: 20, borderRadius: 4,
-                      border: '1px solid #ffcdd2', backgroundColor: '#fff',
-                      fontSize: 13, color: '#ef5350', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      padding: 0, fontWeight: 700, lineHeight: 1,
-                    }}
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
+          ) : selected ? (
+            <div style={{ display: 'flex', gap: 2 }}>
+              <button
+                onClick={handleDoubleClick}
+                title="Edit label"
+                style={{
+                  width: 20, height: 20, borderRadius: 4,
+                  border: '1px solid #ddd', backgroundColor: '#fff',
+                  fontSize: 11, color: '#888', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+                }}
+              >
+                ✎
+              </button>
+              <button
+                onClick={handleDeleteEdge}
+                title="Delete connection"
+                style={{
+                  width: 20, height: 20, borderRadius: 4,
+                  border: '1px solid #ffcdd2', backgroundColor: '#fff',
+                  fontSize: 13, color: '#ef5350', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: 0, fontWeight: 700, lineHeight: 1,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+                }}
+              >
+                ×
+              </button>
             </div>
-          )}
+          ) : null}
         </div>
       </EdgeLabelRenderer>
     </>
