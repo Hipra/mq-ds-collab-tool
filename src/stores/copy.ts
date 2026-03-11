@@ -27,6 +27,8 @@ interface CopyState {
   collapsedGroups: Set<string>; // component names that are collapsed
   highlightedKey: string | null; // entry highlighted from preview click
   loading: boolean;
+  /** Incremented by PreviewFrame when source files change — triggers CopyTab silent re-fetch */
+  refreshToken: number;
 }
 
 interface CopyActions {
@@ -43,6 +45,7 @@ interface CopyActions {
   setHighlightedKey: (key: string | null) => void;
   setLoading: (loading: boolean) => void;
   resolveConflict: (key: string, chosenValue: string) => void;
+  requestRefresh: () => void;
 }
 
 export const useCopyStore = create<CopyState & CopyActions>((set) => ({
@@ -54,6 +57,7 @@ export const useCopyStore = create<CopyState & CopyActions>((set) => ({
   collapsedGroups: new Set<string>(),
   highlightedKey: null,
   loading: false,
+  refreshToken: 0,
 
   // Actions
   setEntries: (entries, conflicts, summary, editsMap = {}) => {
@@ -104,6 +108,8 @@ export const useCopyStore = create<CopyState & CopyActions>((set) => ({
   setHighlightedKey: (key) => set({ highlightedKey: key }),
 
   setLoading: (loading) => set({ loading }),
+
+  requestRefresh: () => set((s) => ({ refreshToken: s.refreshToken + 1 })),
 
   resolveConflict: (key, chosenValue) => {
     set((state) => {

@@ -18,7 +18,7 @@ interface ScreensMeta {
 }
 
 function capitalizeId(id: string): string {
-  if (id === 'index') return 'Main';
+  if (id === 'index') return 'Noname';
   return id.charAt(0).toUpperCase() + id.slice(1);
 }
 
@@ -26,7 +26,7 @@ function capitalizeId(id: string): string {
  * GET /api/preview/[id]/screens
  *
  * Discovers screen files in the prototype directory:
- * - index.jsx is always included as id "index" (name: "Main")
+ * - index.jsx is always included as id "index" (name: "Noname")
  * - screen-*.jsx files are included with id = the part after "screen-" and before ".jsx"
  *
  * Supports custom names and ordering via metadata.json:
@@ -69,7 +69,7 @@ export async function GET(
   if (files.includes('index.jsx')) {
     screens.push({
       id: 'index',
-      name: screensMeta.customNames?.['index'] ?? 'Main',
+      name: screensMeta.customNames?.['index'] ?? 'Noname',
       file: 'index.jsx',
     });
   }
@@ -200,6 +200,58 @@ export async function POST(
   }
 
   return NextResponse.json({ id: screenId, name, file: fileName }, { status: 201 });
+}
+
+/**
+ * DELETE /api/preview/[id]/screens?screenId=<id>
+ *
+ * Deletes a non-index screen file and removes it from metadata.json.
+ * The "index" screen cannot be deleted.
+ */
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const screenId = new URL(req.url).searchParams.get('screenId');
+
+  if (!screenId) {
+    return NextResponse.json({ error: 'screenId query param is required' }, { status: 400 });
+  }
+
+  const protoDir = process.env.PROTOTYPES_DIR ?? path.join(process.cwd(), 'prototypes');
+  const dir = path.join(protoDir, id);
+  const fileName = screenId === 'index' ? 'index.jsx' : `screen-${screenId}.jsx`;
+  const filePath = path.join(dir, fileName);
+
+  try {
+    await fs.unlink(filePath);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: message }, { status: 404 });
+  }
+
+  // Remove from metadata.json (screens.order and screens.customNames)
+  const metaPath = path.join(dir, 'metadata.json');
+  try {
+    const raw = await fs.readFile(metaPath, 'utf-8');
+    const meta = JSON.parse(raw) as Record<string, unknown>;
+    const existingScreens = (meta.screens as ScreensMeta | undefined) ?? {};
+    const updatedScreens: ScreensMeta = { ...existingScreens };
+    if (updatedScreens.order) {
+      updatedScreens.order = updatedScreens.order.filter((sid) => sid !== screenId);
+    }
+    if (updatedScreens.customNames) {
+      const { [screenId]: _removed, ...rest } = updatedScreens.customNames;
+      updatedScreens.customNames = rest;
+    }
+    meta.screens = updatedScreens;
+    await fs.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+  } catch {
+    // Non-fatal — file was deleted, metadata cleanup failed
+  }
+
+  return NextResponse.json({ ok: true });
 }
 
 /**

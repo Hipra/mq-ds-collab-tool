@@ -39,12 +39,13 @@ const MODE_CONFIG: Record<
 export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
   const router = useRouter();
   const { mode, cycleMode } = useThemeStore();
-  const { togglePanel, panelOpen, sidebarOpen, toggleSidebar, activeScreenId } = useInspectorStore();
+  const { togglePanel, panelOpen, sidebarOpen, toggleSidebar, activeScreenId, screens } = useInspectorStore();
   const [copiedClaude, setCopiedClaude] = useState(false);
 
   const handleCopyClaudeCommand = () => {
     const screenFile = activeScreenId === 'index' ? 'index.jsx' : `screen-${activeScreenId}.jsx`;
-    const command = `claude --dangerously-skip-permissions "Work on screen ${screenFile} in prototype prototypes/${prototypeId}/. Follow the rules in CLAUDE.md. Read existing files before editing. Only modify files inside prototypes/${prototypeId}/ — never touch src/, config files, or other prototypes. Stack: React + MUI."`;
+    const screenName = screens.find((s) => s.id === activeScreenId)?.name ?? activeScreenId;
+    const command = `claude --dangerously-skip-permissions "Work on screen \"${screenName}\" (${screenFile}) in prototype prototypes/${prototypeId}/. Follow the rules in CLAUDE.md. Read existing files before editing. Only modify files inside prototypes/${prototypeId}/ — never touch src/, config files, or other prototypes. Stack: React + MUI."`;
     navigator.clipboard.writeText(command);
     setCopiedClaude(true);
   };

@@ -128,6 +128,8 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
           sendReloadToIframe();
           // Re-fetch the component tree after reload
           fetchTree();
+          // Signal CopyTab to silently re-fetch (source file changed)
+          useCopyStore.getState().requestRefresh();
         }
       } catch {
         // Malformed SSE message — ignore

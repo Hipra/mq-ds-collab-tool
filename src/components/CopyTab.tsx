@@ -124,6 +124,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
     searchQuery,
     highlightedKey,
     loading,
+    refreshToken,
     setEntries,
     updateEntry,
     resetEntry,
@@ -145,22 +146,24 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
     try {
       const screen = screenId !== 'index' ? `?screen=${screenId}` : '';
       const res = await fetch(`/api/preview/${prototypeId}/copy${screen}`);
-      if (res.ok) {
-        const data = await res.json();
-        // Build edits map from API response
-        const editsMap: Record<string, Array<{ value: string; timestamp: string }>> = {};
-        if (data.editsMap) {
-          Object.assign(editsMap, data.editsMap);
-        }
-        setEntries(data.entries ?? [], data.conflicts ?? [], data.summary ?? { total: 0, modified: 0 }, editsMap);
+      if (!res.ok) {
+        setLoading(false);
+        return;
+      }
+      const data = await res.json();
+      // Build edits map from API response
+      const editsMap: Record<string, Array<{ value: string; timestamp: string }>> = {};
+      if (data.editsMap) {
+        Object.assign(editsMap, data.editsMap);
+      }
+      setEntries(data.entries ?? [], data.conflicts ?? [], data.summary ?? { total: 0, modified: 0 }, editsMap);
 
-        // If any entries are already modified, send overrides to iframe
-        const allEntries: CopyEntryWithHistory[] = data.entries ?? [];
-        const hasModified = allEntries.some((e: CopyEntryWithHistory) => e.currentValue !== e.sourceValue);
-        if (hasModified) {
-          postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides: buildOverrideMap(allEntries) });
-          postToPreview({ type: 'SET_TEXT_CONTENT_OVERRIDES', overrides: buildTextContentOverrideMap(allEntries) });
-        }
+      // If any entries are already modified, send overrides to iframe
+      const allEntries: CopyEntryWithHistory[] = data.entries ?? [];
+      const hasModified = allEntries.some((e: CopyEntryWithHistory) => e.currentValue !== e.sourceValue);
+      if (hasModified) {
+        postToPreview({ type: 'SET_TEXT_OVERRIDES', overrides: buildOverrideMap(allEntries) });
+        postToPreview({ type: 'SET_TEXT_CONTENT_OVERRIDES', overrides: buildTextContentOverrideMap(allEntries) });
       }
     } catch {
       // Non-critical — show empty state if fetch fails
@@ -168,9 +171,23 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
     }
   }, [prototypeId, setEntries, setLoading]);
 
+  // Keep latest values in refs so the refreshToken effect can access them without
+  // being in their dependency array (avoids re-subscribing on every render)
+  const fetchCopyDataRef = useRef(fetchCopyData);
+  fetchCopyDataRef.current = fetchCopyData;
+  const activeScreenIdRef = useRef(activeScreenId);
+  activeScreenIdRef.current = activeScreenId;
+
   useEffect(() => {
     fetchCopyData(activeScreenId);
   }, [activeScreenId, fetchCopyData]);
+
+  // Silently re-fetch when PreviewFrame signals a source file change
+  // (handles race condition where new prototype files aren't ready on first mount fetch)
+  useEffect(() => {
+    if (refreshToken === 0) return;
+    fetchCopyDataRef.current(activeScreenIdRef.current, true);
+  }, [refreshToken]);
 
   // Scroll to highlighted entry when it changes
   useEffect(() => {
