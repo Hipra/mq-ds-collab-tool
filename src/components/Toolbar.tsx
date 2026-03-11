@@ -83,6 +83,17 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
       <BreakpointSwitcher />
       <Box sx={{ flex: 1 }} />
 
+      <Tooltip title="Flow canvas">
+        <IconButton
+          onClick={() => router.push(`/prototype/${prototypeId}/flow`)}
+          size="small"
+          aria-label="Flow canvas"
+          sx={{ mr: 0.5 }}
+        >
+          <MqIcon name="flow" size={20} />
+        </IconButton>
+      </Tooltip>
+
       <Tooltip title="Copy prompt">
         <IconButton
           onClick={handleCopyClaudeCommand}
