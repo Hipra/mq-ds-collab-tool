@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
@@ -27,6 +27,11 @@ import {
   Divider,
 } from '@memoq/memoq.web.design';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
+import FilterBar from '@/components/dashboard/FilterBar';
+import ProjectCard from '@/components/dashboard/ProjectCard';
+import ProjectDialog from '@/components/dashboard/ProjectDialog';
+import ScreenshotModal from '@/components/dashboard/ScreenshotModal';
+import type { ProjectWithPrototypes, ScreenInfo } from '@/types/project';
 
 interface Prototype {
   id: string;
@@ -43,7 +48,6 @@ interface Template {
   createdAt?: string;
 }
 
-type StatusFilter = 'all' | 'draft' | 'review' | 'approved';
 type ActiveTab = 'prototypes' | 'templates';
 
 const STATUS_CONFIG: Record<string, { label: string; color: 'default' | 'warning' | 'success' }> = {
@@ -81,7 +85,6 @@ export default function GalleryPage() {
   // Prototypes state
   const [prototypes, setPrototypes] = useState<Prototype[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [createError, setCreateError] = useState('');
@@ -108,11 +111,32 @@ export default function GalleryPage() {
   const [addToLoading, setAddToLoading] = useState(false);
   const [addToError, setAddToError] = useState('');
 
+  // Projects state
+  const [projects, setProjects] = useState<ProjectWithPrototypes[]>([]);
+  const [designFilter, setDesignFilter] = useState<string[]>([]);
+  const [devFilter, setDevFilter] = useState<string[]>([]);
+  const [uxWriterFilter, setUxWriterFilter] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<ProjectWithPrototypes | null>(null);
+  const [screenshotModal, setScreenshotModal] = useState<{ src: string; name: string } | null>(null);
+
+  const fetchProjects = async () => {
+    try {
+      const res = await fetch('/api/projects');
+      if (res.ok) {
+        const data = await res.json();
+        setProjects(data);
+      }
+    } catch { /* silent */ }
+  };
+
   useEffect(() => {
     fetch('/api/prototypes')
       .then((res) => res.json())
       .then((data: Prototype[]) => { setPrototypes(data); setLoading(false); })
       .catch(() => setLoading(false));
+    fetchProjects();
   }, []);
 
   useEffect(() => {
@@ -124,11 +148,6 @@ export default function GalleryPage() {
         .catch(() => setTemplatesLoading(false));
     }
   }, [activeTab, templatesFetched]);
-
-  const filtered = useMemo(() =>
-    prototypes.filter((p) => statusFilter === 'all' || p.status === statusFilter),
-    [prototypes, statusFilter]
-  );
 
   const handleTabChange = (_e: React.SyntheticEvent, val: ActiveTab) => setActiveTab(val);
 
@@ -212,6 +231,49 @@ export default function GalleryPage() {
     finally { setAddToLoading(false); }
   };
 
+  const assignedPrototypeIds = new Set(projects.flatMap((p) => p.prototypeIds));
+  const unassignedPrototypes = prototypes.filter((p) => !assignedPrototypeIds.has(p.id));
+
+  const filteredProjects = projects.filter((project) => {
+    if (designFilter.length && !designFilter.includes(project.designStatus)) return false;
+    if (devFilter.length && !devFilter.includes(project.devStatus)) return false;
+    if (uxWriterFilter.length && !uxWriterFilter.includes(project.uxWriterStatus)) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const searchable = [
+        project.name, project.description, project.assignee,
+        ...project.prototypes.map((p) => p.name),
+      ].join(' ').toLowerCase();
+      if (!searchable.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const handleEditProject = (project: ProjectWithPrototypes) => {
+    setEditingProject(project);
+    setProjectDialogOpen(true);
+  };
+
+  const handleCreateProject = () => {
+    setEditingProject(null);
+    setProjectDialogOpen(true);
+  };
+
+  const handleProjectSaved = () => {
+    fetchProjects();
+    fetch('/api/prototypes')
+      .then((res) => res.json())
+      .then((data: Prototype[]) => setPrototypes(data))
+      .catch(() => {});
+  };
+
+  const handleThumbnailClick = (prototypeId: string, screen: ScreenInfo) => {
+    setScreenshotModal({
+      src: `/api/preview/${prototypeId}/thumbnail?screen=${screen.id}`,
+      name: screen.name,
+    });
+  };
+
   const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.system;
 
   const cardSx = {
@@ -266,25 +328,19 @@ export default function GalleryPage() {
           {/* ── Prototypes tab ── */}
           {activeTab === 'prototypes' && (
             <>
-              <Box sx={{ display: 'flex', gap: 1, mb: 3, alignItems: 'center', flexWrap: 'wrap' }}>
-                {(['all', 'draft', 'review', 'approved'] as StatusFilter[]).map((value) => {
-                  const label = value === 'all' ? 'All' : STATUS_CONFIG[value].label;
-                  const selected = statusFilter === value;
-                  return (
-                    <Chip
-                      key={value}
-                      label={label}
-                      size="medium"
-                      onClick={() => setStatusFilter(value)}
-                      color={selected ? 'primary' : 'default'}
-                      variant={selected ? 'filled' : 'outlined'}
-                      sx={{ fontSize: '0.9rem', height: 36, px: 0.5 }}
-                    />
-                  );
-                })}
+              {/* New Project + existing New Prototype buttons */}
+              <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                 <Box sx={{ flex: 1 }} />
                 <Button
                   variant="contained"
+                  size="small"
+                  startIcon={<MqIcon name="plus" size={16} />}
+                  onClick={handleCreateProject}
+                >
+                  New Project
+                </Button>
+                <Button
+                  variant="outlined"
                   size="small"
                   startIcon={<MqIcon name="plus" size={16} />}
                   onClick={() => { setNewName(''); setCreateError(''); setCreateOpen(true); }}
@@ -293,79 +349,111 @@ export default function GalleryPage() {
                 </Button>
               </Box>
 
+              {/* Filter bar */}
+              <FilterBar
+                designFilter={designFilter}
+                devFilter={devFilter}
+                uxWriterFilter={uxWriterFilter}
+                searchQuery={searchQuery}
+                onDesignFilterChange={setDesignFilter}
+                onDevFilterChange={setDevFilter}
+                onUxWriterFilterChange={setUxWriterFilter}
+                onSearchChange={setSearchQuery}
+              />
+
               {loading && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
                   <CircularProgress />
                 </Box>
               )}
 
-              {!loading && filtered.length === 0 && (
-                <EmptyState
-                  icon={<MqIcon name="artboard" size={20} />}
-                  title={prototypes.length === 0 ? 'No prototypes yet' : 'No results'}
-                  description={
-                    prototypes.length === 0
-                      ? 'Create your first prototype to get started.'
-                      : 'Try adjusting your search or filter.'
-                  }
-                />
-              )}
+              {!loading && (
+                <>
+                  {/* Project cards */}
+                  {filteredProjects.map((project) => (
+                    <ProjectCard
+                      key={project.id}
+                      project={project}
+                      onEdit={handleEditProject}
+                      onThumbnailClick={handleThumbnailClick}
+                    />
+                  ))}
 
-              {!loading && filtered.length > 0 && (
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 2 }}>
-                  {filtered.map((proto) => {
-                    const config = STATUS_CONFIG[proto.status] ?? STATUS_CONFIG.draft;
-                    return (
-                      <Card
-                        key={proto.id}
-                        elevation={0}
-                        onClick={() => router.push(`/prototype/${proto.id}`)}
-                        sx={cardSx}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.4, flex: 1, wordBreak: 'break-word' }}>
-                            {proto.name}
-                          </Typography>
-                          <Box className="card-actions" sx={{ display: 'flex', gap: 0.25, flexShrink: 0 }}>
-                            <Tooltip title="Clone">
-                              <IconButton
-                                size="small"
-                                aria-label="Clone"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCloneError('');
-                                  setCloneName(`Copy of ${proto.name}`);
-                                  setCloneTarget(proto);
-                                }}
-                              >
-                                <MqIcon name="copy_clone" size={16} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete">
-                              <IconButton
-                                size="small"
-                                aria-label="Delete"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteError('');
-                                  setDeleteTarget(proto);
-                                }}
-                              >
-                                <MqIcon name="trash" size={16} />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>
-                          <Chip label={config.label} color={config.color} size="small" />
-                          <Typography variant="caption" color="text.disabled">
-                            {proto.createdAt ? new Date(proto.createdAt).toLocaleDateString() : '—'}
-                          </Typography>
-                        </Box>
-                      </Card>
-                    );
-                  })}
-                </Box>
+                  {/* Unassigned section */}
+                  {unassignedPrototypes.length > 0 && (
+                    <>
+                      {filteredProjects.length > 0 && (
+                        <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>Unassigned</Typography>
+                      )}
+                      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 2 }}>
+                        {unassignedPrototypes.map((proto) => {
+                          const config = STATUS_CONFIG[proto.status] ?? STATUS_CONFIG.draft;
+                          return (
+                            <Card
+                              key={proto.id}
+                              elevation={0}
+                              onClick={() => router.push(`/prototype/${proto.id}`)}
+                              sx={cardSx}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                                <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.4, flex: 1, wordBreak: 'break-word' }}>
+                                  {proto.name}
+                                </Typography>
+                                <Box className="card-actions" sx={{ display: 'flex', gap: 0.25, flexShrink: 0 }}>
+                                  <Tooltip title="Clone">
+                                    <IconButton
+                                      size="small"
+                                      aria-label="Clone"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setCloneError('');
+                                        setCloneName(`Copy of ${proto.name}`);
+                                        setCloneTarget(proto);
+                                      }}
+                                    >
+                                      <MqIcon name="copy_clone" size={16} />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Delete">
+                                    <IconButton
+                                      size="small"
+                                      aria-label="Delete"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDeleteError('');
+                                        setDeleteTarget(proto);
+                                      }}
+                                    >
+                                      <MqIcon name="trash" size={16} />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Box>
+                              </Box>
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>
+                                <Chip label={config.label} color={config.color} size="small" />
+                                <Typography variant="caption" color="text.disabled">
+                                  {proto.createdAt ? new Date(proto.createdAt).toLocaleDateString() : '—'}
+                                </Typography>
+                              </Box>
+                            </Card>
+                          );
+                        })}
+                      </Box>
+                    </>
+                  )}
+
+                  {filteredProjects.length === 0 && unassignedPrototypes.length === 0 && (
+                    <EmptyState
+                      icon={<MqIcon name="artboard" size={20} />}
+                      title={prototypes.length === 0 ? 'No prototypes yet' : 'No results'}
+                      description={
+                        prototypes.length === 0
+                          ? 'Create your first prototype to get started.'
+                          : 'Try adjusting your search or filter.'
+                      }
+                    />
+                  )}
+                </>
               )}
             </>
           )}
@@ -558,6 +646,22 @@ export default function GalleryPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* ── Project dialog ── */}
+      <ProjectDialog
+        open={projectDialogOpen}
+        onClose={() => setProjectDialogOpen(false)}
+        onSave={handleProjectSaved}
+        editProject={editingProject}
+      />
+
+      {/* ── Screenshot modal ── */}
+      <ScreenshotModal
+        open={!!screenshotModal}
+        onClose={() => setScreenshotModal(null)}
+        src={screenshotModal?.src || ''}
+        screenName={screenshotModal?.name || ''}
+      />
     </Box>
   );
 }
