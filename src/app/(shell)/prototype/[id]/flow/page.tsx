@@ -26,6 +26,16 @@ export default function FlowPage({
         variant="dense"
         sx={{ '& .MuiToolbar-gutters': { px: 1 } }}
       >
+        <Tooltip title="Back to dashboard">
+          <IconButton
+            size="small"
+            onClick={() => router.push('/')}
+            sx={{ mr: 0.5 }}
+          >
+            <MqIcon name="home" size={20} />
+          </IconButton>
+        </Tooltip>
+
         <Tooltip title="Back to prototype">
           <IconButton
             size="small"
