@@ -2,15 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import {
-  Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
-  MenuItem, Select, TextField, Typography, Alert, type SelectChangeEvent,
+  Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
+  TextField, Alert,
 } from '@mui/material';
 import type { ProjectWithPrototypes } from '@/types/project';
-
-interface PrototypeListItem {
-  id: string;
-  name: string;
-}
 
 interface ProjectDialogProps {
   open: boolean;
@@ -22,44 +17,27 @@ interface ProjectDialogProps {
 export default function ProjectDialog({ open, onClose, onSave, editProject }: ProjectDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [assignee, setAssignee] = useState('');
-  const [selectedPrototypeIds, setSelectedPrototypeIds] = useState<string[]>([]);
-  const [availablePrototypes, setAvailablePrototypes] = useState<PrototypeListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (open) {
-      fetch('/api/prototypes')
-        .then((r) => r.json())
-        .then((data) => setAvailablePrototypes(data))
-        .catch(() => setAvailablePrototypes([]));
-
       if (editProject) {
         setName(editProject.name);
         setDescription(editProject.description);
-        setAssignee(editProject.assignee);
-        setSelectedPrototypeIds(editProject.prototypeIds);
       } else {
         setName('');
         setDescription('');
-        setAssignee('');
-        setSelectedPrototypeIds([]);
       }
       setError('');
     }
   }, [open, editProject]);
 
-  const handlePrototypeChange = (e: SelectChangeEvent<string[]>) => {
-    const val = e.target.value;
-    setSelectedPrototypeIds(typeof val === 'string' ? val.split(',') : val);
-  };
-
   const handleSave = async () => {
     setLoading(true);
     setError('');
     try {
-      const body = { name, description, assignee, prototypeIds: selectedPrototypeIds };
+      const body = { name, description };
       const url = editProject ? `/api/projects/${editProject.id}` : '/api/projects';
       const method = editProject ? 'PUT' : 'POST';
 
@@ -106,44 +84,8 @@ export default function ProjectDialog({ open, onClose, onSave, editProject }: Pr
             rows={2}
             slotProps={{ input: { notched: false, color: 'secondary' } }}
           />
-          <TextField
-            label="Assignee"
-            value={assignee}
-            onChange={(e) => setAssignee(e.target.value)}
-            size="small"
-            slotProps={{ input: { notched: false, color: 'secondary' } }}
-          />
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-              Prototypes
-            </Typography>
-            <Select
-              multiple
-              size="small"
-              value={selectedPrototypeIds}
-              onChange={handlePrototypeChange}
-              displayEmpty
-              fullWidth
-              renderValue={(selected) =>
-                selected.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">Select prototypes</Typography>
-                ) : (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((id) => {
-                      const proto = availablePrototypes.find((p) => p.id === id);
-                      return <Chip key={id} label={proto?.name || id} size="small" />;
-                    })}
-                  </Box>
-                )
-              }
-            >
-              {availablePrototypes.map((proto) => (
-                <MenuItem key={proto.id} value={proto.id}>
-                  {proto.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
+
+
         </Box>
       </DialogContent>
       <DialogActions>

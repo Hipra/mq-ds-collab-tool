@@ -13,12 +13,14 @@ export default function ScreenshotModal({ open, onClose, src, screenName }: Scre
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <DialogContent sx={{ p: 1, display: 'flex', justifyContent: 'center' }}>
-        <Box
-          component="img"
-          src={src}
-          alt={`Screenshot of ${screenName}`}
-          sx={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: 1 }}
-        />
+        {src && (
+          <Box
+            component="img"
+            src={src}
+            alt={`Screenshot of ${screenName}`}
+            sx={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: 1 }}
+          />
+        )}
       </DialogContent>
       <DialogActions>
         <Button variant="text" color="secondary" onClick={onClose}>

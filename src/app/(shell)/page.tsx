@@ -27,7 +27,7 @@ import {
   Divider,
 } from '@memoq/memoq.web.design';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
-import FilterBar from '@/components/dashboard/FilterBar';
+
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import ProjectDialog from '@/components/dashboard/ProjectDialog';
 import ScreenshotModal from '@/components/dashboard/ScreenshotModal';
@@ -113,10 +113,7 @@ export default function GalleryPage() {
 
   // Projects state
   const [projects, setProjects] = useState<ProjectWithPrototypes[]>([]);
-  const [designFilter, setDesignFilter] = useState<string[]>([]);
-  const [devFilter, setDevFilter] = useState<string[]>([]);
-  const [uxWriterFilter, setUxWriterFilter] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectWithPrototypes | null>(null);
   const [screenshotModal, setScreenshotModal] = useState<{ src: string; name: string } | null>(null);
@@ -148,8 +145,6 @@ export default function GalleryPage() {
         .catch(() => setTemplatesLoading(false));
     }
   }, [activeTab, templatesFetched]);
-
-  const handleTabChange = (_e: React.SyntheticEvent, val: ActiveTab) => setActiveTab(val);
 
   const handleCreate = async () => {
     const trimmed = newName.trim();
@@ -234,20 +229,8 @@ export default function GalleryPage() {
   const assignedPrototypeIds = new Set(projects.flatMap((p) => p.prototypeIds));
   const unassignedPrototypes = prototypes.filter((p) => !assignedPrototypeIds.has(p.id));
 
-  const filteredProjects = projects.filter((project) => {
-    if (designFilter.length && !designFilter.includes(project.designStatus)) return false;
-    if (devFilter.length && !devFilter.includes(project.devStatus)) return false;
-    if (uxWriterFilter.length && !uxWriterFilter.includes(project.uxWriterStatus)) return false;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      const searchable = [
-        project.name, project.description, project.assignee,
-        ...project.prototypes.map((p) => p.name),
-      ].join(' ').toLowerCase();
-      if (!searchable.includes(q)) return false;
-    }
-    return true;
-  });
+
+
 
   const handleEditProject = (project: ProjectWithPrototypes) => {
     setEditingProject(project);
@@ -309,58 +292,38 @@ export default function GalleryPage() {
               {modeConfig.icon}
             </IconButton>
           </Tooltip>
-        <Box sx={{ px: 1.5 }}>
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            sx={{ minHeight: 40, '& .MuiTab-root': { minHeight: 40, py: 0, fontSize: '0.8125rem' } }}
-          >
-            <Tab label="Prototypes" value="prototypes" />
-            <Tab label="Templates" value="templates" />
-          </Tabs>
-        </Box>
       </AppBar>
 
       {/* ── Content ── */}
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         <Box sx={{ px: 3, py: 3 }}>
 
+          {/* ── Tab bar ── */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Tabs
+              value={activeTab}
+              onChange={(_e, val: ActiveTab) => setActiveTab(val)}
+              sx={{ minHeight: 36, '& .MuiTab-root': { minHeight: 36, py: 0, textTransform: 'none' } }}
+            >
+              <Tab label="Prototypes" value="prototypes" />
+              <Tab label="Templates" value="templates" />
+            </Tabs>
+            <Box sx={{ flex: 1 }} />
+            {activeTab === 'prototypes' && (
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<MqIcon name="plus" size={16} />}
+                onClick={handleCreateProject}
+              >
+                New Project
+              </Button>
+            )}
+          </Box>
+
           {/* ── Prototypes tab ── */}
           {activeTab === 'prototypes' && (
             <>
-              {/* New Project + existing New Prototype buttons */}
-              <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                <Box sx={{ flex: 1 }} />
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<MqIcon name="plus" size={16} />}
-                  onClick={handleCreateProject}
-                >
-                  New Project
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<MqIcon name="plus" size={16} />}
-                  onClick={() => { setNewName(''); setCreateError(''); setCreateOpen(true); }}
-                >
-                  New prototype
-                </Button>
-              </Box>
-
-              {/* Filter bar */}
-              <FilterBar
-                designFilter={designFilter}
-                devFilter={devFilter}
-                uxWriterFilter={uxWriterFilter}
-                searchQuery={searchQuery}
-                onDesignFilterChange={setDesignFilter}
-                onDevFilterChange={setDevFilter}
-                onUxWriterFilterChange={setUxWriterFilter}
-                onSearchChange={setSearchQuery}
-              />
-
               {loading && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
                   <CircularProgress />
@@ -370,7 +333,7 @@ export default function GalleryPage() {
               {!loading && (
                 <>
                   {/* Project cards */}
-                  {filteredProjects.map((project) => (
+                  {projects.map((project) => (
                     <ProjectCard
                       key={project.id}
                       project={project}
@@ -382,7 +345,7 @@ export default function GalleryPage() {
                   {/* Unassigned section */}
                   {unassignedPrototypes.length > 0 && (
                     <>
-                      {filteredProjects.length > 0 && (
+                      {projects.length > 0 && (
                         <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>Unassigned</Typography>
                       )}
                       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 2 }}>
@@ -442,15 +405,11 @@ export default function GalleryPage() {
                     </>
                   )}
 
-                  {filteredProjects.length === 0 && unassignedPrototypes.length === 0 && (
+                  {projects.length === 0 && unassignedPrototypes.length === 0 && (
                     <EmptyState
                       icon={<MqIcon name="artboard" size={20} />}
-                      title={prototypes.length === 0 ? 'No prototypes yet' : 'No results'}
-                      description={
-                        prototypes.length === 0
-                          ? 'Create your first prototype to get started.'
-                          : 'Try adjusting your search or filter.'
-                      }
+                      title="No prototypes yet"
+                      description="Create your first project to get started."
                     />
                   )}
                 </>

@@ -24,8 +24,8 @@ function ScreenThumbnail({
       <Box
         onClick={onClick}
         sx={{
-          width: 120,
-          height: 80,
+          width: 200,
+          height: 130,
           borderRadius: 1,
           border: '1px solid',
           borderColor: 'divider',
@@ -64,28 +64,19 @@ function ScreenThumbnail({
 
 export default function PrototypeSection({ prototype, onThumbnailClick }: PrototypeSectionProps) {
   return (
-    <Box sx={{ mt: 2 }}>
+    <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+        <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
           {prototype.name}
         </Typography>
-        <Button
-          component={Link}
-          href={`/prototype/${prototype.id}`}
-          size="small"
-          variant="text"
-          startIcon={<MqIcon name="open-in-new" size={14} />}
-        >
-          Prototype
-        </Button>
         <Button
           component={Link}
           href={`/prototype/${prototype.id}/flow`}
           size="small"
           variant="text"
-          startIcon={<MqIcon name="workflow" size={14} />}
+          color="secondary"
         >
-          Flow
+          View flow
         </Button>
       </Box>
       <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1 }}>
