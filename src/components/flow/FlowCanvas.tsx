@@ -21,6 +21,11 @@ import {
   type Edge,
 } from '@xyflow/react';
 
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
+import Typography from '@mui/material/Typography';
+
 import { ScreenNode, type ScreenNodeData } from './ScreenNode';
 import { CommentNode } from './CommentNode';
 import { LabeledEdge } from './LabeledEdge';
@@ -46,13 +51,12 @@ const DEFAULT_EDGE_OPTIONS = {
 function autoLayout(
   screens: { id: string; name: string }[],
   prototypeId: string,
-  status: ScreenNodeData['status'],
 ): Node[] {
   return screens.map((s, i) => ({
     id: `screen-${s.id}`,
     type: 'screenNode',
     position: { x: i * 340, y: 0 },
-    data: { screenId: s.id, screenName: s.name, prototypeId, status } satisfies ScreenNodeData,
+    data: { screenId: s.id, screenName: s.name, prototypeId } satisfies ScreenNodeData,
   }));
 }
 
@@ -60,7 +64,6 @@ function mergeNodes(
   saved: Node[],
   screens: { id: string; name: string }[],
   prototypeId: string,
-  status: ScreenNodeData['status'],
 ): Node[] {
   const savedMap = new Map(saved.map((n) => [n.id, n]));
   const maxX = saved
@@ -76,14 +79,14 @@ function mergeNodes(
     if (existing) {
       result.push({
         ...existing,
-        data: { ...existing.data, screenName: screen.name, prototypeId, status },
+        data: { ...existing.data, screenName: screen.name, prototypeId },
       });
     } else {
       result.push({
         id: nodeId,
         type: 'screenNode',
         position: { x: newX, y: 0 },
-        data: { screenId: screen.id, screenName: screen.name, prototypeId, status } satisfies ScreenNodeData,
+        data: { screenId: screen.id, screenName: screen.name, prototypeId } satisfies ScreenNodeData,
       });
       newX += 340;
     }
@@ -91,24 +94,6 @@ function mergeNodes(
 
   return result;
 }
-
-const OVERLAY_BTN: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 5,
-  padding: '5px 10px',
-  borderRadius: 6,
-  border: '1px solid #e0e0e0',
-  backgroundColor: '#fff',
-  boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-  fontSize: 12,
-  fontWeight: 500,
-  color: '#444',
-  cursor: 'pointer',
-  transition: 'box-shadow 0.15s, background-color 0.15s',
-  whiteSpace: 'nowrap',
-};
-
 
 interface FlowCanvasProps {
   prototypeId: string;
@@ -140,26 +125,21 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
   // Load on mount
   useEffect(() => {
     async function load() {
-      const [flowRes, screensRes, statusRes] = await Promise.all([
+      const [flowRes, screensRes] = await Promise.all([
         fetch(`/api/flow/${prototypeId}`),
         fetch(`/api/preview/${prototypeId}/screens`),
-        fetch(`/api/preview/${prototypeId}/status`),
       ]);
 
       const flow = flowRes.ok ? await flowRes.json() : { nodes: [], edges: [] };
       const screens: { id: string; name: string }[] = screensRes.ok ? await screensRes.json() : [];
-      const statusData = statusRes.ok ? await statusRes.json() : {};
-      const status = (['draft', 'review', 'approved'].includes(statusData.status)
-        ? statusData.status
-        : 'draft') as ScreenNodeData['status'];
 
       const savedNodes: Node[] = flow.nodes ?? [];
       const savedEdges: Edge[] = flow.edges ?? [];
 
       const finalNodes =
         savedNodes.filter((n: Node) => n.type === 'screenNode').length === 0
-          ? autoLayout(screens, prototypeId, status)
-          : mergeNodes(savedNodes, screens, prototypeId, status);
+          ? autoLayout(screens, prototypeId)
+          : mergeNodes(savedNodes, screens, prototypeId);
 
       setNodes(finalNodes);
       setEdges(savedEdges);
@@ -255,7 +235,7 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
     });
   }, [screenToFlowPosition, setNodes, save, edges]);
 
-return (
+  return (
     <FlowContext.Provider value={{ triggerSave, thumbnailVersions }}>
       <style>{`
         .react-flow__node-screenNode .react-flow__handle {
@@ -265,6 +245,25 @@ return (
         .react-flow__node-screenNode.selected .react-flow__handle,
         .react-flow__node-screenNode .react-flow__handle:hover {
           opacity: 1;
+        }
+        /* Miro-style controls */
+        .react-flow__controls {
+          border-radius: 12px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+          border: 1px solid rgba(0,0,0,0.06);
+          overflow: hidden;
+        }
+        .react-flow__controls button {
+          border: none;
+          border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+        .react-flow__controls button:last-child {
+          border-bottom: none;
+        }
+        .react-flow__minimap {
+          border-radius: 12px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+          border: 1px solid rgba(0,0,0,0.06);
         }
       `}</style>
       <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -284,65 +283,82 @@ return (
           maxZoom={2}
           proOptions={{ hideAttribution: true }}
         >
-          <Background gap={20} size={1} color="#e8eaed" />
+          <Background gap={24} size={1.5} color="#d0d4d8" />
           <Controls
-            style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.10)', border: '1px solid #e0e0e0' }}
+            showInteractive={false}
+            style={{ borderRadius: 12, boxShadow: 'none', border: 'none' }}
           />
           <MiniMap
             nodeColor={(n) => {
               if (n.type === 'commentNode') return '#ffe082';
-    return '#e8eaf6';
+              return '#c5cae9';
             }}
-            style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.10)', border: '1px solid #e0e0e0' }}
+            maskColor="rgba(0,0,0,0.06)"
+            style={{ borderRadius: 12, boxShadow: 'none', border: 'none' }}
           />
         </ReactFlow>
 
-        {/* Canvas toolbar — top left */}
-        <div
-          style={{
+        {/* ── Floating bottom toolbar (Miro-style) ── */}
+        <Box
+          sx={{
             position: 'absolute',
-            top: 12,
-            left: 12,
+            bottom: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
             display: 'flex',
-            gap: 6,
+            alignItems: 'center',
+            gap: 0.25,
+            px: 0.75,
+            py: 0.5,
+            borderRadius: 3.5,
+            bgcolor: 'background.paper',
+            boxShadow: 3,
+            border: '1px solid',
+            borderColor: 'divider',
             zIndex: 10,
           }}
         >
-          <button
+          <Button
             onClick={handleAddComment}
-            style={OVERLAY_BTN}
-            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.14)')}
-            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)')}
+            variant="text"
+            color="secondary"
+            size="small"
+            sx={{ textTransform: 'none', fontSize: 13 }}
           >
             💬 Comment
-          </button>
+          </Button>
 
-        </div>
+          <Divider orientation="vertical" flexItem />
 
-        {/* Screenshot capture progress badge */}
+          <Typography variant="caption" color="text.disabled" sx={{ px: 1, whiteSpace: 'nowrap' }}>
+            Click to annotate · Double-click to open · Select arrow to set trigger
+          </Typography>
+        </Box>
+
+        {/* Screenshot capture progress badge — top right */}
         {captureProgress !== null && captureProgress.done < captureProgress.total && (
-          <div
-            style={{
+          <Box
+            sx={{
               position: 'absolute',
               top: 12,
               right: 12,
               zIndex: 10,
-              padding: '5px 10px',
-              borderRadius: 6,
-              border: '1px solid #e0e0e0',
-              backgroundColor: '#fff',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-              fontSize: 12,
-              fontWeight: 500,
-              color: '#444',
+              px: 1.5,
+              py: 0.75,
+              borderRadius: 2.5,
+              bgcolor: 'background.paper',
+              boxShadow: 2,
+              border: '1px solid',
+              borderColor: 'divider',
               display: 'flex',
               alignItems: 'center',
-              gap: 5,
+              gap: 0.75,
             }}
           >
-            <span style={{ fontSize: 14 }}>📸</span>
-            Previews: {captureProgress.done}/{captureProgress.total}
-          </div>
+            <Typography variant="caption" color="text.secondary">
+              📸 Previews: {captureProgress.done}/{captureProgress.total}
+            </Typography>
+          </Box>
         )}
 
         {/* Annotation panel — appears when a screen node is selected */}

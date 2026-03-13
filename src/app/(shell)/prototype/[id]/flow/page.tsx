@@ -9,6 +9,13 @@ import { useRouter } from 'next/navigation';
 import MqIcon from '@/components/MqIcon';
 import { FlowCanvas } from '@/components/flow/FlowCanvas';
 import { AppBar } from '@memoq/memoq.web.design';
+import { useThemeStore, type ThemeMode } from '@/stores/theme';
+
+const MODE_CONFIG: Record<ThemeMode, { icon: string; label: string }> = {
+  light: { icon: 'sun', label: 'Light mode' },
+  dark: { icon: 'moon', label: 'Dark mode' },
+  system: { icon: 'system_theme', label: 'System mode' },
+};
 
 export default function FlowPage({
   params,
@@ -17,60 +24,30 @@ export default function FlowPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { mode, cycleMode } = useThemeStore();
+  const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.system;
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      {/* Toolbar */}
-      <AppBar
-        position="static"
-        variant="dense"
-        sx={{ '& .MuiToolbar-gutters': { px: 1 } }}
-      >
+      {/* AppBar — same style as dashboard */}
+      <AppBar position="static" variant="dense" sx={{ '& .MuiToolbar-gutters': { px: 2.5 } }}>
         <Tooltip title="Back to dashboard">
-          <IconButton
-            size="small"
-            onClick={() => router.push('/')}
-            sx={{ mr: 0.5 }}
-          >
-            <MqIcon name="home" size={20} />
-          </IconButton>
-        </Tooltip>
-
-        <Tooltip title="Back to prototype">
-          <IconButton
-            size="small"
-            onClick={() => router.push(`/prototype/${id}`)}
-            sx={{ mr: 0.5 }}
-          >
+          <IconButton size="small" onClick={() => router.push('/')}>
             <MqIcon name="arrow_left" size={20} />
           </IconButton>
         </Tooltip>
 
-        <Typography variant="subtitle2" sx={{ flexShrink: 0 }}>
+        <Typography variant="subtitle2" sx={{ flexShrink: 0, ml: 0.5 }}>
           {id}
         </Typography>
 
-        <Box
-          sx={{
-            mx: 1.5,
-            px: 1,
-            py: 0.25,
-            borderRadius: 1,
-            bgcolor: 'primary.main',
-            color: 'primary.contrastText',
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: 0.3,
-          }}
-        >
-          Flow
-        </Box>
-
         <Box sx={{ flex: 1 }} />
 
-        <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
-          Click a screen to annotate · Select an arrow to set trigger type
-        </Typography>
+        <Tooltip title={modeConfig.label}>
+          <IconButton onClick={cycleMode} size="small" aria-label={modeConfig.label}>
+            <MqIcon name={modeConfig.icon} size={20} />
+          </IconButton>
+        </Tooltip>
       </AppBar>
 
       {/* Canvas */}

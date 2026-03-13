@@ -1,40 +1,6 @@
 {
   "nodes": [
     {
-      "id": "comment-1773318300249",
-      "type": "commentNode",
-      "position": {
-        "x": -211.86252781283758,
-        "y": -366.65648282706337
-      },
-      "data": {
-        "text": "an option to add external links (both places)"
-      },
-      "measured": {
-        "width": 260,
-        "height": 55
-      },
-      "selected": true,
-      "dragging": false
-    },
-    {
-      "id": "comment-1773318530607",
-      "type": "commentNode",
-      "position": {
-        "x": 52.42301778023324,
-        "y": -364.9465010566014
-      },
-      "data": {
-        "text": "an option to add useful notes (both places)"
-      },
-      "measured": {
-        "width": 260,
-        "height": 55
-      },
-      "selected": false,
-      "dragging": false
-    },
-    {
       "id": "screen-dialog-template",
       "type": "screenNode",
       "position": {
@@ -52,7 +18,7 @@
       },
       "measured": {
         "width": 280,
-        "height": 256
+        "height": 211
       },
       "selected": false,
       "dragging": false
@@ -61,8 +27,8 @@
       "id": "screen-main-copy",
       "type": "screenNode",
       "position": {
-        "x": 105.30281352132795,
-        "y": -289.7271152141932
+        "x": 93.30281352132795,
+        "y": -301.7271152141932
       },
       "data": {
         "screenId": "main-copy",
@@ -76,7 +42,7 @@
       },
       "measured": {
         "width": 280,
-        "height": 236
+        "height": 211
       },
       "selected": false,
       "dragging": false

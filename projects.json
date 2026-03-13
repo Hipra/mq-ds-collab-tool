@@ -1,0 +1,15 @@
+[
+  {
+    "id": "edtr-customize-toolbar",
+    "name": "EDTR / Customize toolbar",
+    "description": "We are going to let the user to change the order of the toolbar items in groups and let the user to turn off the toolbar items one by one.",
+    "assignee": "",
+    "designStatus": "concept",
+    "devStatus": "not_started",
+    "uxWriterStatus": "not_started",
+    "prototypeIds": [
+      "demo-prototype"
+    ],
+    "updatedAt": "2026-03-13T12:50:03.965Z"
+  }
+]

@@ -280,9 +280,9 @@ export default function GalleryPage() {
       {/* ── AppBar ── */}
       <AppBar position="static" variant="dense" sx={{ '& .MuiToolbar-gutters': { px: 2.5 } }}>
           <Typography
-            variant="body2"
+            variant="subtitle2"
             component="div"
-            sx={{ fontWeight: 700, letterSpacing: '0.04em', color: 'inherit', userSelect: 'none' }}
+            sx={{ letterSpacing: '0.04em', color: 'inherit', userSelect: 'none' }}
           >
             mq collab
           </Typography>

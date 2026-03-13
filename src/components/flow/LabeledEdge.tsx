@@ -10,6 +10,11 @@ import {
   type Edge,
   useReactFlow,
 } from '@xyflow/react';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import TextField from '@mui/material/TextField';
+import MqIcon from '@/components/MqIcon';
 
 export type TriggerType = 'click' | 'error' | 'back' | 'auto';
 
@@ -26,22 +31,10 @@ const TRIGGER_CONFIG: Record<TriggerType, {
   activeColor: string;
   dashed: boolean;
 }> = {
-  click: { label: 'Click', stroke: '#64b5f6', activeColor: '#1976d2', dashed: false },
+  click: { label: 'Click', stroke: '#90caf9', activeColor: '#1976d2', dashed: false },
   error: { label: 'Error', stroke: '#ef9a9a', activeColor: '#c62828', dashed: true  },
   back:  { label: 'Back',  stroke: '#bdbdbd', activeColor: '#546e7a', dashed: true  },
   auto:  { label: 'Auto',  stroke: '#ce93d8', activeColor: '#6a1b9a', dashed: true  },
-};
-
-const BTN: React.CSSProperties = {
-  borderRadius: 3,
-  border: '1px solid #ddd',
-  backgroundColor: '#fff',
-  cursor: 'pointer',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.10)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: 0,
 };
 
 export function LabeledEdge({
@@ -68,7 +61,7 @@ export function LabeledEdge({
   });
 
   const strokeColor = selected ? cfg.activeColor : cfg.stroke;
-  const strokeWidth = selected ? 2.5 : 1.5;
+  const strokeWidth = selected ? 2.5 : 1.8;
 
   const commitLabel = () => {
     updateEdgeData(id, { label: draft });
@@ -131,25 +124,36 @@ export function LabeledEdge({
           onDoubleClick={() => { setDraft(data?.label ?? ''); setEditingLabel(true); }}
         >
           {showBadge && (
-            <div style={{
-              backgroundColor: '#fff',
-              border: `1px solid ${selected ? cfg.activeColor : '#e0e0e0'}`,
-              borderRadius: 4,
-              padding: '2px 6px',
-              fontSize: 11,
-              color: selected ? cfg.activeColor : '#666',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 3,
-              whiteSpace: 'nowrap',
-            }}>
+            <Box
+              sx={{
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: selected ? cfg.activeColor : 'divider',
+                borderRadius: 2,
+                px: 1,
+                py: 0.25,
+                boxShadow: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                whiteSpace: 'nowrap',
+              }}
+            >
               {currentType !== 'click' && (
-                <span style={{ color: cfg.activeColor, fontWeight: 600 }}>{cfg.label}</span>
+                <Typography
+                  variant="caption"
+                  sx={{ color: cfg.activeColor, fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}
+                >
+                  {cfg.label}
+                </Typography>
               )}
-              {data?.label && currentType !== 'click' && <span style={{ color: '#ccc' }}>·</span>}
-              {data?.label && <span>{data.label}</span>}
-            </div>
+              {data?.label && currentType !== 'click' && (
+                <Typography variant="caption" color="text.disabled">·</Typography>
+              )}
+              {data?.label && (
+                <Typography variant="caption" color="text.secondary">{data.label}</Typography>
+              )}
+            </Box>
           )}
         </div>
 
@@ -158,95 +162,113 @@ export function LabeledEdge({
           <div
             style={{
               position: 'absolute',
-              transform: `translate(-50%, -100%) translate(${labelX}px,${labelY - 10}px)`,
+              transform: `translate(-50%, -100%) translate(${labelX}px,${labelY - 12}px)`,
               pointerEvents: 'all',
               zIndex: 9999,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 3,
             }}
             className="nodrag nopan"
           >
-            {/* Trigger type selector */}
-            <div style={{
-              backgroundColor: '#fff',
-              border: '1px solid #e0e0e0',
-              borderRadius: 6,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-              overflow: 'hidden',
-              minWidth: 90,
-            }}>
-              {(Object.keys(TRIGGER_CONFIG) as TriggerType[]).map((type) => {
-                const tc = TRIGGER_CONFIG[type];
-                const active = type === currentType;
-                return (
-                  <div
-                    key={type}
-                    onClick={(e) => handleTypeChange(e, type)}
-                    style={{
-                      padding: '5px 10px',
-                      fontSize: 11,
-                      fontWeight: active ? 700 : 400,
-                      color: active ? tc.activeColor : '#555',
-                      backgroundColor: active ? tc.activeColor + '18' : 'transparent',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.1s',
-                    }}
-                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.backgroundColor = '#f5f5f5'; }}
-                    onMouseLeave={(e) => { if (!active) e.currentTarget.style.backgroundColor = 'transparent'; }}
-                  >
-                    {tc.label}
-                  </div>
-                );
-              })}
-            </div>
-
-            {editingLabel ? (
-              <input
-                autoFocus
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onBlur={commitLabel}
-                onKeyDown={handleKeyDown}
-                style={{
-                  border: '1px solid #1976d2',
-                  borderRadius: 4,
-                  padding: '2px 6px',
-                  fontSize: 11,
-                  outline: 'none',
-                  backgroundColor: '#fff',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-                  minWidth: 80,
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+              {/* Trigger type selector */}
+              <Box
+                sx={{
+                  bgcolor: 'background.paper',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2.5,
+                  boxShadow: 3,
+                  overflow: 'hidden',
+                  minWidth: 96,
                 }}
-              />
-            ) : (
-              <div style={{ display: 'flex', gap: 2 }}>
-                <button
-                  onClick={() => { setDraft(data?.label ?? ''); setEditingLabel(true); }}
-                  title="Edit label"
-                  style={{ ...BTN, width: 22, height: 22, fontSize: 11, color: '#888' }}
-                >
-                  ✎
-                </button>
+              >
+                {(Object.keys(TRIGGER_CONFIG) as TriggerType[]).map((type) => {
+                  const tc = TRIGGER_CONFIG[type];
+                  const active = type === currentType;
+                  return (
+                    <Box
+                      key={type}
+                      onClick={(e) => handleTypeChange(e, type)}
+                      sx={{
+                        px: 1.5,
+                        py: 0.75,
+                        fontSize: 11,
+                        fontWeight: active ? 600 : 400,
+                        color: active ? tc.activeColor : 'text.secondary',
+                        bgcolor: active ? tc.activeColor + '12' : 'transparent',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.1s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75,
+                        '&:hover': !active ? { bgcolor: 'action.hover' } : {},
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 3,
+                          borderRadius: 1,
+                          bgcolor: tc.activeColor,
+                          opacity: active ? 1 : 0.4,
+                        }}
+                      />
+                      {tc.label}
+                    </Box>
+                  );
+                })}
+              </Box>
 
-                <button
-                  onClick={handleDeleteEdge}
-                  title="Delete connection"
-                  style={{
-                    ...BTN,
-                    width: 22, height: 22,
-                    border: '1px solid #ffcdd2',
-                    fontSize: 13,
-                    color: '#ef5350',
-                    fontWeight: 700,
-                    lineHeight: 1,
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            )}
+              {editingLabel ? (
+                <TextField
+                  autoFocus
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onBlur={commitLabel}
+                  onKeyDown={handleKeyDown}
+                  size="small"
+                  variant="outlined"
+                  sx={{ minWidth: 80, '& .MuiOutlinedInput-root': { fontSize: 11 } }}
+                  slotProps={{ input: { notched: false } }}
+                />
+              ) : (
+                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                  <IconButton
+                    onClick={() => { setDraft(data?.label ?? ''); setEditingLabel(true); }}
+                    title="Edit label"
+                    size="small"
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      bgcolor: 'background.paper',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      boxShadow: 1,
+                      '&:hover': { bgcolor: 'action.hover' },
+                    }}
+                  >
+                    <MqIcon name="edit" size={13} />
+                  </IconButton>
+
+                  <IconButton
+                    onClick={handleDeleteEdge}
+                    title="Delete connection"
+                    size="small"
+                    color="error"
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      bgcolor: 'background.paper',
+                      border: '1px solid',
+                      borderColor: 'error.light',
+                      boxShadow: 1,
+                      '&:hover': { bgcolor: 'error.50' },
+                    }}
+                  >
+                    <MqIcon name="close" size={13} color="error" />
+                  </IconButton>
+                </Box>
+              )}
+            </Box>
           </div>
         )}
       </EdgeLabelRenderer>

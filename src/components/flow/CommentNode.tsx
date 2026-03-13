@@ -2,6 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { type NodeProps, type Node, useReactFlow } from '@xyflow/react';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import MqIcon from '@/components/MqIcon';
 
 export interface CommentNodeData extends Record<string, unknown> {
   text: string;
@@ -45,50 +49,48 @@ export function CommentNode({ id, data, selected }: NodeProps<CommentNodeType>) 
   };
 
   return (
-    <div
-      style={{
-        minWidth: 160,
-        maxWidth: 260,
-        backgroundColor: '#fffde7',
-        border: selected ? '1.5px solid #f9a825' : '1.5px solid #ffe082',
-        borderRadius: 6,
-        boxShadow: selected
-          ? '0 0 0 3px rgba(249,168,37,0.2), 0 3px 12px rgba(0,0,0,0.10)'
-          : '0 2px 8px rgba(0,0,0,0.08)',
-        padding: '8px 10px',
+    <Box
+      sx={{
+        minWidth: 180,
+        maxWidth: 280,
+        bgcolor: '#fffde7',
+        border: '1px solid',
+        borderColor: selected ? 'warning.main' : 'divider',
+        borderRadius: 2.5,
+        boxShadow: selected ? 3 : 1,
+        px: 1.75,
+        py: 1.25,
         position: 'relative',
         cursor: 'default',
         userSelect: 'none',
+        transition: 'box-shadow 0.2s, border-color 0.2s',
       }}
       onDoubleClick={() => { setDraft(data.text); setEditing(true); }}
     >
       {/* Delete button */}
       {selected && !editing && (
-        <button
+        <IconButton
           onClick={handleDelete}
-          style={{
-            position: 'absolute',
-            top: -8,
-            right: -8,
-            width: 18,
-            height: 18,
-            borderRadius: '50%',
-            border: 'none',
-            backgroundColor: '#ef5350',
-            color: '#fff',
-            fontSize: 11,
-            lineHeight: '18px',
-            textAlign: 'center',
-            cursor: 'pointer',
-            padding: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
+          size="small"
+          color="error"
           title="Delete comment"
+          sx={{
+            position: 'absolute',
+            top: -10,
+            right: -10,
+            width: 22,
+            height: 22,
+            bgcolor: 'error.main',
+            color: 'error.contrastText',
+            border: '2px solid',
+            borderColor: 'background.paper',
+            boxShadow: 2,
+            '&:hover': { bgcolor: 'error.dark' },
+            fontSize: 13,
+          }}
         >
-          ×
-        </button>
+          <MqIcon name="close" size={12} color="#fff" />
+        </IconButton>
       )}
 
       {editing ? (
@@ -101,39 +103,54 @@ export function CommentNode({ id, data, selected }: NodeProps<CommentNodeType>) 
             onBlur={commit}
             style={{
               width: '100%',
-              minHeight: 60,
+              minHeight: 64,
               border: 'none',
               outline: 'none',
               backgroundColor: 'transparent',
               resize: 'none',
-              fontSize: 12,
+              fontSize: 13,
               fontFamily: 'inherit',
               lineHeight: 1.5,
-              color: '#555',
+              color: '#444',
             }}
             placeholder="Add a comment…"
           />
-          <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>⌘↵ to save · Esc to cancel</div>
+          <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: 'block', fontSize: 10 }}>
+            ⌘↵ save · Esc cancel
+          </Typography>
         </>
       ) : (
-        <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: '#555', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-          {data.text || <span style={{ color: '#bbb', fontStyle: 'italic' }}>Double-click to edit</span>}
-        </p>
+        <Typography
+          variant="body2"
+          sx={{
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            color: 'text.secondary',
+            lineHeight: 1.5,
+          }}
+        >
+          {data.text || (
+            <Typography component="span" variant="body2" color="text.disabled" sx={{ fontStyle: 'italic' }}>
+              Double-click to edit
+            </Typography>
+          )}
+        </Typography>
       )}
 
       {/* Little tail */}
-      <div
-        style={{
+      <Box
+        sx={{
           position: 'absolute',
-          bottom: -8,
-          left: 18,
+          bottom: -7,
+          left: 20,
           width: 0,
           height: 0,
-          borderLeft: '6px solid transparent',
-          borderRight: '6px solid transparent',
-          borderTop: `8px solid ${selected ? '#f9a825' : '#ffe082'}`,
+          borderLeft: '5px solid transparent',
+          borderRight: '5px solid transparent',
+          borderTop: selected ? '7px solid' : '7px solid #fffde7',
+          borderTopColor: selected ? 'warning.main' : '#fffde7',
         }}
       />
-    </div>
+    </Box>
   );
 }

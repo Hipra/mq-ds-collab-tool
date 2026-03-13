@@ -2,47 +2,14 @@
 
 import { Box, Card, Divider, IconButton, Typography } from '@mui/material';
 import MqIcon from '@/components/MqIcon';
+import { StatusDot } from '@/components/StatusDot';
 import PrototypeSection from './PrototypeSection';
 import type { ProjectWithPrototypes, ScreenInfo } from '@/types/project';
-
-const STATUS_COLOR: Record<string, string> = {
-  concept: 'text.disabled',
-  not_started: 'text.disabled',
-  in_progress: 'primary.main',
-  review: 'secondary.main',
-  qa: 'secondary.main',
-  done: 'success.main',
-  deployed: 'success.main',
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  concept: 'Concept',
-  in_progress: 'In Progress',
-  review: 'Review',
-  done: 'Done',
-  not_started: 'Not Started',
-  qa: 'QA',
-  deployed: 'Deployed',
-};
 
 interface ProjectCardProps {
   project: ProjectWithPrototypes;
   onEdit: (project: ProjectWithPrototypes) => void;
   onThumbnailClick: (prototypeId: string, screen: ScreenInfo) => void;
-}
-
-function StatusIndicator({ label, status }: { label: string; status: string }) {
-  const color = STATUS_COLOR[status] ?? 'text.disabled';
-  const text = STATUS_LABEL[status] ?? status;
-
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
-      <Typography variant="caption" color="text.secondary">
-        {label}: {text}
-      </Typography>
-    </Box>
-  );
 }
 
 export default function ProjectCard({ project, onEdit, onThumbnailClick }: ProjectCardProps) {
@@ -105,9 +72,9 @@ export default function ProjectCard({ project, onEdit, onThumbnailClick }: Proje
       {/* Footer */}
       <Divider />
       <Box sx={{ px: 3, py: 1.5, display: 'flex', alignItems: 'center', gap: 3 }}>
-        <StatusIndicator label="UX design" status={project.designStatus} />
-        <StatusIndicator label="Dev" status={project.devStatus} />
-        <StatusIndicator label="UX copy" status={project.uxWriterStatus} />
+        <StatusDot label="UX design" status={project.designStatus} />
+        <StatusDot label="Dev" status={project.devStatus} />
+        <StatusDot label="UX copy" status={project.uxWriterStatus} />
       </Box>
     </Card>
   );
