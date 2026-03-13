@@ -7,9 +7,11 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useRouter } from 'next/navigation';
 import MqIcon from '@/components/MqIcon';
+import { ProjectLinks } from '@/components/ProjectLinks';
 import { FlowCanvas } from '@/components/flow/FlowCanvas';
 import { AppBar } from '@memoq/memoq.web.design';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
+import { useProjectLinks } from '@/hooks/useProjectLinks';
 
 const MODE_CONFIG: Record<ThemeMode, { icon: string; label: string }> = {
   light: { icon: 'sun', label: 'Light mode' },
@@ -26,6 +28,7 @@ export default function FlowPage({
   const router = useRouter();
   const { mode, cycleMode } = useThemeStore();
   const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.system;
+  const links = useProjectLinks(id);
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -40,6 +43,8 @@ export default function FlowPage({
         <Typography variant="subtitle2" sx={{ flexShrink: 0, ml: 0.5 }}>
           {id}
         </Typography>
+
+        <ProjectLinks links={links} size={18} />
 
         <Box sx={{ flex: 1 }} />
 

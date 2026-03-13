@@ -10,8 +10,10 @@ import { useRouter } from 'next/navigation';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 import { AppBar, Typography } from '@memoq/memoq.web.design';
 import MqIcon from '@/components/MqIcon';
+import { ProjectLinks } from '@/components/ProjectLinks';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
+import { useProjectLinks } from '@/hooks/useProjectLinks';
 import { BreakpointSwitcher } from '@/components/BreakpointSwitcher';
 import { StatusBadge } from '@/components/StatusBadge';
 
@@ -40,6 +42,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
   const router = useRouter();
   const { mode, cycleMode } = useThemeStore();
   const { togglePanel, panelOpen, sidebarOpen, toggleSidebar, activeScreenId, screens } = useInspectorStore();
+  const links = useProjectLinks(prototypeId);
   const [copiedClaude, setCopiedClaude] = useState(false);
 
   const handleCopyClaudeCommand = () => {
@@ -78,6 +81,8 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
       <Box sx={{ ml: 1 }}>
         <StatusBadge prototypeId={prototypeId} />
       </Box>
+
+      <ProjectLinks links={links} size={18} />
 
       <Box sx={{ flex: 1 }} />
       <BreakpointSwitcher />

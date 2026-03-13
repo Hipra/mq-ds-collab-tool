@@ -84,8 +84,6 @@ export default function ProjectDialog({ open, onClose, onSave, editProject }: Pr
             rows={2}
             slotProps={{ input: { notched: false, color: 'secondary' } }}
           />
-
-
         </Box>
       </DialogContent>
       <DialogActions>

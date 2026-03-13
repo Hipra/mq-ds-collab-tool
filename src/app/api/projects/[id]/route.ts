@@ -14,7 +14,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const updatable = ['name', 'description', 'assignee', 'designStatus', 'devStatus', 'uxWriterStatus', 'prototypeIds'] as const;
+    const updatable = ['name', 'description', 'assignee', 'designStatus', 'devStatus', 'uxWriterStatus', 'prototypeIds', 'links'] as const;
     const updated = { ...projects[index] };
 
     for (const key of updatable) {

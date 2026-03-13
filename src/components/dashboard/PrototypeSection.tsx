@@ -1,6 +1,12 @@
 'use client';
 
-import { Box, Button, Typography } from '@mui/material';
+import { useState } from 'react';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
 import MqIcon from '@/components/MqIcon';
 import Link from 'next/link';
 import type { PrototypeInfo, ScreenInfo } from '@/types/project';
@@ -63,9 +69,21 @@ function ScreenThumbnail({
 }
 
 export default function PrototypeSection({ prototype, onThumbnailClick }: PrototypeSectionProps) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+    <Accordion
+      expanded={expanded}
+      onChange={(_e, isExpanded) => setExpanded(isExpanded)}
+      disableGutters
+      sx={{ mt: 1.5, '&::before': { display: 'none' } }}
+    >
+      <AccordionSummary
+        expandIcon={<MqIcon name="chevron_down" size={16} />}
+        sx={{
+          '& .MuiAccordionSummary-content': { alignItems: 'center', gap: 1 },
+        }}
+      >
         <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
           {prototype.name}
         </Typography>
@@ -75,20 +93,24 @@ export default function PrototypeSection({ prototype, onThumbnailClick }: Protot
           size="small"
           variant="text"
           color="secondary"
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          sx={{ mr: 2 }}
         >
           View flow
         </Button>
-      </Box>
-      <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1 }}>
-        {prototype.screens.map((screen) => (
-          <ScreenThumbnail
-            key={screen.id}
-            prototypeId={prototype.id}
-            screen={screen}
-            onClick={() => onThumbnailClick(prototype.id, screen)}
-          />
-        ))}
-      </Box>
-    </Box>
+      </AccordionSummary>
+      <AccordionDetails>
+        <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1 }}>
+          {prototype.screens.map((screen) => (
+            <ScreenThumbnail
+              key={screen.id}
+              prototypeId={prototype.id}
+              screen={screen}
+              onClick={() => onThumbnailClick(prototype.id, screen)}
+            />
+          ))}
+        </Box>
+      </AccordionDetails>
+    </Accordion>
   );
 }

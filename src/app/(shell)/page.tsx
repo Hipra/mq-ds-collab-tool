@@ -31,7 +31,7 @@ import { useThemeStore, type ThemeMode } from '@/stores/theme';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import ProjectDialog from '@/components/dashboard/ProjectDialog';
 import ScreenshotModal from '@/components/dashboard/ScreenshotModal';
-import type { ProjectWithPrototypes, ScreenInfo } from '@/types/project';
+import type { ProjectWithPrototypes, ProjectLink, ScreenInfo } from '@/types/project';
 
 interface Prototype {
   id: string;
@@ -250,6 +250,17 @@ export default function GalleryPage() {
       .catch(() => {});
   };
 
+  const handleLinksChange = async (projectId: string, links: ProjectLink[]) => {
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, links } : p)));
+    try {
+      await fetch(`/api/projects/${projectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ links }),
+      });
+    } catch { /* silent */ }
+  };
+
   const handleThumbnailClick = (prototypeId: string, screen: ScreenInfo) => {
     setScreenshotModal({
       src: `/api/preview/${prototypeId}/thumbnail?screen=${screen.id}`,
@@ -339,6 +350,7 @@ export default function GalleryPage() {
                       project={project}
                       onEdit={handleEditProject}
                       onThumbnailClick={handleThumbnailClick}
+                      onLinksChange={handleLinksChange}
                     />
                   ))}
 
