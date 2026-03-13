@@ -1,11 +1,45 @@
 {
   "nodes": [
     {
+      "id": "comment-1773318300249",
+      "type": "commentNode",
+      "position": {
+        "x": -211.86252781283758,
+        "y": -366.65648282706337
+      },
+      "data": {
+        "text": "an option to add external links (both places)"
+      },
+      "measured": {
+        "width": 260,
+        "height": 55
+      },
+      "selected": true,
+      "dragging": false
+    },
+    {
+      "id": "comment-1773318530607",
+      "type": "commentNode",
+      "position": {
+        "x": 52.42301778023324,
+        "y": -364.9465010566014
+      },
+      "data": {
+        "text": "an option to add useful notes (both places)"
+      },
+      "measured": {
+        "width": 260,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
       "id": "screen-dialog-template",
       "type": "screenNode",
       "position": {
-        "x": -166.131830948585,
-        "y": -21.460384775561835
+        "x": -374.63320641391795,
+        "y": -298.4216967519574
       },
       "data": {
         "screenId": "dialog-template",
@@ -13,11 +47,12 @@
         "prototypeId": "demo-prototype",
         "status": "draft",
         "purpose": "this is the goal",
-        "copyTone": "reassuring"
+        "copyTone": "reassuring",
+        "userIntent": ""
       },
       "measured": {
-        "width": 200,
-        "height": 88
+        "width": 280,
+        "height": 256
       },
       "selected": false,
       "dragging": false
@@ -26,8 +61,8 @@
       "id": "screen-main-copy",
       "type": "screenNode",
       "position": {
-        "x": 152.28214501255482,
-        "y": 24.5955363711809
+        "x": 105.30281352132795,
+        "y": -289.7271152141932
       },
       "data": {
         "screenId": "main-copy",
@@ -40,8 +75,8 @@
         "notes": ""
       },
       "measured": {
-        "width": 200,
-        "height": 68
+        "width": 280,
+        "height": 236
       },
       "selected": false,
       "dragging": false
@@ -57,7 +92,7 @@
         "height": 16
       },
       "data": {
-        "label": "",
+        "label": "lorem ipsum",
         "triggerType": "click",
         "isPrimary": false
       },
