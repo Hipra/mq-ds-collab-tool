@@ -620,7 +620,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
       </Box>
 
       {/* Footer: export / import */}
-      <Box sx={{ pt: 1.5, flexShrink: 0, display: 'flex', gap: 1 }}>
+      <Box sx={{ py: 1.5, flexShrink: 0, display: 'flex', gap: 1 }}>
         <Button
           size="small"
           variant="outlined"

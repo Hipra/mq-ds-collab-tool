@@ -95,13 +95,10 @@ function SortableScreenItem({
         onClick={() => onSelect(screen.id)}
         onDoubleClick={() => onDoubleClick(screen.id, screen.name)}
         sx={{
-          pr: 0.5,
-          pl: 0.5,
+          px: 2,
+          py: 1.5,
           '& .screen-dup-btn': { opacity: 0 },
           '&:hover .screen-dup-btn': { opacity: 1 },
-          borderRadius: 1,
-          '&.Mui-selected': { bgcolor: 'rgba(0,0,0,0.02)' },
-          '&.Mui-selected:hover': { bgcolor: 'rgba(0,0,0,0.02)' },
         }}
       >
         {/* Drag handle */}
@@ -118,7 +115,7 @@ function SortableScreenItem({
             flexShrink: 0,
           }}
         >
-          <MqIcon name="move" size={16} />
+          <MqIcon name="menu" size={16} />
         </Box>
 
         {isEditing ? (
@@ -146,7 +143,7 @@ function SortableScreenItem({
         ) : (
           <ListItemText
             primary={screen.name}
-            primaryTypographyProps={{ fontSize: 13, noWrap: true, fontWeight: isActive ? 600 : 400 }}
+            slotProps={{ primary: { variant: 'body2', noWrap: true, fontWeight: isActive ? 600 : 400 } }}
           />
         )}
 
@@ -465,13 +462,15 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
   return (
     <Box
       sx={{
-        width: sidebarOpen ? 200 : 0,
+        width: sidebarOpen ? 260 : 0,
         flexShrink: 0,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         transition: 'width 0.2s ease, box-shadow 0.2s ease',
         position: 'relative',
+        borderRight: sidebarOpen ? '1px solid' : 'none',
+        borderColor: 'divider',
       }}
     >
       {/* Screen list */}
@@ -508,15 +507,12 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
       </Box>
 
       {/* Add screen button */}
-      <Box>
+      <Box sx={{ p: 2 }}>
         <Button
-          variant="outlined"
-          color="secondary"
-          size="small"
+          variant="contained"
           startIcon={<MqIcon name="plus" size={16} />}
           fullWidth
           onClick={() => { setCreateError(''); setNewName(''); setSelectedTemplateId('empty'); setCreateOpen(true); }}
-          sx={{ textTransform: 'none', fontSize: 12 }}
         >
           Add screen
         </Button>

@@ -23,13 +23,11 @@ import {
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import Typography from '@mui/material/Typography';
+import MqIcon from '@/components/MqIcon';
 
 import { ScreenNode, type ScreenNodeData } from './ScreenNode';
 import { CommentNode } from './CommentNode';
 import { LabeledEdge } from './LabeledEdge';
-import { AnnotationPanel } from './AnnotationPanel';
 import { FlowContext } from './FlowContext';
 import { ScreenshotCapturer } from './ScreenshotCapturer';
 
@@ -107,20 +105,7 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
   const initialised = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [annotationOpen, setAnnotationOpen] = useState(false);
   const [thumbnailVersions, setThumbnailVersions] = useState<Record<string, number>>({});
-  // captureProgress: null = not yet started, { done, total } = in progress or done
-  const [captureProgress, setCaptureProgress] = useState<{ done: number; total: number } | null>(null);
-
-  const handleCaptureProgress = useCallback((done: number, total: number) => {
-    setCaptureProgress({ done, total });
-  }, []);
-
-  const selectedScreenNode = nodes.find((n) => n.selected && n.type === 'screenNode') ?? null;
-
-  useEffect(() => {
-    setAnnotationOpen(!!selectedScreenNode);
-  }, [selectedScreenNode]);
 
   // Load on mount
   useEffect(() => {
@@ -311,7 +296,7 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
             px: 0.75,
             py: 0.5,
             borderRadius: 3.5,
-            bgcolor: 'background.paper',
+            bgcolor: 'common.white',
             boxShadow: 3,
             border: '1px solid',
             borderColor: 'divider',
@@ -323,59 +308,17 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
             variant="text"
             color="secondary"
             size="small"
+            startIcon={<MqIcon name="document_general" size={16} />}
             sx={{ textTransform: 'none', fontSize: 13 }}
           >
-            💬 Comment
+            Add note
           </Button>
-
-          <Divider orientation="vertical" flexItem />
-
-          <Typography variant="caption" color="text.disabled" sx={{ px: 1, whiteSpace: 'nowrap' }}>
-            Click to annotate · Double-click to open · Select arrow to set trigger
-          </Typography>
         </Box>
 
-        {/* Screenshot capture progress badge — top right */}
-        {captureProgress !== null && captureProgress.done < captureProgress.total && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              zIndex: 10,
-              px: 1.5,
-              py: 0.75,
-              borderRadius: 2.5,
-              bgcolor: 'background.paper',
-              boxShadow: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.75,
-            }}
-          >
-            <Typography variant="caption" color="text.secondary">
-              📸 Previews: {captureProgress.done}/{captureProgress.total}
-            </Typography>
-          </Box>
-        )}
-
-        {/* Annotation panel — appears when a screen node is selected */}
-        {annotationOpen && selectedScreenNode && (
-          <AnnotationPanel
-            key={selectedScreenNode.id}
-            nodeId={selectedScreenNode.id}
-            onClose={() => setAnnotationOpen(false)}
-          />
-        )}
       </div>
 
       {/* Hidden off-screen iframes for screenshot capture */}
-      <ScreenshotCapturer
-        prototypeId={prototypeId}
-        onProgress={handleCaptureProgress}
-      />
+      <ScreenshotCapturer prototypeId={prototypeId} />
     </FlowContext.Provider>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { useInspectorStore } from '@/stores/inspector';
 import { useFlowContext } from './FlowContext';
@@ -51,7 +52,7 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
       sx={{
         width: 280,
         borderRadius: 3,
-        bgcolor: 'background.paper',
+        bgcolor: 'common.white',
         border: selected ? '2px solid' : '1px solid',
         borderColor: selected ? 'primary.main' : 'divider',
         boxShadow: selected ? 4 : 2,
@@ -72,7 +73,6 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
           width: '100%',
           height: 168,
           overflow: 'hidden',
-          bgcolor: 'action.hover',
           flexShrink: 0,
         }}
       >
@@ -109,19 +109,35 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
 
       {/* Content */}
       <Box sx={{ px: 1.75, py: 1.5, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-        <Typography
-          variant="caption"
-          sx={{
-            fontWeight: 600,
-            color: 'text.primary',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            fontSize: 13,
-          }}
-        >
-          {screenName}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 600,
+              color: 'text.primary',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              fontSize: 13,
+              flexGrow: 1,
+            }}
+          >
+            {screenName}
+          </Typography>
+          <Button
+            variant="text"
+            color="secondary"
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveScreen(screenId);
+              router.push(`/prototype/${prototypeId}`);
+            }}
+            sx={{ textTransform: 'none', fontSize: 11, minWidth: 0, px: 1, py: 0.25, flexShrink: 0 }}
+          >
+            View
+          </Button>
+        </Box>
 
         {/* Notes preview */}
         {data.notes && (

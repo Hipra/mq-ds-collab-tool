@@ -86,10 +86,6 @@ export function InspectorPanel({ prototypeId, tabs = ALL_TABS }: InspectorPanelP
     setHoveredComponent,
   } = useInspectorStore();
 
-  if (!panelOpen) {
-    return null;
-  }
-
   // Index within the visible tabs list; fall back to 0 if active tab is not shown
   const visibleTabIndex = tabs.includes(activeTab) ? tabs.indexOf(activeTab) : 0;
 
@@ -104,12 +100,17 @@ export function InspectorPanel({ prototypeId, tabs = ALL_TABS }: InspectorPanelP
   return (
     <Box
       sx={{
-        width: 320,
+        width: panelOpen ? 320 : 0,
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
         overflow: 'hidden',
+        transition: 'width 0.2s ease',
+        borderLeft: panelOpen ? '1px solid' : 'none',
+        borderColor: 'divider',
+        px: panelOpen ? 2 : 0,
+        pt: panelOpen ? 1.5 : 0,
       }}
     >
       {/* Tab header — hidden when only one tab is visible */}

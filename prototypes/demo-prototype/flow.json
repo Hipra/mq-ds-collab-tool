@@ -18,7 +18,7 @@
       },
       "measured": {
         "width": 280,
-        "height": 211
+        "height": 212
       },
       "selected": false,
       "dragging": false
@@ -42,32 +42,11 @@
       },
       "measured": {
         "width": 280,
-        "height": 211
+        "height": 212
       },
       "selected": false,
       "dragging": false
     }
   ],
-  "edges": [
-    {
-      "type": "labeled",
-      "markerEnd": {
-        "type": "arrowclosed",
-        "color": "#64b5f6",
-        "width": 16,
-        "height": 16
-      },
-      "data": {
-        "label": "lorem ipsum",
-        "triggerType": "click",
-        "isPrimary": false
-      },
-      "source": "screen-dialog-template",
-      "sourceHandle": "right",
-      "target": "screen-main-copy",
-      "targetHandle": "left",
-      "id": "xy-edge__screen-dialog-templateright-screen-main-copyleft",
-      "selected": false
-    }
-  ]
+  "edges": []
 }

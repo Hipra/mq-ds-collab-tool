@@ -253,8 +253,6 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
         overflow: 'auto',
         bgcolor: isFixedWidth ? 'action.hover' : 'background.paper',
         position: 'relative',
-        borderRadius: 3,
-        boxShadow: '0 16px 48px 0 rgba(0,0,0,0.04), 0 4px 12px 0 rgba(0,0,0,0.03)',
       }}
     >
       {/* Width-constrained wrapper — centers the iframe at fixed widths */}

@@ -76,20 +76,19 @@ export function CommentNode({ id, data, selected }: NodeProps<CommentNodeType>) 
           title="Delete comment"
           sx={{
             position: 'absolute',
-            top: -10,
-            right: -10,
-            width: 22,
-            height: 22,
+            top: -8,
+            right: -8,
+            width: 16,
+            height: 16,
             bgcolor: 'error.main',
             color: 'error.contrastText',
-            border: '2px solid',
-            borderColor: 'background.paper',
-            boxShadow: 2,
+            border: '1.5px solid',
+            borderColor: 'common.white',
+            boxShadow: 1,
             '&:hover': { bgcolor: 'error.dark' },
-            fontSize: 13,
           }}
         >
-          <MqIcon name="close" size={12} color="#fff" />
+          <MqIcon name="close" size={8} color="#fff" />
         </IconButton>
       )}
 
@@ -137,20 +136,6 @@ export function CommentNode({ id, data, selected }: NodeProps<CommentNodeType>) 
         </Typography>
       )}
 
-      {/* Little tail */}
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: -7,
-          left: 20,
-          width: 0,
-          height: 0,
-          borderLeft: '5px solid transparent',
-          borderRight: '5px solid transparent',
-          borderTop: selected ? '7px solid' : '7px solid #fffde7',
-          borderTopColor: selected ? 'warning.main' : '#fffde7',
-        }}
-      />
     </Box>
   );
 }

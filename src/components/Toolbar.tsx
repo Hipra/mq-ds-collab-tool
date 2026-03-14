@@ -15,7 +15,6 @@ import { useThemeStore, type ThemeMode } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
 import { useProjectLinks } from '@/hooks/useProjectLinks';
 import { BreakpointSwitcher } from '@/components/BreakpointSwitcher';
-import { StatusBadge } from '@/components/StatusBadge';
 
 interface ToolbarProps {
   prototypeName: string;
@@ -61,7 +60,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
     <AppBar
       position="static"
       variant="dense"
-      sx={{ '& .MuiToolbar-gutters': { px: 1 } }}
+      sx={{ '& .MuiToolbar-gutters': { px: 1 }, zIndex: 1 }}
     >
       <Tooltip title="Back to prototypes">
         <IconButton
@@ -77,10 +76,6 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
       <Typography variant="subtitle2" component="div" sx={{ flexShrink: 0 }}>
         {prototypeName}
       </Typography>
-
-      <Box sx={{ ml: 1 }}>
-        <StatusBadge prototypeId={prototypeId} />
-      </Box>
 
       <ProjectLinks links={links} size={18} />
 
@@ -106,7 +101,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
           aria-label="Copy prompt"
           sx={{ mr: 0.5 }}
         >
-          <MqIcon name="language_terminal" size={20} />
+          <MqIcon name="copy_source_to_target" size={20} />
         </IconButton>
       </Tooltip>
 
