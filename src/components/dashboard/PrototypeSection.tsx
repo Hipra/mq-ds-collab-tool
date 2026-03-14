@@ -41,7 +41,7 @@ function ScreenThumbnail({
           alignItems: 'center',
           justifyContent: 'center',
           bgcolor: screen.hasThumbnail ? 'transparent' : 'action.hover',
-          '&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.1)' },
+          '&:hover': { boxShadow: 3 },
         }}
       >
         {screen.hasThumbnail ? (

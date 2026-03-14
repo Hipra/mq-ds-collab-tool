@@ -53,7 +53,8 @@ export function CommentNode({ id, data, selected }: NodeProps<CommentNodeType>) 
       sx={{
         minWidth: 180,
         maxWidth: 280,
-        bgcolor: '#fffde7',
+        bgcolor: 'warning.50',
+        '[data-mui-color-scheme="dark"] &': { bgcolor: 'rgba(255, 253, 231, 0.08)' },
         border: '1px solid',
         borderColor: selected ? 'warning.main' : 'divider',
         borderRadius: 1,
@@ -83,7 +84,7 @@ export function CommentNode({ id, data, selected }: NodeProps<CommentNodeType>) 
             bgcolor: 'error.main',
             color: 'error.contrastText',
             border: '1.5px solid',
-            borderColor: 'common.white',
+            borderColor: 'background.default',
             boxShadow: 1,
             '&:hover': { bgcolor: 'error.dark' },
           }}
@@ -110,7 +111,7 @@ export function CommentNode({ id, data, selected }: NodeProps<CommentNodeType>) 
               fontSize: 13,
               fontFamily: 'inherit',
               lineHeight: 1.5,
-              color: '#444',
+              color: 'var(--mui-palette-text-secondary)',
             }}
             placeholder="Add a comment…"
           />

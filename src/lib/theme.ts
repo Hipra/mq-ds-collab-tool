@@ -59,12 +59,21 @@ export function createAppTheme() {
       // App shell overrides — take precedence over DS defaults
       MuiAppBar: {
         styleOverrides: {
-          root: ({ theme: t }) => ({
-            border: 'none',
-            boxShadow: t.shadows[2],
-            color: t.vars.palette.text.primary,
-            backgroundColor: t.vars.palette.background.default,
-          }),
+          root: {
+            // MUI dark mode applies: background-color: var(--mui-palette-AppBar-darkBg, var(--AppBar-background))
+            // MUI sets darkBg = palette.background.paper which in our DS is gray[400] (#ADADAD) — way too light.
+            // Override both variables so light AND dark use background.default.
+            '--AppBar-background': 'var(--mui-palette-background-default)',
+            '--mui-palette-AppBar-darkBg': 'var(--mui-palette-background-default)',
+            borderTop: 'none',
+            borderLeft: 'none',
+            borderRight: 'none',
+            borderBottom: '1px solid',
+            borderColor: 'var(--mui-palette-divider)',
+            boxShadow: 'none',
+            color: 'var(--mui-palette-text-primary)',
+            backgroundColor: 'var(--AppBar-background)',
+          },
         },
       },
       MuiToolbar: {
@@ -79,14 +88,14 @@ export function createAppTheme() {
       },
       MuiListItemButton: {
         styleOverrides: {
-          root: ({ theme: t }) => ({
+          root: {
             '&.Mui-selected': {
-              backgroundColor: t.vars.palette.action.selected,
+              backgroundColor: 'var(--mui-palette-action-selected)',
               '&:hover': {
-                backgroundColor: t.vars.palette.action.hover,
+                backgroundColor: 'var(--mui-palette-action-hover)',
               },
             },
-          }),
+          },
         },
       },
     },

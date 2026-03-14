@@ -231,24 +231,29 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
         .react-flow__node-screenNode .react-flow__handle:hover {
           opacity: 1;
         }
-        /* Miro-style controls */
+        /* Controls & MiniMap — theme-aware */
         .react-flow__controls {
           border-radius: 4px;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-          border: 1px solid rgba(0,0,0,0.06);
+          box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+          border: 1px solid var(--mui-palette-divider);
           overflow: hidden;
         }
         .react-flow__controls button {
           border: none;
-          border-bottom: 1px solid rgba(0,0,0,0.06);
+          border-bottom: 1px solid var(--mui-palette-divider);
+          background: var(--mui-palette-background-paper);
+          color: var(--mui-palette-text-secondary);
+        }
+        .react-flow__controls button:hover {
+          background: var(--mui-palette-action-hover);
         }
         .react-flow__controls button:last-child {
           border-bottom: none;
         }
         .react-flow__minimap {
           border-radius: 4px;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-          border: 1px solid rgba(0,0,0,0.06);
+          box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+          border: 1px solid var(--mui-palette-divider);
         }
       `}</style>
       <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -268,10 +273,10 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
           maxZoom={2}
           proOptions={{ hideAttribution: true }}
         >
-          <Background gap={24} size={1.5} color="#d0d4d8" />
+          <Background gap={24} size={1.5} color="var(--mui-palette-divider)" />
           <Controls
             showInteractive={false}
-            style={{ borderRadius: 4, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.06)' }}
+            style={{ borderRadius: 4, boxShadow: 'none', border: 'none' }}
           />
           <MiniMap
             nodeColor={(n) => {
@@ -296,7 +301,7 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
             px: 0.75,
             py: 0.5,
             borderRadius: 100,
-            bgcolor: 'common.white',
+            bgcolor: 'background.paper',
             boxShadow: 3,
             border: '1px solid',
             borderColor: 'divider',

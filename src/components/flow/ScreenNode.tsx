@@ -22,8 +22,8 @@ const HANDLE_STYLE: React.CSSProperties = {
   width: 10,
   height: 10,
   borderRadius: '50%',
-  backgroundColor: '#fff',
-  border: '2px solid #90caf9',
+  backgroundColor: 'var(--mui-palette-background-paper)',
+  border: '2px solid var(--mui-palette-primary-light)',
 };
 
 export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
@@ -52,7 +52,7 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
       sx={{
         width: 280,
         borderRadius: 1,
-        bgcolor: 'common.white',
+        bgcolor: 'background.paper',
         border: selected ? '2px solid' : '1px solid',
         borderColor: selected ? 'primary.main' : 'divider',
         boxShadow: selected ? 4 : 2,

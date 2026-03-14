@@ -473,7 +473,7 @@ export default function GalleryPage() {
                         justifyContent: 'center',
                         bgcolor: tmpl.hasThumbnail ? 'transparent' : 'action.hover',
                         position: 'relative',
-                        '&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.1)' },
+                        '&:hover': { boxShadow: 3 },
                         '&:hover .card-actions': { opacity: 1 },
                       }}
                     >
@@ -497,9 +497,8 @@ export default function GalleryPage() {
                           gap: 0.25,
                           opacity: 0,
                           transition: 'opacity 150ms ease',
-                          bgcolor: 'rgba(255,255,255,0.85)',
+                          bgcolor: 'background.paper',
                           borderRadius: 1,
-                          '[data-mui-color-scheme="dark"] &': { bgcolor: 'rgba(0,0,0,0.7)' },
                         }}
                       >
                         <Tooltip title="Add to prototype">

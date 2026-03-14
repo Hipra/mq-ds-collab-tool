@@ -126,12 +126,12 @@ export function InspectorPanel({ prototypeId, tabs = ALL_TABS }: InspectorPanelP
             fullWidth
             sx={{
               '& .MuiToggleButton-root.Mui-selected': {
-                bgcolor: 'rgba(0,0,0,0.02)',
+                bgcolor: 'action.selected',
                 color: 'text.primary',
                 fontWeight: 600,
               },
               '& .MuiToggleButton-root.Mui-selected:hover': {
-                bgcolor: 'rgba(0,0,0,0.04)',
+                bgcolor: 'action.hover',
               },
             }}
           >
