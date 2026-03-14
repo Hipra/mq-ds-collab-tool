@@ -233,7 +233,7 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
         }
         /* Miro-style controls */
         .react-flow__controls {
-          border-radius: 12px;
+          border-radius: 4px;
           box-shadow: 0 2px 12px rgba(0,0,0,0.08);
           border: 1px solid rgba(0,0,0,0.06);
           overflow: hidden;
@@ -246,7 +246,7 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
           border-bottom: none;
         }
         .react-flow__minimap {
-          border-radius: 12px;
+          border-radius: 4px;
           box-shadow: 0 2px 12px rgba(0,0,0,0.08);
           border: 1px solid rgba(0,0,0,0.06);
         }
@@ -271,7 +271,7 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
           <Background gap={24} size={1.5} color="#d0d4d8" />
           <Controls
             showInteractive={false}
-            style={{ borderRadius: 12, boxShadow: 'none', border: 'none' }}
+            style={{ borderRadius: 4, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.06)' }}
           />
           <MiniMap
             nodeColor={(n) => {
@@ -279,7 +279,7 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
               return '#c5cae9';
             }}
             maskColor="rgba(0,0,0,0.06)"
-            style={{ borderRadius: 12, boxShadow: 'none', border: 'none' }}
+            style={{ borderRadius: 4, boxShadow: 'none', border: 'none' }}
           />
         </ReactFlow>
 
@@ -295,7 +295,7 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
             gap: 0.25,
             px: 0.75,
             py: 0.5,
-            borderRadius: 3.5,
+            borderRadius: 100,
             bgcolor: 'common.white',
             boxShadow: 3,
             border: '1px solid',

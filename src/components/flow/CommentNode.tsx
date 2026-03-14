@@ -56,7 +56,7 @@ export function CommentNode({ id, data, selected }: NodeProps<CommentNodeType>) 
         bgcolor: '#fffde7',
         border: '1px solid',
         borderColor: selected ? 'warning.main' : 'divider',
-        borderRadius: 2.5,
+        borderRadius: 1,
         boxShadow: selected ? 3 : 1,
         px: 1.75,
         py: 1.25,

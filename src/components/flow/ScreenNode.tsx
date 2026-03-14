@@ -51,7 +51,7 @@ export function ScreenNode({ data, selected }: NodeProps<ScreenNodeType>) {
       onDoubleClick={handleDoubleClick}
       sx={{
         width: 280,
-        borderRadius: 3,
+        borderRadius: 1,
         bgcolor: 'common.white',
         border: selected ? '2px solid' : '1px solid',
         borderColor: selected ? 'primary.main' : 'divider',
