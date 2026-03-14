@@ -9,10 +9,10 @@ const UX_WRITER_STATUSES = ['not_started', 'in_progress', 'review', 'done'] as c
 
 const STATUS_LABELS: Record<string, string> = {
   concept: 'Concept',
-  in_progress: 'In Progress',
+  in_progress: 'In progress',
   review: 'Review',
   done: 'Done',
-  not_started: 'Not Started',
+  not_started: 'Not started',
   qa: 'QA',
   deployed: 'Deployed',
 };

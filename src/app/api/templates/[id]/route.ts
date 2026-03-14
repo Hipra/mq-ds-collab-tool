@@ -69,6 +69,13 @@ export async function DELETE(
     // file already gone — continue
   }
 
+  // Remove thumbnail if it exists
+  try {
+    await fs.unlink(path.join(TEMPLATES_DIR, 'thumbnails', `${id}.png`));
+  } catch {
+    // no thumbnail — continue
+  }
+
   delete meta[id];
   await writeMetadata(meta);
 

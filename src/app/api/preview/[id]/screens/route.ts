@@ -231,6 +231,13 @@ export async function DELETE(
     return NextResponse.json({ error: message }, { status: 404 });
   }
 
+  // Remove thumbnail if it exists
+  try {
+    await fs.unlink(path.join(dir, 'thumbnails', `${screenId}.png`));
+  } catch {
+    // no thumbnail — continue
+  }
+
   // Remove from metadata.json (screens.order and screens.customNames)
   const metaPath = path.join(dir, 'metadata.json');
   try {

@@ -54,7 +54,12 @@ export async function GET() {
           createdAt = undefined;
         }
       }
-      return { id, ...m, createdAt };
+      let hasThumbnail = false;
+      try {
+        await fs.access(path.join(TEMPLATES_DIR, 'thumbnails', `${id}.png`));
+        hasThumbnail = true;
+      } catch { /* no thumbnail */ }
+      return { id, ...m, createdAt, hasThumbnail };
     })
   );
   templates.sort((a, b) => {

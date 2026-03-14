@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import Card from '@mui/material/Card';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
@@ -18,7 +17,6 @@ import {
   AppBar,
   Typography,
   TextField,
-  Chip,
   Button,
   Dialog,
   DialogTitle,
@@ -28,33 +26,20 @@ import {
 } from '@memoq/memoq.web.design';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
 
-import ProjectCard from '@/components/dashboard/ProjectCard';
+import ProjectDetail from '@/components/dashboard/ProjectDetail';
 import ProjectDialog from '@/components/dashboard/ProjectDialog';
 import ScreenshotModal from '@/components/dashboard/ScreenshotModal';
 import type { ProjectWithPrototypes, ProjectLink, ScreenInfo } from '@/types/project';
-
-interface Prototype {
-  id: string;
-  name: string;
-  status: string;
-  createdAt: string;
-  hasShareToken: boolean;
-}
 
 interface Template {
   id: string;
   name: string;
   builtIn: boolean;
   createdAt?: string;
+  hasThumbnail?: boolean;
 }
 
 type ActiveTab = 'prototypes' | 'templates';
-
-const STATUS_CONFIG: Record<string, { label: string; color: 'default' | 'warning' | 'success' }> = {
-  draft: { label: 'Draft', color: 'default' },
-  review: { label: 'Review', color: 'warning' },
-  approved: { label: 'Approved', color: 'success' },
-};
 
 const MODE_CONFIG: Record<ThemeMode, { icon: React.ReactNode; label: string }> = {
   light: { icon: <MqIcon name="sun" size={20} />, label: 'Light mode' },
@@ -82,20 +67,33 @@ export default function GalleryPage() {
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('prototypes');
 
-  // Prototypes state
-  const [prototypes, setPrototypes] = useState<Prototype[]>([]);
+  // Projects state
+  const [projects, setProjects] = useState<ProjectWithPrototypes[]>([]);
   const [loading, setLoading] = useState(true);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [createError, setCreateError] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Prototype | null>(null);
-  const [deleteError, setDeleteError] = useState('');
-  const [deleting, setDeleting] = useState(false);
-  const [cloneTarget, setCloneTarget] = useState<Prototype | null>(null);
-  const [cloneName, setCloneName] = useState('');
-  const [cloneError, setCloneError] = useState('');
-  const [cloning, setCloning] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<ProjectWithPrototypes | null>(null);
+  const [screenshotModal, setScreenshotModal] = useState<{ src: string; name: string } | null>(null);
+
+  // Add prototype dialog
+  const [addProtoOpen, setAddProtoOpen] = useState(false);
+  const [addProtoProjectId, setAddProtoProjectId] = useState('');
+  const [addProtoName, setAddProtoName] = useState('');
+  const [addProtoError, setAddProtoError] = useState('');
+  const [addProtoLoading, setAddProtoLoading] = useState(false);
+
+  // Add screen dialog
+  const [addScreenOpen, setAddScreenOpen] = useState(false);
+  const [addScreenProtoId, setAddScreenProtoId] = useState('');
+  const [addScreenName, setAddScreenName] = useState('');
+  const [addScreenError, setAddScreenError] = useState('');
+  const [addScreenLoading, setAddScreenLoading] = useState(false);
+
+  // Delete prototype dialog
+  const [deleteProtoId, setDeleteProtoId] = useState<string | null>(null);
+  const [deleteProtoError, setDeleteProtoError] = useState('');
+  const [deletingProto, setDeletingProto] = useState(false);
 
   // Templates state
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -111,29 +109,27 @@ export default function GalleryPage() {
   const [addToLoading, setAddToLoading] = useState(false);
   const [addToError, setAddToError] = useState('');
 
-  // Projects state
-  const [projects, setProjects] = useState<ProjectWithPrototypes[]>([]);
-
-  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState<ProjectWithPrototypes | null>(null);
-  const [screenshotModal, setScreenshotModal] = useState<{ src: string; name: string } | null>(null);
-
   const fetchProjects = async () => {
     try {
       const res = await fetch('/api/projects');
       if (res.ok) {
-        const data = await res.json();
+        const data: ProjectWithPrototypes[] = await res.json();
         setProjects(data);
+        // Auto-select first project if none selected or selected no longer exists
+        if (data.length > 0) {
+          setSelectedProjectId((prev) => {
+            if (prev && data.some((p) => p.id === prev)) return prev;
+            return data[0].id;
+          });
+        } else {
+          setSelectedProjectId(null);
+        }
       }
     } catch { /* silent */ }
   };
 
   useEffect(() => {
-    fetch('/api/prototypes')
-      .then((res) => res.json())
-      .then((data: Prototype[]) => { setPrototypes(data); setLoading(false); })
-      .catch(() => setLoading(false));
-    fetchProjects();
+    fetchProjects().then(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -146,54 +142,146 @@ export default function GalleryPage() {
     }
   }, [activeTab, templatesFetched]);
 
-  const handleCreate = async () => {
-    const trimmed = newName.trim();
-    if (!trimmed) return;
-    setCreating(true);
-    setCreateError('');
+  const handleEditProject = (project: ProjectWithPrototypes) => {
+    setEditingProject(project);
+    setProjectDialogOpen(true);
+  };
+
+  const handleCreateProject = () => {
+    setEditingProject(null);
+    setProjectDialogOpen(true);
+  };
+
+  const handleProjectSaved = () => {
+    fetchProjects();
+  };
+
+  const handleLinksChange = async (projectId: string, links: ProjectLink[]) => {
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, links } : p)));
     try {
+      await fetch(`/api/projects/${projectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ links }),
+      });
+    } catch { /* silent */ }
+  };
+
+  const handleStatusChange = async (projectId: string, field: string, value: string) => {
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, [field]: value } : p)));
+    try {
+      await fetch(`/api/projects/${projectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      });
+    } catch { /* silent */ }
+  };
+
+  const handleThumbnailClick = (prototypeId: string, screen: ScreenInfo) => {
+    setScreenshotModal({
+      src: `/api/preview/${prototypeId}/thumbnail?screen=${screen.id}`,
+      name: screen.name,
+    });
+  };
+
+  const handleAddPrototype = (projectId: string) => {
+    setAddProtoProjectId(projectId);
+    setAddProtoName('');
+    setAddProtoError('');
+    setAddProtoOpen(true);
+  };
+
+  const handleCreatePrototype = async () => {
+    const trimmed = addProtoName.trim();
+    if (!trimmed) return;
+    setAddProtoLoading(true);
+    setAddProtoError('');
+    try {
+      // 1. Create prototype
       const res = await fetch('/api/prototypes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: trimmed }),
       });
-      if (!res.ok) { setCreateError((await res.json()).error ?? 'Failed to create prototype'); return; }
-      const data = await res.json();
-      setCreateOpen(false);
-      router.push(`/prototype/${data.id}`);
-    } catch { setCreateError('Network error'); }
-    finally { setCreating(false); }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setAddProtoError(data.error || 'Failed to create prototype');
+        return;
+      }
+      const proto = await res.json();
+
+      // 2. Add prototype to project
+      const project = projects.find((p) => p.id === addProtoProjectId);
+      if (project) {
+        const prototypeIds = [...project.prototypeIds, proto.id];
+        await fetch(`/api/projects/${addProtoProjectId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prototypeIds }),
+        });
+      }
+
+      setAddProtoOpen(false);
+      fetchProjects();
+    } catch {
+      setAddProtoError('Network error');
+    } finally {
+      setAddProtoLoading(false);
+    }
   };
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    setDeleteError('');
-    try {
-      const res = await fetch(`/api/prototypes/${deleteTarget.id}`, { method: 'DELETE' });
-      if (!res.ok) { setDeleteError((await res.json()).error ?? 'Failed to delete prototype'); return; }
-      setPrototypes((prev) => prev.filter((p) => p.id !== deleteTarget.id));
-      setDeleteTarget(null);
-    } catch { setDeleteError('Network error'); }
-    finally { setDeleting(false); }
+  const handleAddScreen = (prototypeId: string) => {
+    setAddScreenProtoId(prototypeId);
+    setAddScreenName('');
+    setAddScreenError('');
+    setAddScreenOpen(true);
   };
 
-  const handleClone = async () => {
-    if (!cloneTarget) return;
-    setCloning(true);
-    setCloneError('');
+  const handleCreateScreen = async () => {
+    const trimmed = addScreenName.trim();
+    if (!trimmed) return;
+    setAddScreenLoading(true);
+    setAddScreenError('');
     try {
-      const res = await fetch(`/api/prototypes/${cloneTarget.id}/clone`, {
+      const res = await fetch(`/api/preview/${addScreenProtoId}/screens`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: cloneName.trim() }),
+        body: JSON.stringify({ name: trimmed }),
       });
-      if (!res.ok) { setCloneError((await res.json()).error ?? 'Failed to clone prototype'); return; }
-      const data = await res.json();
-      setCloneTarget(null);
-      router.push(`/prototype/${data.id}`);
-    } catch { setCloneError('Network error'); }
-    finally { setCloning(false); }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setAddScreenError(data.error || 'Failed to create screen');
+        return;
+      }
+
+      setAddScreenOpen(false);
+      fetchProjects();
+    } catch {
+      setAddScreenError('Network error');
+    } finally {
+      setAddScreenLoading(false);
+    }
+  };
+
+  const handleDeletePrototype = async () => {
+    if (!deleteProtoId) return;
+    setDeletingProto(true);
+    setDeleteProtoError('');
+    try {
+      const res = await fetch(`/api/prototypes/${deleteProtoId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setDeleteProtoError(data.error ?? 'Failed to delete prototype');
+        return;
+      }
+      setDeleteProtoId(null);
+      fetchProjects();
+    } catch {
+      setDeleteProtoError('Network error');
+    } finally {
+      setDeletingProto(false);
+    }
   };
 
   const handleDeleteTemplate = async () => {
@@ -226,65 +314,9 @@ export default function GalleryPage() {
     finally { setAddToLoading(false); }
   };
 
-  const assignedPrototypeIds = new Set(projects.flatMap((p) => p.prototypeIds));
-  const unassignedPrototypes = prototypes.filter((p) => !assignedPrototypeIds.has(p.id));
-
-
-
-
-  const handleEditProject = (project: ProjectWithPrototypes) => {
-    setEditingProject(project);
-    setProjectDialogOpen(true);
-  };
-
-  const handleCreateProject = () => {
-    setEditingProject(null);
-    setProjectDialogOpen(true);
-  };
-
-  const handleProjectSaved = () => {
-    fetchProjects();
-    fetch('/api/prototypes')
-      .then((res) => res.json())
-      .then((data: Prototype[]) => setPrototypes(data))
-      .catch(() => {});
-  };
-
-  const handleLinksChange = async (projectId: string, links: ProjectLink[]) => {
-    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, links } : p)));
-    try {
-      await fetch(`/api/projects/${projectId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ links }),
-      });
-    } catch { /* silent */ }
-  };
-
-  const handleThumbnailClick = (prototypeId: string, screen: ScreenInfo) => {
-    setScreenshotModal({
-      src: `/api/preview/${prototypeId}/thumbnail?screen=${screen.id}`,
-      name: screen.name,
-    });
-  };
+  const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? null;
 
   const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.system;
-
-  const cardSx = {
-    borderRadius: 2,
-    p: 2,
-    cursor: 'pointer',
-    border: '1px solid rgba(0,0,0,0.07)',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-    transition: 'box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1)',
-    '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)' },
-    '& .card-actions': { opacity: 0, transition: 'opacity 150ms ease' },
-    '&:hover .card-actions': { opacity: 1 },
-    '[data-mui-color-scheme="dark"] &': {
-      backgroundColor: '#222222',
-      borderColor: 'rgba(255,255,255,0.08)',
-    },
-  } as const;
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -298,6 +330,19 @@ export default function GalleryPage() {
             mq collab
           </Typography>
           <Box sx={{ flex: 1 }} />
+          <Tabs
+            value={activeTab}
+            onChange={(_e, val: ActiveTab) => setActiveTab(val)}
+            sx={{
+              minHeight: 40,
+              '& .MuiTab-root': { minHeight: 40, py: 0, textTransform: 'none', color: 'inherit' },
+              '& .MuiTabs-indicator': { bgcolor: 'currentColor' },
+            }}
+          >
+            <Tab label="Prototypes" value="prototypes" />
+            <Tab label="Templates" value="templates" />
+          </Tabs>
+          <Box sx={{ flex: 1 }} />
           <Tooltip title={modeConfig.label}>
             <IconButton onClick={cycleMode} size="small" aria-label={modeConfig.label}>
               {modeConfig.icon}
@@ -306,263 +351,218 @@ export default function GalleryPage() {
       </AppBar>
 
       {/* ── Content ── */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <Box sx={{ px: 3, py: 3 }}>
+      <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
 
-          {/* ── Tab bar ── */}
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Tabs
-              value={activeTab}
-              onChange={(_e, val: ActiveTab) => setActiveTab(val)}
-              sx={{ minHeight: 36, '& .MuiTab-root': { minHeight: 36, py: 0, textTransform: 'none' } }}
-            >
-              <Tab label="Prototypes" value="prototypes" />
-              <Tab label="Templates" value="templates" />
-            </Tabs>
-            <Box sx={{ flex: 1 }} />
-            {activeTab === 'prototypes' && (
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<MqIcon name="plus" size={16} />}
-                onClick={handleCreateProject}
-              >
-                New Project
-              </Button>
-            )}
-          </Box>
-
-          {/* ── Prototypes tab ── */}
-          {activeTab === 'prototypes' && (
-            <>
-              {loading && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
-                  <CircularProgress />
+        {/* ── Prototypes tab — master-detail ── */}
+        {activeTab === 'prototypes' && (
+          <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+                <CircularProgress />
+              </Box>
+            ) : projects.length === 0 ? (
+              <Box sx={{ flex: 1 }}>
+                <EmptyState
+                  icon={<MqIcon name="artboard" size={20} />}
+                  title="No projects yet"
+                  description="Create your first project to get started."
+                />
+              </Box>
+            ) : (
+              <>
+                {/* Left — project list */}
+                <Box
+                  sx={{
+                    width: 260,
+                    flexShrink: 0,
+                    borderRight: '1px solid',
+                    borderColor: 'divider',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <List disablePadding sx={{ flex: 1, overflow: 'auto' }}>
+                    {projects.map((project) => (
+                      <ListItemButton
+                        key={project.id}
+                        selected={project.id === selectedProjectId}
+                        onClick={() => setSelectedProjectId(project.id)}
+                        sx={{ px: 3, py: 1.5 }}
+                      >
+                        <ListItemText
+                          primary={project.name}
+                          slotProps={{ primary: { variant: 'body2', fontWeight: project.id === selectedProjectId ? 600 : 400 } }}
+                        />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                  <Box sx={{ p: 2 }}>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      startIcon={<MqIcon name="plus" size={16} />}
+                      onClick={handleCreateProject}
+                    >
+                      New project
+                    </Button>
+                  </Box>
                 </Box>
-              )}
 
-              {!loading && (
-                <>
-                  {/* Project cards */}
-                  {projects.map((project) => (
-                    <ProjectCard
-                      key={project.id}
-                      project={project}
+                {/* Right — detail panel */}
+                <Box sx={{ flex: 1, overflow: 'auto' }}>
+                  {selectedProject ? (
+                    <ProjectDetail
+                      project={selectedProject}
                       onEdit={handleEditProject}
                       onThumbnailClick={handleThumbnailClick}
                       onLinksChange={handleLinksChange}
+                      onStatusChange={handleStatusChange}
+                      onAddPrototype={handleAddPrototype}
+                      onAddScreen={handleAddScreen}
+                      onDeletePrototype={(protoId) => { setDeleteProtoError(''); setDeleteProtoId(protoId); }}
                     />
-                  ))}
-
-                  {/* Unassigned section */}
-                  {unassignedPrototypes.length > 0 && (
-                    <>
-                      {projects.length > 0 && (
-                        <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>Unassigned</Typography>
-                      )}
-                      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 2 }}>
-                        {unassignedPrototypes.map((proto) => {
-                          const config = STATUS_CONFIG[proto.status] ?? STATUS_CONFIG.draft;
-                          return (
-                            <Card
-                              key={proto.id}
-                              elevation={0}
-                              onClick={() => router.push(`/prototype/${proto.id}`)}
-                              sx={cardSx}
-                            >
-                              <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
-                                <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.4, flex: 1, wordBreak: 'break-word' }}>
-                                  {proto.name}
-                                </Typography>
-                                <Box className="card-actions" sx={{ display: 'flex', gap: 0.25, flexShrink: 0 }}>
-                                  <Tooltip title="Clone">
-                                    <IconButton
-                                      size="small"
-                                      aria-label="Clone"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setCloneError('');
-                                        setCloneName(`Copy of ${proto.name}`);
-                                        setCloneTarget(proto);
-                                      }}
-                                    >
-                                      <MqIcon name="copy_clone" size={16} />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Delete">
-                                    <IconButton
-                                      size="small"
-                                      aria-label="Delete"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setDeleteError('');
-                                        setDeleteTarget(proto);
-                                      }}
-                                    >
-                                      <MqIcon name="trash" size={16} />
-                                    </IconButton>
-                                  </Tooltip>
-                                </Box>
-                              </Box>
-                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>
-                                <Chip label={config.label} color={config.color} size="small" />
-                                <Typography variant="caption" color="text.disabled">
-                                  {proto.createdAt ? new Date(proto.createdAt).toLocaleDateString() : '—'}
-                                </Typography>
-                              </Box>
-                            </Card>
-                          );
-                        })}
-                      </Box>
-                    </>
-                  )}
-
-                  {projects.length === 0 && unassignedPrototypes.length === 0 && (
+                  ) : (
                     <EmptyState
                       icon={<MqIcon name="artboard" size={20} />}
-                      title="No prototypes yet"
-                      description="Create your first project to get started."
+                      title="Select a project"
+                      description="Choose a project from the list to see its details."
                     />
                   )}
-                </>
-              )}
-            </>
-          )}
-
-          {/* ── Templates tab ── */}
-          {activeTab === 'templates' && (
-            <>
-              {templatesLoading && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
-                  <CircularProgress />
                 </Box>
-              )}
+              </>
+            )}
+          </Box>
+        )}
 
-              {!templatesLoading && templates.length === 0 && (
-                <EmptyState
-                  icon={<MqIcon name="palette" size={20} />}
-                  title="No templates yet"
-                  description="Save a screen as a template from within a prototype."
-                />
-              )}
+        {/* ── Templates tab ── */}
+        {activeTab === 'templates' && (
+          <Box sx={{ flex: 1, overflow: 'auto', px: 3, pt: 3, pb: 3 }}>
+            {templatesLoading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
+                <CircularProgress />
+              </Box>
+            )}
 
-              {!templatesLoading && templates.length > 0 && (
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 2 }}>
-                  {templates.map((tmpl) => (
-                    <Card
-                      key={tmpl.id}
-                      elevation={0}
+            {!templatesLoading && templates.length === 0 && (
+              <EmptyState
+                icon={<MqIcon name="palette" size={20} />}
+                title="No templates yet"
+                description="Save a screen as a template from within a prototype."
+              />
+            )}
+
+            {!templatesLoading && templates.length > 0 && (
+              <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', flexWrap: 'wrap', pb: 1 }}>
+                {templates.map((tmpl) => (
+                  <Box
+                    key={tmpl.id}
+                    sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, position: 'relative' }}
+                  >
+                    <Box
                       onClick={() => router.push(`/template/${tmpl.id}`)}
-                      sx={cardSx}
+                      sx={{
+                        width: 200,
+                        height: 130,
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: tmpl.hasThumbnail ? 'transparent' : 'action.hover',
+                        position: 'relative',
+                        '&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.1)' },
+                        '&:hover .card-actions': { opacity: 1 },
+                      }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.4, flex: 1, wordBreak: 'break-word' }}>
-                          {tmpl.name}
-                        </Typography>
-                        <Box className="card-actions" sx={{ display: 'flex', gap: 0.25, flexShrink: 0 }}>
-                          <Tooltip title="Add to prototype">
+                      {tmpl.hasThumbnail ? (
+                        <Box
+                          component="img"
+                          src={`/api/preview/template/${tmpl.id}/thumbnail`}
+                          alt={tmpl.name}
+                          sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <MqIcon name="image" size={24} color="disabled" />
+                      )}
+                      <Box
+                        className="card-actions"
+                        sx={{
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          display: 'flex',
+                          gap: 0.25,
+                          opacity: 0,
+                          transition: 'opacity 150ms ease',
+                          bgcolor: 'rgba(255,255,255,0.85)',
+                          borderRadius: 1,
+                          '[data-mui-color-scheme="dark"] &': { bgcolor: 'rgba(0,0,0,0.7)' },
+                        }}
+                      >
+                        <Tooltip title="Add to prototype">
+                          <IconButton
+                            size="small"
+                            aria-label="Add to prototype"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAddToError('');
+                              setAddToProtoId('');
+                              setAddToTemplate(tmpl);
+                            }}
+                          >
+                            <MqIcon name="list_numbered" size={16} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={tmpl.builtIn ? 'Built-in templates cannot be deleted' : 'Delete'}>
+                          <span>
                             <IconButton
                               size="small"
-                              aria-label="Add to prototype"
+                              aria-label="Delete template"
+                              disabled={tmpl.builtIn}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setAddToError('');
-                                setAddToProtoId('');
-                                setAddToTemplate(tmpl);
+                                setDeleteTemplateError('');
+                                setDeleteTemplateTarget(tmpl);
                               }}
                             >
-                              <MqIcon name="list_numbered" size={16} />
+                              <MqIcon name="trash" size={16} />
                             </IconButton>
-                          </Tooltip>
-                          <Tooltip title={tmpl.builtIn ? 'Built-in templates cannot be deleted' : 'Delete'}>
-                            <span>
-                              <IconButton
-                                size="small"
-                                aria-label="Delete template"
-                                disabled={tmpl.builtIn}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteTemplateError('');
-                                  setDeleteTemplateTarget(tmpl);
-                                }}
-                              >
-                                <MqIcon name="trash" size={16} />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                        </Box>
+                          </span>
+                        </Tooltip>
                       </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>
-                        {tmpl.builtIn
-                          ? <Chip label="Built-in" size="small" variant="outlined" />
-                          : <Box />}
-                        <Typography variant="caption" color="text.disabled">
-                          {tmpl.createdAt ? new Date(tmpl.createdAt).toLocaleDateString() : '—'}
-                        </Typography>
-                      </Box>
-                    </Card>
-                  ))}
-                </Box>
-              )}
-            </>
-          )}
-
-        </Box>
+                    </Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      onClick={() => router.push(`/template/${tmpl.id}`)}
+                      sx={{ cursor: 'pointer', textAlign: 'center', maxWidth: 200, '&:hover': { textDecoration: 'underline' } }}
+                    >
+                      {tmpl.name}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
+        )}
       </Box>
 
-      {/* ── New Prototype dialog ── */}
-      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>New Prototype</DialogTitle>
-        <DialogContent>
-          {createError && <Alert severity="error" sx={{ mb: 2 }}>{createError}</Alert>}
-          <TextField
-            autoFocus fullWidth label="Prototype name" value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); }}
-            slotProps={{ input: { notched: false, color: 'secondary' } }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button variant="text" color="secondary" onClick={() => setCreateOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleCreate} disabled={!newName.trim() || creating}>
-            {creating ? 'Creating…' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* ── Clone dialog ── */}
-      <Dialog open={cloneTarget !== null} onClose={() => setCloneTarget(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>Clone prototype</DialogTitle>
-        <DialogContent>
-          {cloneError && <Alert severity="error" sx={{ mb: 2 }}>{cloneError}</Alert>}
-          <TextField
-            autoFocus fullWidth label="New name" value={cloneName}
-            onChange={(e) => setCloneName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleClone(); }}
-            slotProps={{ input: { notched: false, color: 'secondary' } }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button variant="text" color="secondary" onClick={() => setCloneTarget(null)}>Cancel</Button>
-          <Button variant="contained" onClick={handleClone} disabled={!cloneName.trim() || cloning}>
-            {cloning ? 'Cloning…' : 'Clone'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       {/* ── Delete prototype dialog ── */}
-      <Dialog open={deleteTarget !== null} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
+      <Dialog open={deleteProtoId !== null} onClose={() => setDeleteProtoId(null)} maxWidth="xs" fullWidth>
         <DialogTitle>Delete prototype?</DialogTitle>
         <DialogContent>
-          {deleteError && <Alert severity="error" sx={{ mb: 2 }}>{deleteError}</Alert>}
+          {deleteProtoError && <Alert severity="error" sx={{ mb: 2 }}>{deleteProtoError}</Alert>}
           <Typography>
-            <strong>{deleteTarget?.name}</strong> will be permanently deleted. This action cannot be undone.
+            This prototype and all its screens will be permanently deleted. This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button variant="text" color="secondary" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={handleDelete} disabled={deleting}>
-            {deleting ? 'Deleting…' : 'Delete'}
+          <Button variant="text" color="secondary" onClick={() => setDeleteProtoId(null)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={handleDeletePrototype} disabled={deletingProto}>
+            {deletingProto ? 'Deleting…' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -593,13 +593,13 @@ export default function GalleryPage() {
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
               <CircularProgress size={24} />
             </Box>
-          ) : prototypes.length === 0 ? (
+          ) : projects.length === 0 ? (
             <Typography color="text.secondary" sx={{ px: 3, py: 3 }}>
-              No prototypes yet. Create one first.
+              No projects yet. Create one first.
             </Typography>
           ) : (
             <List disablePadding>
-              {prototypes.map((proto, idx) => (
+              {projects.flatMap((p) => p.prototypes).map((proto, idx, arr) => (
                 <React.Fragment key={proto.id}>
                   {idx > 0 && <Divider component="li" />}
                   <ListItemButton selected={addToProtoId === proto.id} onClick={() => setAddToProtoId(proto.id)}>
@@ -618,11 +618,61 @@ export default function GalleryPage() {
         </DialogActions>
       </Dialog>
 
+      {/* ── Add prototype dialog ── */}
+      <Dialog open={addProtoOpen} onClose={() => setAddProtoOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>New prototype</DialogTitle>
+        <DialogContent>
+          {addProtoError && <Alert severity="error" sx={{ mb: 2 }}>{addProtoError}</Alert>}
+          <TextField
+            autoFocus
+            fullWidth
+            label="Prototype name"
+            value={addProtoName}
+            onChange={(e) => setAddProtoName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleCreatePrototype(); }}
+            slotProps={{ input: { notched: false, color: 'secondary' } }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button variant="text" color="secondary" onClick={() => setAddProtoOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleCreatePrototype} disabled={!addProtoName.trim() || addProtoLoading}>
+            {addProtoLoading ? 'Creating…' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ── Add screen dialog ── */}
+      <Dialog open={addScreenOpen} onClose={() => setAddScreenOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>New screen</DialogTitle>
+        <DialogContent>
+          {addScreenError && <Alert severity="error" sx={{ mb: 2 }}>{addScreenError}</Alert>}
+          <TextField
+            autoFocus
+            fullWidth
+            label="Screen name"
+            value={addScreenName}
+            onChange={(e) => setAddScreenName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleCreateScreen(); }}
+            slotProps={{ input: { notched: false, color: 'secondary' } }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button variant="text" color="secondary" onClick={() => setAddScreenOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleCreateScreen} disabled={!addScreenName.trim() || addScreenLoading}>
+            {addScreenLoading ? 'Creating…' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* ── Project dialog ── */}
       <ProjectDialog
         open={projectDialogOpen}
         onClose={() => setProjectDialogOpen(false)}
         onSave={handleProjectSaved}
+        onDelete={(id) => {
+          setProjects((prev) => prev.filter((p) => p.id !== id));
+          setSelectedProjectId((prev) => (prev === id ? null : prev));
+        }}
         editProject={editingProject}
       />
 
