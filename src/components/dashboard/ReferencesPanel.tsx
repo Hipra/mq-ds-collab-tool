@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import {
   Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
-  IconButton, TextField, Typography,
+  IconButton, TextField, Tooltip, Typography,
 } from '@mui/material';
 import MqIcon from '@/components/MqIcon';
 import type { ProjectLink } from '@/types/project';
@@ -94,9 +94,11 @@ export default function ReferencesPanel({ links, onChange, startAdding, onAdding
                 >
                   {link.label}
                 </Typography>
-                <IconButton className="remove-link" size="small" onClick={() => handleRemove(i)} sx={{ flexShrink: 0 }}>
-                  <MqIcon name="trash" size={16} />
-                </IconButton>
+                <Tooltip title="Remove link">
+                  <IconButton className="remove-link" size="small" onClick={() => handleRemove(i)} aria-label="Remove link" sx={{ flexShrink: 0 }}>
+                    <MqIcon name="trash" size={16} />
+                  </IconButton>
+                </Tooltip>
               </Box>
             </Box>
           ))}

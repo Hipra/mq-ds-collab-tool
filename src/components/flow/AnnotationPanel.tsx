@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import Divider from '@mui/material/Divider';
 import MqIcon from '@/components/MqIcon';
 import { useFlowContext } from './FlowContext';
@@ -51,9 +52,11 @@ export function AnnotationPanel({ nodeId, onClose }: AnnotationPanelProps) {
         <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: 0.8, fontSize: 10 }}>
           Screen notes
         </Typography>
-        <IconButton size="small" onClick={onClose} sx={{ mr: -0.5 }}>
-          <MqIcon name="close" size={14} />
-        </IconButton>
+        <Tooltip title="Close">
+          <IconButton size="small" onClick={onClose} aria-label="Close" sx={{ mr: -0.5 }}>
+            <MqIcon name="close" size={14} />
+          </IconButton>
+        </Tooltip>
       </Box>
 
       <Typography variant="subtitle2" sx={{ px: 2, pb: 1.5, fontWeight: 700, color: 'text.primary' }}>

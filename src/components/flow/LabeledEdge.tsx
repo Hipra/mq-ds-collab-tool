@@ -13,6 +13,7 @@ import {
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import MqIcon from '@/components/MqIcon';
 
@@ -232,40 +233,44 @@ export function LabeledEdge({
                 />
               ) : (
                 <Box sx={{ display: 'flex', gap: 0.5 }}>
-                  <IconButton
-                    onClick={() => { setDraft(data?.label ?? ''); setEditingLabel(true); }}
-                    title="Edit label"
-                    size="small"
-                    sx={{
-                      width: 28,
-                      height: 28,
-                      bgcolor: 'background.paper',
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      boxShadow: 1,
-                      '&:hover': { bgcolor: 'action.hover' },
-                    }}
-                  >
-                    <MqIcon name="edit" size={13} />
-                  </IconButton>
+                  <Tooltip title="Edit label">
+                    <IconButton
+                      onClick={() => { setDraft(data?.label ?? ''); setEditingLabel(true); }}
+                      aria-label="Edit label"
+                      size="small"
+                      sx={{
+                        width: 28,
+                        height: 28,
+                        bgcolor: 'background.paper',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        boxShadow: 1,
+                        '&:hover': { bgcolor: 'action.hover' },
+                      }}
+                    >
+                      <MqIcon name="edit" size={13} />
+                    </IconButton>
+                  </Tooltip>
 
-                  <IconButton
-                    onClick={handleDeleteEdge}
-                    title="Delete connection"
-                    size="small"
-                    color="error"
-                    sx={{
-                      width: 28,
-                      height: 28,
-                      bgcolor: 'background.paper',
-                      border: '1px solid',
-                      borderColor: 'error.light',
-                      boxShadow: 1,
-                      '&:hover': { bgcolor: 'error.50' },
-                    }}
-                  >
-                    <MqIcon name="trash" size={13} color="error" />
-                  </IconButton>
+                  <Tooltip title="Delete connection">
+                    <IconButton
+                      onClick={handleDeleteEdge}
+                      aria-label="Delete connection"
+                      size="small"
+                      color="error"
+                      sx={{
+                        width: 28,
+                        height: 28,
+                        bgcolor: 'background.paper',
+                        border: '1px solid',
+                        borderColor: 'error.light',
+                        boxShadow: 1,
+                        '&:hover': { bgcolor: 'error.50' },
+                      }}
+                    >
+                      <MqIcon name="trash" size={13} color="error" />
+                    </IconButton>
+                  </Tooltip>
                 </Box>
               )}
             </Box>

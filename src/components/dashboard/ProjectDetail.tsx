@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { Box, Divider, IconButton, Typography } from '@mui/material';
+import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material';
 import { Button } from '@memoq/memoq.web.design';
 import MqIcon from '@/components/MqIcon';
 import { StatusDot } from '@/components/StatusDot';
@@ -52,9 +52,11 @@ export default function ProjectDetail({
           >
             Add new prototype
           </Button>
-          <IconButton size="small" onClick={() => onEdit(project)}>
-            <MqIcon name="edit" size={18} />
-          </IconButton>
+          <Tooltip title="Edit project">
+            <IconButton size="small" onClick={() => onEdit(project)} aria-label="Edit project">
+              <MqIcon name="edit" size={18} />
+            </IconButton>
+          </Tooltip>
         </Box>
 
 

@@ -487,7 +487,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                               <Box sx={{ flex: 1 }} />
                               {entry.edits.length > 0 && (
                                 <Tooltip title="Edit history">
-                                  <IconButton size="small" onClick={() => toggleHistory(entry.key)} sx={{ p: 0.25 }}>
+                                  <IconButton size="small" onClick={() => toggleHistory(entry.key)} aria-label="Edit history" sx={{ p: 0.25 }}>
                                     <MqIcon name="history" size={20} />
                                   </IconButton>
                                 </Tooltip>
@@ -497,13 +497,14 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                                   size="small"
                                   onClick={() => handleApprove([{ key: entry.key, value: entry.currentValue }])}
                                   disabled={approving}
+                                  aria-label="Approve — write to source"
                                   sx={{ p: 0.25 }}
                                 >
                                   <MqIcon name="check" size={20} />
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title="Reset to original">
-                                <IconButton size="small" onClick={() => handleResetEntry(entry)} sx={{ p: 0.25 }}>
+                                <IconButton size="small" onClick={() => handleResetEntry(entry)} aria-label="Reset to original" sx={{ p: 0.25 }}>
                                   <MqIcon name="reload" size={20} />
                                 </IconButton>
                               </Tooltip>

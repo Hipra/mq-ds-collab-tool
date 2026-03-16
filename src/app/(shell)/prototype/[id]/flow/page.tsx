@@ -35,7 +35,7 @@ export default function FlowPage({
       {/* AppBar — same style as dashboard */}
       <AppBar position="static" variant="dense" sx={{ '& .MuiToolbar-gutters': { px: 2.5 } }}>
         <Tooltip title="Back to dashboard">
-          <IconButton size="small" onClick={() => router.push('/')}>
+          <IconButton size="small" onClick={() => router.push('/')} aria-label="Back to dashboard">
             <MqIcon name="arrow_left" size={20} />
           </IconButton>
         </Tooltip>

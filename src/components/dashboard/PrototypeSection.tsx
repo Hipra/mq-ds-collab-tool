@@ -87,7 +87,7 @@ export default function PrototypeSection({ prototype, onThumbnailClick, onAddScr
         </Button>
         {onDelete && (
           <Tooltip title="Delete prototype">
-            <IconButton size="small" onClick={() => onDelete(prototype.id)}>
+            <IconButton size="small" onClick={() => onDelete(prototype.id)} aria-label="Delete prototype">
               <MqIcon name="trash" size={16} />
             </IconButton>
           </Tooltip>

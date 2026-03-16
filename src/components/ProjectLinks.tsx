@@ -31,6 +31,7 @@ export function ProjectLinks({ links, size = 18 }: ProjectLinksProps) {
             target="_blank"
             rel="noopener noreferrer"
             size="small"
+            aria-label={link.label}
           >
             <MqIcon name={getLinkIcon(link)} size={size} />
           </IconButton>

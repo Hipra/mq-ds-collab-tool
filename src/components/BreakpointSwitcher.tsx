@@ -85,6 +85,7 @@ export function BreakpointSwitcher() {
         <IconButton
           size="small"
           onClick={handleToggle}
+          aria-label={isAuto ? 'Lock width' : 'Reset to auto'}
           sx={{
             borderRadius: 0,
             borderLeft: '1px solid',

@@ -5,6 +5,7 @@ import { type NodeProps, type Node, useReactFlow } from '@xyflow/react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import MqIcon from '@/components/MqIcon';
 
 export interface CommentNodeData extends Record<string, unknown> {
@@ -70,11 +71,12 @@ export function CommentNode({ id, data, selected }: NodeProps<CommentNodeType>) 
     >
       {/* Delete button */}
       {selected && !editing && (
+        <Tooltip title="Delete comment">
         <IconButton
           onClick={handleDelete}
           size="small"
           color="error"
-          title="Delete comment"
+          aria-label="Delete comment"
           sx={{
             position: 'absolute',
             top: -8,
@@ -91,6 +93,7 @@ export function CommentNode({ id, data, selected }: NodeProps<CommentNodeType>) 
         >
           <MqIcon name="close" size={8} color="#fff" />
         </IconButton>
+        </Tooltip>
       )}
 
       {editing ? (
