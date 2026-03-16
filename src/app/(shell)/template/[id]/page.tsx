@@ -87,6 +87,11 @@ export default function TemplateDetailPage({
       .catch(() => {});
   }, [id]);
 
+  useEffect(() => {
+    document.title = `handoff — ${templateName}`;
+    return () => { document.title = 'handoff'; };
+  }, [templateName]);
+
   // Fetch component tree for inspector
   useEffect(() => {
     fetch(`/api/preview/template/${id}/tree`)

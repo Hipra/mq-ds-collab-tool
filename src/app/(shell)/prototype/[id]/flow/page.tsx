@@ -1,6 +1,6 @@
 'use client';
 
-import { use } from 'react';
+import { use, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
@@ -28,6 +28,11 @@ export default function FlowPage({
   const { id } = use(params);
   const router = useRouter();
   const { mode, cycleMode } = useThemeStore();
+
+  useEffect(() => {
+    document.title = `handoff — ${id}`;
+    return () => { document.title = 'handoff'; };
+  }, [id]);
   const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.system;
   const links = useProjectLinks(id);
 

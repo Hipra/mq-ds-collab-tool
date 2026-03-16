@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
@@ -44,6 +44,11 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
   const { togglePanel, panelOpen, sidebarOpen, toggleSidebar, activeScreenId, screens } = useInspectorStore();
   const links = useProjectLinks(prototypeId);
   const [copiedClaude, setCopiedClaude] = useState(false);
+
+  useEffect(() => {
+    document.title = `handoff — ${prototypeName}`;
+    return () => { document.title = 'handoff'; };
+  }, [prototypeName]);
 
   const handleCopyClaudeCommand = () => {
     const screenFile = activeScreenId === 'index' ? 'index.jsx' : `screen-${activeScreenId}.jsx`;

@@ -5,7 +5,7 @@ import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'MQ DS Collab Tool',
+  title: 'handoff',
   description: 'MUI Design System Collaboration Tool — live prototype rendering and inspection',
 };
 

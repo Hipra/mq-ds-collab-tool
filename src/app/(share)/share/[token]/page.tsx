@@ -32,6 +32,10 @@ export default function ShareViewerPage({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = data ? `handoff — ${data.name}` : 'handoff';
+  }, [data]);
+
+  useEffect(() => {
     fetch(`/api/share/${token}`)
       .then((res) => {
         if (!res.ok) throw new Error('Not found');
