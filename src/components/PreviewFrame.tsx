@@ -66,9 +66,7 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
   const fetchTree = useCallback(async (screenId?: string) => {
     try {
       const screen = screenId ?? activeScreenId;
-      const url = screen !== 'index'
-        ? `/api/preview/${prototypeId}/tree?screen=${screen}`
-        : `/api/preview/${prototypeId}/tree`;
+      const url = `/api/preview/${prototypeId}/tree?screen=${screen}`;
       const res = await fetch(url);
       if (res.ok) {
         const tree = await res.json();

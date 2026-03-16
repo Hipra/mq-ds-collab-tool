@@ -26,6 +26,7 @@ import {
 } from '@memoq/memoq.web.design';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
 
+import { Logo } from '@/components/Logo';
 import ProjectDetail from '@/components/dashboard/ProjectDetail';
 import ProjectDialog from '@/components/dashboard/ProjectDialog';
 import ScreenshotModal from '@/components/dashboard/ScreenshotModal';
@@ -322,21 +323,14 @@ export default function GalleryPage() {
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* ── AppBar ── */}
       <AppBar position="static" variant="dense" sx={{ '& .MuiToolbar-gutters': { px: 2.5 } }}>
-          <Typography
-            variant="subtitle2"
-            component="div"
-            sx={{ letterSpacing: '0.04em', color: 'inherit', userSelect: 'none' }}
-          >
-            mq collab
-          </Typography>
+          <Logo height={20} />
           <Box sx={{ flex: 1 }} />
           <Tabs
             value={activeTab}
             onChange={(_e, val: ActiveTab) => setActiveTab(val)}
             sx={{
               minHeight: 40,
-              '& .MuiTab-root': { minHeight: 40, py: 0, textTransform: 'none', color: 'inherit' },
-              '& .MuiTabs-indicator': { bgcolor: 'currentColor' },
+              '& .MuiTab-root': { minHeight: 40, py: 0, textTransform: 'none' },
             }}
           >
             <Tab label="Projects" value="prototypes" />

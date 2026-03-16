@@ -36,3 +36,16 @@ Use standard MUI patterns unless there is a specific reason not to.
 - Use Typography `variant` prop instead of manual `fontSize`/`fontWeight`; do not invent custom variants
 - Use `slotProps={{ input: { ... } }}` — never deprecated `InputProps`, `inputProps`, or `SelectProps`
 - For layouts use `Box` with flexbox or `Stack`; if Grid is needed use MUI Grid v2 (`import Grid from '@mui/material/Grid2'`) — never `<Grid item>` (v1 API)
+
+## Dialog Conventions
+
+- **Cancel button:** always `variant="text" color="secondary"` — never `variant="contained"` or default
+- **TextField:** `slotProps={{ input: { notched: false, color: 'secondary' } }}` — matches DS TextField (no legend notch, secondary focus ring)
+- **Destructive actions (delete, remove):** show only on hover using `visibility: hidden` / `visibility: visible` pattern
+
+## AppBar Conventions
+
+- Use DS `AppBar` (`@memoq/memoq.web.design`) with `variant="dense"` — never MUI AppBar directly
+- Title: `Typography variant="subtitle2"` — never `body2` with manual fontWeight or `subtitle1`
+- Back button spacing: `ml: 0.5` on the title, not `mr` on the button
+- All UI text uses sentence case, never Title Case

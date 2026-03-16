@@ -570,7 +570,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
+          <Button variant="text" color="secondary" onClick={() => setCreateOpen(false)}>Cancel</Button>
           <Button
             variant="contained"
             onClick={handleCreateScreen}
@@ -680,7 +680,7 @@ export function ScreenSidebar({ prototypeId }: ScreenSidebarProps) {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSaveTemplateOpen(false)}>Cancel</Button>
+          <Button variant="text" color="secondary" onClick={() => setSaveTemplateOpen(false)}>Cancel</Button>
           <Button
             variant="contained"
             onClick={handleSaveTemplateConfirm}

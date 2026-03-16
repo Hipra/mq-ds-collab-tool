@@ -1,11 +1,47 @@
 {
   "nodes": [
     {
+      "id": "note-1773654585221",
+      "type": "noteNode",
+      "position": {
+        "x": -148.26587644246075,
+        "y": -405.77425538986625
+      },
+      "data": {
+        "text": "Lorem ipsum dolor sit amet consetetur",
+        "color": "yellow"
+      },
+      "measured": {
+        "width": 263,
+        "height": 40
+      },
+      "selected": true,
+      "dragging": false
+    },
+    {
+      "id": "note-1773654629055",
+      "type": "noteNode",
+      "position": {
+        "x": -8.780757722853863,
+        "y": -28.63975684495635
+      },
+      "data": {
+        "text": "This is another note",
+        "color": "blue"
+      },
+      "measured": {
+        "width": 180,
+        "height": 40
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
       "id": "screen-dialog-template",
       "type": "screenNode",
       "position": {
-        "x": -374.63320641391795,
-        "y": -298.4216967519574
+        "x": -441.90577990382053,
+        "y": -344.60883675995024
       },
       "data": {
         "screenId": "dialog-template",
@@ -46,43 +82,27 @@
       },
       "selected": false,
       "dragging": false
-    },
-    {
-      "id": "note-1773654585221",
-      "type": "noteNode",
-      "position": {
-        "x": -316.6975399723053,
-        "y": -366.61559320917667
-      },
-      "data": {
-        "text": "Lorem ipsum dolor sit amet consetetur",
-        "color": "yellow"
-      },
-      "measured": {
-        "width": 263,
-        "height": 40
-      },
-      "selected": false,
-      "dragging": false
-    },
-    {
-      "id": "note-1773654629055",
-      "type": "noteNode",
-      "position": {
-        "x": -85.08994556214634,
-        "y": -71.8146920698192
-      },
-      "data": {
-        "text": "This is another note",
-        "color": "blue"
-      },
-      "measured": {
-        "width": 180,
-        "height": 40
-      },
-      "selected": false,
-      "dragging": false
     }
   ],
-  "edges": []
+  "edges": [
+    {
+      "type": "labeled",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#64b5f6",
+        "width": 16,
+        "height": 16
+      },
+      "data": {
+        "label": "",
+        "triggerType": "click",
+        "isPrimary": false
+      },
+      "source": "screen-dialog-template",
+      "sourceHandle": "right",
+      "target": "screen-main-copy",
+      "targetHandle": "left",
+      "id": "xy-edge__screen-dialog-templateright-screen-main-copyleft"
+    }
+  ]
 }

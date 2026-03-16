@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
@@ -90,8 +91,18 @@ export default function PrototypeSection({ prototype, onThumbnailClick, onAddScr
 
   return (
     <Box sx={{ '&:not(:first-of-type)': { mt: 2.5 } }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, minHeight: 32 }}>
-        <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          mb: 1.5,
+          minHeight: 32,
+          '& .delete-btn': { visibility: 'hidden' },
+          '&:hover .delete-btn': { visibility: 'visible' },
+        }}
+      >
+        <Typography variant="subtitle2">
           {prototype.name}
           {noteCount > 0 && (
             <Typography component="span" variant="subtitle2" color="text.disabled">
@@ -99,23 +110,30 @@ export default function PrototypeSection({ prototype, onThumbnailClick, onAddScr
             </Typography>
           )}
         </Typography>
-        <Button
-          component={Link}
-          href={`/prototype/${prototype.id}/flow`}
-          size="small"
-          variant="outlined"
-          color="secondary"
-          startIcon={<MqIcon name="eye_opened" size={14} />}
-        >
-          View flow
-        </Button>
         {onDelete && (
           <Tooltip title="Delete prototype">
-            <IconButton size="small" onClick={() => onDelete(prototype.id)} aria-label="Delete prototype">
+            <IconButton className="delete-btn" size="small" onClick={() => onDelete(prototype.id)} aria-label="Delete prototype" sx={{ ml: -0.5 }}>
               <MqIcon name="trash" size={16} />
             </IconButton>
           </Tooltip>
         )}
+        <Box sx={{ flex: 1 }} />
+        <ButtonGroup size="small" variant="outlined" color="secondary">
+          <Button
+            component={Link}
+            href={`/prototype/${prototype.id}`}
+            startIcon={<MqIcon name="workflow" size={14} />}
+          >
+            Open prototype
+          </Button>
+          <Button
+            component={Link}
+            href={`/prototype/${prototype.id}/flow`}
+            startIcon={<MqIcon name="eye_opened" size={14} />}
+          >
+            View flow
+          </Button>
+        </ButtonGroup>
       </Box>
       <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1 }}>
         {prototype.screens.map((screen) => (

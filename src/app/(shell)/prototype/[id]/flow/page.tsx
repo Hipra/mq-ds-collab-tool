@@ -7,6 +7,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useRouter } from 'next/navigation';
 import MqIcon from '@/components/MqIcon';
+import { Logo } from '@/components/Logo';
 import { ProjectLinks } from '@/components/ProjectLinks';
 import { FlowCanvas } from '@/components/flow/FlowCanvas';
 import { AppBar } from '@memoq/memoq.web.design';
@@ -39,6 +40,8 @@ export default function FlowPage({
             <MqIcon name="arrow_left" size={20} />
           </IconButton>
         </Tooltip>
+
+        <Logo height={16} sx={{ ml: 1 }} />
 
         <Typography variant="subtitle2" sx={{ flexShrink: 0, ml: 0.5 }}>
           {id}

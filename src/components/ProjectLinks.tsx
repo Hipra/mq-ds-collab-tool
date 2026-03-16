@@ -9,7 +9,7 @@ function getLinkIcon(link: ProjectLink): string {
   const url = link.url.toLowerCase();
   if (url.includes('figma.com')) return 'figma';
   if (url.includes('github.com')) return 'github';
-  if (url.includes('jira') || url.includes('atlassian')) return 'bug';
+  if (url.includes('jira') || url.includes('atlassian')) return 'open_external';
   return 'open_external';
 }
 

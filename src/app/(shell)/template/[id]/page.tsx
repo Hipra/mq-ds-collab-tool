@@ -20,6 +20,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 
 import MqIcon from "@/components/MqIcon";
+import { Logo } from '@/components/Logo';
 
 
 
@@ -183,15 +184,16 @@ export default function TemplateDetailPage({
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* ── AppBar ── */}
-      <AppBar position="static" variant="dense" sx={{ '& .MuiToolbar-gutters': { px: 1.5, gap: 1 } }}>
+      <AppBar position="static" variant="dense" sx={{ '& .MuiToolbar-gutters': { px: 2.5 } }}>
           <Tooltip title="Back to dashboard">
             <IconButton size="small" onClick={() => router.push('/')} aria-label="Back">
               <MqIcon name="arrow_left" size={20} />
             </IconButton>
           </Tooltip>
+          <Logo height={16} sx={{ ml: 1 }} />
           <Typography
-            variant="body2"
-            sx={{ fontWeight: 600, color: 'text.primary', ml: 0.5 }}
+            variant="subtitle2"
+            sx={{ ml: 0.5 }}
           >
             {templateName}
           </Typography>
@@ -279,7 +281,7 @@ export default function TemplateDetailPage({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAddToOpen(false)}>Cancel</Button>
+          <Button variant="text" color="secondary" onClick={() => setAddToOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleAddTo} disabled={!addToProtoId || addToLoading}>
             {addToLoading ? 'Adding…' : 'Add screen'}
           </Button>

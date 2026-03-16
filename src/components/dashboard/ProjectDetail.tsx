@@ -39,10 +39,24 @@ export default function ProjectDetail({
     <Box sx={{ height: '100%', overflow: 'auto' }}>
       {/* Section: Project info */}
       <Box sx={{ px: 3, py: 2.5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 1,
+            '& .edit-btn': { visibility: 'hidden' },
+            '&:hover .edit-btn': { visibility: 'visible' },
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
             {project.name}
           </Typography>
+          <Tooltip title="Edit project">
+            <IconButton className="edit-btn" size="small" onClick={() => onEdit(project)} aria-label="Edit project" sx={{ ml: -0.5 }}>
+              <MqIcon name="edit" size={18} />
+            </IconButton>
+          </Tooltip>
+          <Box sx={{ flex: 1 }} />
           <Button
             variant="outlined"
             color="secondary"
@@ -52,11 +66,6 @@ export default function ProjectDetail({
           >
             Add new prototype
           </Button>
-          <Tooltip title="Edit project">
-            <IconButton size="small" onClick={() => onEdit(project)} aria-label="Edit project">
-              <MqIcon name="edit" size={18} />
-            </IconButton>
-          </Tooltip>
         </Box>
 
 

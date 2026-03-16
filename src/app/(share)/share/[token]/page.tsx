@@ -1,12 +1,12 @@
 'use client';
 
 import React, { use, useState, useEffect } from 'react';
-import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
-import MuiToolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
+import { AppBar } from '@memoq/memoq.web.design';
+import { Logo } from '@/components/Logo';
 import { PreviewFrame } from '@/components/PreviewFrame';
 
 const STATUS_CONFIG: Record<string, { label: string; color: 'default' | 'warning' | 'success' }> = {
@@ -69,19 +69,18 @@ export default function ShareViewerPage({
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <AppBar position="static" color="default" elevation={0}>
-        <MuiToolbar variant="dense">
-          <Typography variant="subtitle1" component="div" sx={{ fontWeight: 500 }}>
-            {data.name}
-          </Typography>
-          <Box sx={{ ml: 1 }}>
-            <Chip label={statusConfig.label} color={statusConfig.color} size="small" />
-          </Box>
-          <Box sx={{ ml: 1 }}>
-            <Chip label="View only" size="small" variant="outlined" />
-          </Box>
-          <Box sx={{ flex: 1 }} />
-        </MuiToolbar>
+      <AppBar position="static" variant="dense" sx={{ '& .MuiToolbar-gutters': { px: 2.5 } }}>
+        <Logo height={16} sx={{ ml: 1 }} />
+        <Typography variant="subtitle2" component="div" sx={{ ml: 0.5 }}>
+          {data.name}
+        </Typography>
+        <Box sx={{ ml: 1 }}>
+          <Chip label={statusConfig.label} color={statusConfig.color} size="small" />
+        </Box>
+        <Box sx={{ ml: 1 }}>
+          <Chip label="View only" size="small" variant="outlined" />
+        </Box>
+        <Box sx={{ flex: 1 }} />
       </AppBar>
       <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <PreviewFrame prototypeId={data.prototypeId} readOnly />

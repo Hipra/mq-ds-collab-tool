@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractComponentTree } from '@/lib/ast-inspector';
 import { getPrototypeSource } from '@/lib/bundler';
 import path from 'path';
+import fs from 'fs/promises';
 
 // Prevent Next.js from caching this route — source changes must be reflected immediately
 export const dynamic = 'force-dynamic';
@@ -28,6 +29,12 @@ export async function GET(
     screen && screen !== 'index' ? `screen-${screen}.jsx` : 'index.jsx';
 
   const filePath = path.join(protoDir, id, screenFile);
+
+  try {
+    await fs.access(filePath);
+  } catch {
+    return NextResponse.json([]);
+  }
 
   try {
     const source = await getPrototypeSource(filePath);

@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 import { AppBar, Typography } from '@memoq/memoq.web.design';
 import MqIcon from '@/components/MqIcon';
+import { Logo } from '@/components/Logo';
 import { ProjectLinks } from '@/components/ProjectLinks';
 import { useThemeStore, type ThemeMode } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
@@ -60,20 +61,21 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
     <AppBar
       position="static"
       variant="dense"
-      sx={{ '& .MuiToolbar-gutters': { px: 1 }, zIndex: 1 }}
+      sx={{ '& .MuiToolbar-gutters': { px: 1.5 }, zIndex: 1 }}
     >
       <Tooltip title="Back to prototypes">
         <IconButton
           onClick={() => router.push('/')}
           size="small"
           aria-label="Back to prototypes"
-          sx={{ mr: 0.5 }}
         >
           <MqIcon name="arrow_left" size={20} />
         </IconButton>
       </Tooltip>
 
-      <Typography variant="subtitle2" component="div" sx={{ flexShrink: 0 }}>
+      <Logo height={16} sx={{ ml: 1 }} />
+
+      <Typography variant="subtitle2" component="div" sx={{ flexShrink: 0, ml: 0.5 }}>
         {prototypeName}
       </Typography>
 
@@ -122,7 +124,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
           size="small"
           aria-label={sidebarOpen ? 'Hide screens' : 'Show screens'}
           color="inherit"
-          sx={{ mr: 0.5, color: sidebarOpen ? 'text.primary' : 'text.secondary' }}
+          sx={{ mr: 0.5, opacity: sidebarOpen ? 1 : 0.5 }}
         >
           <MqIcon name="menu" size={20} />
         </IconButton>
@@ -134,7 +136,7 @@ export function Toolbar({ prototypeName, prototypeId }: ToolbarProps) {
           size="small"
           aria-label={panelOpen ? 'Hide inspector panel' : 'Show inspector panel'}
           color="inherit"
-          sx={{ mr: 0.5, color: panelOpen ? 'text.primary' : 'text.secondary' }}
+          sx={{ mr: 0.5, opacity: panelOpen ? 1 : 0.5 }}
         >
           <MqIcon name="sidebar" size={20} />
         </IconButton>
