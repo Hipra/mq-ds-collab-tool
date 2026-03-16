@@ -1,4 +1,4 @@
-export type DesignStatus = 'concept' | 'in_progress' | 'review' | 'done';
+export type DesignStatus = 'in_progress' | 'review' | 'done';
 export type DevStatus = 'not_started' | 'in_progress' | 'qa' | 'deployed';
 export type UxWriterStatus = 'not_started' | 'in_progress' | 'review' | 'done';
 

@@ -3,12 +3,11 @@
 import { Box, Chip, MenuItem, Select, TextField, Typography, type SelectChangeEvent } from '@mui/material';
 import MqIcon from '@/components/MqIcon';
 
-const DESIGN_STATUSES = ['concept', 'in_progress', 'review', 'done'] as const;
+const DESIGN_STATUSES = ['in_progress', 'review', 'done'] as const;
 const DEV_STATUSES = ['not_started', 'in_progress', 'qa', 'deployed'] as const;
 const UX_WRITER_STATUSES = ['not_started', 'in_progress', 'review', 'done'] as const;
 
 const STATUS_LABELS: Record<string, string> = {
-  concept: 'Concept',
   in_progress: 'In progress',
   review: 'Review',
   done: 'Done',

@@ -45,7 +45,7 @@ test.describe('Dashboard Projects', () => {
 
     const card = page.locator('[class*="MuiCard"]', { hasText: TEST_PROJECT.name });
     await expect(card).toBeVisible();
-    await expect(card.getByText(/design.*concept/i)).toBeVisible();
+    await expect(card.getByText(/design.*in progress/i)).toBeVisible();
     await expect(card.getByText(/dev.*not started/i)).toBeVisible();
     await expect(card.getByText(/ux.*not started/i)).toBeVisible();
   });
@@ -106,7 +106,7 @@ test.describe('Dashboard Projects', () => {
     expect(Array.isArray(data)).toBeTruthy();
     const project = data.find((p: { name: string }) => p.name === TEST_PROJECT.name);
     expect(project).toBeTruthy();
-    expect(project.designStatus).toBe('concept');
+    expect(project.designStatus).toBe('in_progress');
   });
 
   test('API: DELETE /api/projects/:id removes and re-creates project', async ({ request }) => {

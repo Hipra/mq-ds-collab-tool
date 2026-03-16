@@ -9,7 +9,7 @@ import PrototypeSection from './PrototypeSection';
 import ReferencesPanel from './ReferencesPanel';
 import type { ProjectWithPrototypes, ProjectLink, ScreenInfo, DesignStatus, DevStatus, UxWriterStatus } from '@/types/project';
 
-const DESIGN_OPTIONS: DesignStatus[] = ['concept', 'in_progress', 'review', 'done'];
+const DESIGN_OPTIONS: DesignStatus[] = ['in_progress', 'review', 'done'];
 const DEV_OPTIONS: DevStatus[] = ['not_started', 'in_progress', 'qa', 'deployed'];
 const COPY_OPTIONS: UxWriterStatus[] = ['not_started', 'in_progress', 'review', 'done'];
 

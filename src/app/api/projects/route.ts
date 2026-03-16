@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       name: name.trim(),
       description: description?.trim() || '',
       assignee: assignee?.trim() || '',
-      designStatus: 'concept',
+      designStatus: 'in_progress',
       devStatus: 'not_started',
       uxWriterStatus: 'not_started',
       prototypeIds: prototypeIds || [],

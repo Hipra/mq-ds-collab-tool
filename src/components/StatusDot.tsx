@@ -9,7 +9,6 @@ import Typography from '@mui/material/Typography';
 
 /** Chip background — use main color at low alpha for readability */
 const STATUS_BG: Record<string, string> = {
-  concept: 'action.hover',
   not_started: 'action.hover',
   in_progress: 'rgba(var(--mui-palette-primary-mainChannel) / 0.12)',
   review: 'rgba(var(--mui-palette-secondary-mainChannel) / 0.12)',
@@ -22,7 +21,6 @@ const STATUS_BG: Record<string, string> = {
 
 /** Foreground / text color */
 const STATUS_FG: Record<string, string> = {
-  concept: 'text.secondary',
   not_started: 'text.secondary',
   in_progress: 'primary.main',
   review: 'secondary.main',
@@ -34,7 +32,6 @@ const STATUS_FG: Record<string, string> = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  concept: 'Concept',
   in_progress: 'In progress',
   review: 'Review',
   done: 'Done',
