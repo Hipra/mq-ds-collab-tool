@@ -69,7 +69,7 @@ export function GroupNode({ id, data, selected }: NodeProps<GroupNodeType>) {
                 fontSize: 12,
                 fontWeight: 700,
                 color: 'var(--mui-palette-primary-dark)',
-                background: 'var(--mui-palette-background-paper)',
+                background: 'var(--mui-palette-common-white)',
                 border: '1.5px solid var(--mui-palette-primary-light)',
                 borderRadius: 5,
                 padding: '1px 8px',
@@ -81,7 +81,7 @@ export function GroupNode({ id, data, selected }: NodeProps<GroupNodeType>) {
           ) : (
             <div
               style={{
-                background: 'var(--mui-palette-background-paper)',
+                background: 'var(--mui-palette-common-white)',
                 border: `1.5px solid ${selected ? 'var(--mui-palette-primary-light)' : 'var(--mui-palette-divider)'}`,
                 borderRadius: 5,
                 padding: '1px 8px',

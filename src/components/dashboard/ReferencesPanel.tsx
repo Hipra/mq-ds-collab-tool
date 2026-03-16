@@ -55,8 +55,9 @@ export default function ReferencesPanel({ links, onChange, startAdding, onAdding
         {hasLinks && (
           <Button
             size="small"
-            variant="text"
+            variant="outlined"
             color="secondary"
+            startIcon={<MqIcon name="plus" size={14} />}
             onClick={openDialog}
           >
             Add reference

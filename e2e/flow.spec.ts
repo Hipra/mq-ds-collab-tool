@@ -85,8 +85,8 @@ test.describe('Flow canvas — navigation and layout', () => {
     await expect(page.locator('text=✎').or(page.locator('text=×')).first()).toBeVisible({ timeout: 3_000 });
   });
 
-  test('"Add Comment" button is visible in the canvas toolbar', async ({ page }) => {
-    await expect(page.getByText('Comment', { exact: false })).toBeVisible();
+  test('"Add Note" button is visible in the canvas toolbar', async ({ page }) => {
+    await expect(page.getByText('Note', { exact: false })).toBeVisible();
   });
 
   test('minimap and controls are visible', async ({ page }) => {
@@ -169,9 +169,9 @@ test.describe('Flow canvas — annotation panel', () => {
   });
 });
 
-// ── Comment nodes ─────────────────────────────────────────────────────────────
+// ── Note nodes ─────────────────────────────────────────────────────────────
 
-test.describe('Flow canvas — comment nodes (write, uses test prototype)', () => {
+test.describe('Flow canvas — note nodes (write, uses test prototype)', () => {
   let testProtoId: string;
 
   test.beforeAll(async ({ request }) => {
@@ -188,62 +188,62 @@ test.describe('Flow canvas — comment nodes (write, uses test prototype)', () =
     await waitForFlowReady(page);
   });
 
-  test('Add Comment button adds a comment node to the canvas', async ({ page }) => {
-    const commentsBefore = await page.locator('.react-flow__node-commentNode').count();
-    await page.getByText('Comment', { exact: false }).click();
-    await expect(page.locator('.react-flow__node-commentNode')).toHaveCount(commentsBefore + 1, {
+  test('Add Note button adds a note node to the canvas', async ({ page }) => {
+    const notesBefore = await page.locator('.react-flow__node-noteNode').count();
+    await page.getByText('Note', { exact: false }).click();
+    await expect(page.locator('.react-flow__node-noteNode')).toHaveCount(notesBefore + 1, {
       timeout: 5_000,
     });
   });
 
-  test('comment node can be edited by double-clicking', async ({ page }) => {
-    // Add a comment first
-    await page.getByText('Comment', { exact: false }).click();
-    await page.waitForSelector('.react-flow__node-commentNode', { timeout: 5_000 });
+  test('note node can be edited by double-clicking', async ({ page }) => {
+    // Add a note first
+    await page.getByText('Note', { exact: false }).click();
+    await page.waitForSelector('.react-flow__node-noteNode', { timeout: 5_000 });
 
-    const node = page.locator('.react-flow__node-commentNode').last();
+    const node = page.locator('.react-flow__node-noteNode').last();
     await node.dblclick();
     // After double-click, a textarea should appear inside the node
     await expect(node.locator('textarea')).toBeVisible({ timeout: 3_000 });
   });
 
-  test('comment text can be typed and saved with Ctrl+Enter', async ({ page }) => {
-    await page.getByText('Comment', { exact: false }).click();
-    await page.waitForSelector('.react-flow__node-commentNode', { timeout: 5_000 });
+  test('note text can be typed and saved with Ctrl+Enter', async ({ page }) => {
+    await page.getByText('Note', { exact: false }).click();
+    await page.waitForSelector('.react-flow__node-noteNode', { timeout: 5_000 });
 
-    const node = page.locator('.react-flow__node-commentNode').last();
+    const node = page.locator('.react-flow__node-noteNode').last();
     await node.dblclick();
     const textarea = node.locator('textarea');
-    await textarea.fill('Test comment text');
+    await textarea.fill('Test note text');
     await textarea.press('Meta+Enter');
 
     // After saving, the text should be displayed in the node
-    await expect(node.getByText('Test comment text')).toBeVisible({ timeout: 3_000 });
+    await expect(node.getByText('Test note text')).toBeVisible({ timeout: 3_000 });
   });
 
-  test('comment node has a delete button (title="Delete comment") in its DOM', async ({ page }) => {
-    await page.getByText('Comment', { exact: false }).click();
-    await page.waitForSelector('.react-flow__node-commentNode', { timeout: 5_000 });
+  test('note node has a delete button (title="Delete note") in its DOM', async ({ page }) => {
+    await page.getByText('Note', { exact: false }).click();
+    await page.waitForSelector('.react-flow__node-noteNode', { timeout: 5_000 });
 
     // The delete button is conditionally rendered when selected=true.
     // Verify it exists in the component source by checking the node's shadow DOM structure:
     // Select via xyflow's internal class then verify the button is present when node is active.
-    const node = page.locator('.react-flow__node-commentNode').last();
+    const node = page.locator('.react-flow__node-noteNode').last();
     // Trigger selection via xyflow's pointer event dispatch
     await node.dispatchEvent('pointerdown', { bubbles: true, cancelable: true, isPrimary: true });
     await node.dispatchEvent('pointerup', { bubbles: true, cancelable: true, isPrimary: true });
     await page.waitForTimeout(300);
 
     // Either the delete button is visible, or the node count decreased (Delete key worked)
-    const deleteBtn = node.locator('button[title="Delete comment"]');
+    const deleteBtn = node.locator('button[title="Delete note"]');
     const btnVisible = await deleteBtn.isVisible();
     if (btnVisible) {
       await deleteBtn.click();
-      const countAfter = await page.locator('.react-flow__node-commentNode').count();
+      const countAfter = await page.locator('.react-flow__node-noteNode').count();
       expect(countAfter).toBeGreaterThanOrEqual(0);
     } else {
       // Node deselected / focus lost — verify the button exists in DOM even if hidden
-      const btnCount = await node.locator('button[title="Delete comment"]').count();
+      const btnCount = await node.locator('button[title="Delete note"]').count();
       // Button may be conditionally rendered; confirm DOM doesn't crash
       expect(btnCount).toBeGreaterThanOrEqual(0);
     }

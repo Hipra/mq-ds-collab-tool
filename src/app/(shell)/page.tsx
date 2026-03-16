@@ -339,7 +339,7 @@ export default function GalleryPage() {
               '& .MuiTabs-indicator': { bgcolor: 'currentColor' },
             }}
           >
-            <Tab label="Prototypes" value="prototypes" />
+            <Tab label="Projects" value="prototypes" />
             <Tab label="Templates" value="templates" />
           </Tabs>
           <Box sx={{ flex: 1 }} />

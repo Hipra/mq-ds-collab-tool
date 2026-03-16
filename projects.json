@@ -10,7 +10,12 @@
     "prototypeIds": [
       "demo-prototype"
     ],
-    "links": [],
-    "updatedAt": "2026-03-14T18:09:51.592Z"
+    "links": [
+      {
+        "label": "Related Jira ticket",
+        "url": "https://kilgray-jira.atlassian.net/browse/MQW-4460"
+      }
+    ],
+    "updatedAt": "2026-03-16T09:35:24.106Z"
   }
 ]

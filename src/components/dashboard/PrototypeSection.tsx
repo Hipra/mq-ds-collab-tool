@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
@@ -14,6 +15,22 @@ interface PrototypeSectionProps {
   onThumbnailClick: (prototypeId: string, screen: ScreenInfo) => void;
   onAddScreen?: () => void;
   onDelete?: (prototypeId: string) => void;
+}
+
+function useNoteCount(prototypeId: string) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    fetch(`/api/flow/${prototypeId}`)
+      .then((r) => r.json())
+      .then((flow) => {
+        const n = (flow.nodes ?? []).filter((node: { type?: string }) => node.type === 'noteNode').length;
+        setCount(n);
+      })
+      .catch(() => {});
+  }, [prototypeId]);
+
+  return count;
 }
 
 function ScreenThumbnail({
@@ -69,11 +86,18 @@ function ScreenThumbnail({
 }
 
 export default function PrototypeSection({ prototype, onThumbnailClick, onAddScreen, onDelete }: PrototypeSectionProps) {
+  const noteCount = useNoteCount(prototype.id);
+
   return (
     <Box sx={{ '&:not(:first-of-type)': { mt: 2.5 } }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, minHeight: 32 }}>
         <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
           {prototype.name}
+          {noteCount > 0 && (
+            <Typography component="span" variant="subtitle2" color="text.disabled">
+              {' '}({noteCount} {noteCount === 1 ? 'note' : 'notes'})
+            </Typography>
+          )}
         </Typography>
         <Button
           component={Link}

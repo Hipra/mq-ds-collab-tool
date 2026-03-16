@@ -46,6 +46,42 @@
       },
       "selected": false,
       "dragging": false
+    },
+    {
+      "id": "note-1773654585221",
+      "type": "noteNode",
+      "position": {
+        "x": -316.6975399723053,
+        "y": -366.61559320917667
+      },
+      "data": {
+        "text": "Lorem ipsum dolor sit amet consetetur",
+        "color": "yellow"
+      },
+      "measured": {
+        "width": 263,
+        "height": 40
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "note-1773654629055",
+      "type": "noteNode",
+      "position": {
+        "x": -85.08994556214634,
+        "y": -71.8146920698192
+      },
+      "data": {
+        "text": "This is another note",
+        "color": "blue"
+      },
+      "measured": {
+        "width": 180,
+        "height": 40
+      },
+      "selected": false,
+      "dragging": false
     }
   ],
   "edges": []

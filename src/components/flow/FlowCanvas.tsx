@@ -26,14 +26,14 @@ import Button from '@mui/material/Button';
 import MqIcon from '@/components/MqIcon';
 
 import { ScreenNode, type ScreenNodeData } from './ScreenNode';
-import { CommentNode } from './CommentNode';
+import { NoteNode, getNoteMinimapColor } from './NoteNode';
 import { LabeledEdge } from './LabeledEdge';
 import { FlowContext } from './FlowContext';
 import { ScreenshotCapturer } from './ScreenshotCapturer';
 
 const nodeTypes: NodeTypes = {
   screenNode: ScreenNode,
-  commentNode: CommentNode,
+  noteNode: NoteNode,
 };
 
 const edgeTypes: EdgeTypes = {
@@ -68,7 +68,7 @@ function mergeNodes(
     .filter((n) => n.type === 'screenNode')
     .reduce((m, n) => Math.max(m, n.position.x), -340);
 
-  const result: Node[] = [...saved.filter((n) => n.type === 'commentNode')];
+  const result: Node[] = [...saved.filter((n) => n.type === 'noteNode')];
 
   let newX = maxX + 260;
   for (const screen of screens) {
@@ -201,15 +201,15 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
     [setEdges, save, nodes],
   );
 
-  const handleAddComment = useCallback(() => {
+  const handleAddNote = useCallback(() => {
     const bounds = containerRef.current?.getBoundingClientRect();
     const cx = bounds ? bounds.left + bounds.width / 2 : 400;
     const cy = bounds ? bounds.top + bounds.height / 2 : 300;
     const pos = screenToFlowPosition({ x: cx, y: cy });
 
     const newNode: Node = {
-      id: `comment-${Date.now()}`,
-      type: 'commentNode',
+      id: `note-${Date.now()}`,
+      type: 'noteNode',
       position: pos,
       data: { text: '' },
     };
@@ -241,8 +241,11 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
         .react-flow__controls button {
           border: none;
           border-bottom: 1px solid var(--mui-palette-divider);
-          background: var(--mui-palette-background-paper);
+          background: var(--mui-palette-common-white);
           color: var(--mui-palette-text-secondary);
+        }
+        *:where([data-mui-color-scheme="dark"]) .react-flow__controls button {
+          background: var(--mui-palette-background-default);
         }
         .react-flow__controls button:hover {
           background: var(--mui-palette-action-hover);
@@ -276,11 +279,11 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
           <Background gap={24} size={1.5} color="var(--mui-palette-divider)" />
           <Controls
             showInteractive={false}
-            style={{ borderRadius: 4, boxShadow: 'none', border: 'none' }}
+            style={{ borderRadius: 4, border: 'none' }}
           />
           <MiniMap
             nodeColor={(n) => {
-              if (n.type === 'commentNode') return '#ffe082';
+              if (n.type === 'noteNode') return getNoteMinimapColor(n.data?.color as string);
               return '#c5cae9';
             }}
             maskColor="rgba(0,0,0,0.06)"
@@ -301,7 +304,8 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
             px: 0.75,
             py: 0.5,
             borderRadius: 100,
-            bgcolor: 'background.paper',
+            bgcolor: 'common.white',
+            '[data-mui-color-scheme="dark"] &': { bgcolor: 'background.default' },
             boxShadow: 3,
             border: '1px solid',
             borderColor: 'divider',
@@ -309,7 +313,7 @@ function FlowCanvasInner({ prototypeId }: FlowCanvasProps) {
           }}
         >
           <Button
-            onClick={handleAddComment}
+            onClick={handleAddNote}
             variant="text"
             color="secondary"
             size="small"

@@ -127,7 +127,7 @@ export function LabeledEdge({
           {showBadge && (
             <Box
               sx={{
-                bgcolor: 'background.paper',
+                bgcolor: 'common.white', '[data-mui-color-scheme="dark"] &': { bgcolor: 'background.default' },
                 border: '1px solid',
                 borderColor: selected ? cfg.activeColor : 'divider',
                 borderRadius: 2,
@@ -173,7 +173,7 @@ export function LabeledEdge({
               {/* Trigger type selector */}
               <Box
                 sx={{
-                  bgcolor: 'background.paper',
+                  bgcolor: 'common.white', '[data-mui-color-scheme="dark"] &': { bgcolor: 'background.default' },
                   border: '1px solid',
                   borderColor: 'divider',
                   borderRadius: 2.5,
@@ -241,7 +241,7 @@ export function LabeledEdge({
                       sx={{
                         width: 28,
                         height: 28,
-                        bgcolor: 'background.paper',
+                        bgcolor: 'common.white', '[data-mui-color-scheme="dark"] &': { bgcolor: 'background.default' },
                         border: '1px solid',
                         borderColor: 'divider',
                         boxShadow: 1,
@@ -261,7 +261,7 @@ export function LabeledEdge({
                       sx={{
                         width: 28,
                         height: 28,
-                        bgcolor: 'background.paper',
+                        bgcolor: 'common.white', '[data-mui-color-scheme="dark"] &': { bgcolor: 'background.default' },
                         border: '1px solid',
                         borderColor: 'error.light',
                         boxShadow: 1,
