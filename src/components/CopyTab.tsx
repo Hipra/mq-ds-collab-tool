@@ -439,7 +439,13 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
             exclusive
             value={pseudoMode ?? 'none'}
             onChange={(_e, val: PseudoMode | 'none' | null) => setPseudoMode(val === 'none' || val === null ? null : val)}
-            sx={{ '& .MuiToggleButton-root': { py: 0.25, px: 1, fontSize: '11px', lineHeight: 1.6, textTransform: 'none' } }}
+            sx={{
+              gap: 0.5,
+              '& .MuiToggleButtonGroup-grouped': { border: '1px solid', borderColor: 'divider', borderRadius: '999px !important', mx: 0 },
+              '& .MuiToggleButton-root': { py: 0.25, px: 1.5, fontSize: '11px', lineHeight: 1.6, textTransform: 'none', color: 'text.secondary' },
+              '& .MuiToggleButton-root.Mui-selected': { bgcolor: 'secondary.main', color: 'secondary.contrastText', borderColor: 'secondary.main' },
+              '& .MuiToggleButton-root.Mui-selected:hover': { bgcolor: 'secondary.dark' },
+            }}
           >
             <ToggleButton value="none" aria-label="none">None</ToggleButton>
             {(Object.keys(PSEUDO_MODE_LABELS) as PseudoMode[]).map((m) => (
