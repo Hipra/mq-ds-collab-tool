@@ -15,8 +15,7 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
 import FormLabel from '@mui/material/FormLabel';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import { ToggleButton, ToggleButtonGroup } from '@memoq/memoq.web.design';
 import MqIcon from "@/components/MqIcon";
 import { pseudoTransform, PSEUDO_MODE_LABELS, type PseudoMode } from '@/lib/pseudo-translation';
 import { usePseudoTranslationStore } from '@/stores/pseudo-translation';
@@ -439,13 +438,9 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
             exclusive
             value={pseudoMode ?? 'none'}
             onChange={(_e, val: PseudoMode | 'none' | null) => setPseudoMode(val === 'none' || val === null ? null : val)}
-            sx={{
-              gap: 0.5,
-              '& .MuiToggleButtonGroup-grouped': { border: '1px solid', borderColor: 'divider', borderRadius: '999px !important', mx: 0 },
-              '& .MuiToggleButton-root': { py: 0.25, px: 1.5, fontSize: '11px', lineHeight: 1.6, textTransform: 'none', color: 'text.secondary' },
-              '& .MuiToggleButton-root.Mui-selected': { bgcolor: 'secondary.main', color: 'secondary.contrastText', borderColor: 'secondary.main' },
-              '& .MuiToggleButton-root.Mui-selected:hover': { bgcolor: 'secondary.dark' },
-            }}
+            borderRadius="pill"
+            color="secondary"
+            sx={{ '& .MuiToggleButton-root': { py: 0.25, px: 1.5, fontSize: '11px', textTransform: 'none' } }}
           >
             <ToggleButton value="none" aria-label="none">None</ToggleButton>
             {(Object.keys(PSEUDO_MODE_LABELS) as PseudoMode[]).map((m) => (
