@@ -431,52 +431,34 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
       {/* Header: summary + search + actions */}
       <Box sx={{ flexShrink: 0 }}>
         {/* Pseudo-translation control */}
-        <Box sx={{ mb: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box sx={{ mb: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           <FormLabel sx={{ display: 'block' }}>Pseudo-translation</FormLabel>
 
-          {/* A — pill, no border */}
-          {(['pill', 'box'] as const).map((br) =>
-            ([false, true] as const).map((brd) => (
-              <Box key={`${br}-${brd}`} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="caption" color="text.disabled" sx={{ width: 80, flexShrink: 0 }}>
-                  {br}, {brd ? 'border' : 'no border'}
-                </Typography>
-                <ToggleButtonGroup
-                  size="medium"
-                  exclusive
-                  value={pseudoMode ?? 'none'}
-                  onChange={(_e, val: PseudoMode | 'none' | null) => setPseudoMode(val === 'none' || val === null ? null : val)}
-                  borderRadius={br}
-                  border={brd}
-                  color="secondary"
-                  sx={{ '& .MuiToggleButton-root': { textTransform: 'none', fontSize: '12px' } }}
-                >
-                  <ToggleButton value="none">None</ToggleButton>
-                  {(Object.keys(PSEUDO_MODE_LABELS) as PseudoMode[]).map((m) => (
-                    <ToggleButton key={m} value={m}>{PSEUDO_MODE_LABELS[m]}</ToggleButton>
-                  ))}
-                </ToggleButtonGroup>
-              </Box>
-            ))
-          )}
-
-          {/* Nav variant */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="caption" color="text.disabled" sx={{ width: 80, flexShrink: 0 }}>Nav</Typography>
-            <ToggleButtonGroup.Nav
-              size="medium"
-              exclusive
-              value={pseudoMode ?? 'none'}
-              onChange={(_e, val: PseudoMode | 'none' | null) => setPseudoMode(val === 'none' || val === null ? null : val)}
-              color="secondary"
-              sx={{ '& .MuiToggleButton-root': { textTransform: 'none', fontSize: '12px' } }}
-            >
-              <ToggleButton value="none">None</ToggleButton>
-              {(Object.keys(PSEUDO_MODE_LABELS) as PseudoMode[]).map((m) => (
-                <ToggleButton key={m} value={m}>{PSEUDO_MODE_LABELS[m]}</ToggleButton>
-              ))}
-            </ToggleButtonGroup.Nav>
-          </Box>
+          {/* A — pill, outlined */}
+          {[
+            { label: 'A — pill', pillSx: { borderRadius: '999px', '& .MuiToggleButtonGroup-grouped': { borderRadius: '999px !important' } } },
+            { label: 'B — rounded', pillSx: { borderRadius: '8px', '& .MuiToggleButtonGroup-grouped': { borderRadius: '8px !important' } } },
+            { label: 'C — square', pillSx: {} },
+            { label: 'D — filled', pillSx: { border: 'none', bgcolor: 'action.hover', borderRadius: '8px', p: 0.25, gap: 0.25, '& .MuiToggleButtonGroup-grouped': { border: 'none !important', borderRadius: '6px !important' }, '& .MuiToggleButton-root.Mui-selected': { bgcolor: 'background.paper', boxShadow: 1 } } },
+            { label: 'E — pill filled', pillSx: { border: 'none', bgcolor: 'action.hover', borderRadius: '999px', p: 0.25, gap: 0.25, '& .MuiToggleButtonGroup-grouped': { border: 'none !important', borderRadius: '999px !important' }, '& .MuiToggleButton-root.Mui-selected': { bgcolor: 'background.paper', boxShadow: 1 } } },
+          ].map(({ label, pillSx }) => (
+            <Box key={label} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="caption" color="text.disabled" sx={{ width: 72, flexShrink: 0 }}>{label}</Typography>
+              <ToggleButtonGroup
+                size="medium"
+                exclusive
+                value={pseudoMode ?? 'none'}
+                onChange={(_e, val: PseudoMode | 'none' | null) => setPseudoMode(val === 'none' || val === null ? null : val)}
+                color="secondary"
+                sx={{ '& .MuiToggleButton-root': { textTransform: 'none', fontSize: '12px' }, ...pillSx }}
+              >
+                <ToggleButton value="none">None</ToggleButton>
+                {(Object.keys(PSEUDO_MODE_LABELS) as PseudoMode[]).map((m) => (
+                  <ToggleButton key={m} value={m}>{PSEUDO_MODE_LABELS[m]}</ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </Box>
+          ))}
         </Box>
 
         {/* Search */}
