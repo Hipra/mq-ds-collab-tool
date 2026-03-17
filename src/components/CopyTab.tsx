@@ -14,6 +14,7 @@ import ListItem from '@mui/material/ListItem';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
+import FormLabel from '@mui/material/FormLabel';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import MqIcon from "@/components/MqIcon";
@@ -431,17 +432,16 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
       {/* Header: summary + search + actions */}
       <Box sx={{ flexShrink: 0 }}>
         {/* Pseudo-translation control */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-            Pseudo-translation
-          </Typography>
+        <Box sx={{ mb: 1.5 }}>
+          <FormLabel sx={{ display: 'block', mb: 0.75 }}>Pseudo-translation</FormLabel>
           <ToggleButtonGroup
             size="small"
             exclusive
-            value={pseudoMode}
-            onChange={(_e, val: PseudoMode | null) => setPseudoMode(val)}
+            value={pseudoMode ?? 'none'}
+            onChange={(_e, val: PseudoMode | 'none' | null) => setPseudoMode(val === 'none' || val === null ? null : val)}
             sx={{ '& .MuiToggleButton-root': { py: 0.25, px: 1, fontSize: '11px', lineHeight: 1.6, textTransform: 'none' } }}
           >
+            <ToggleButton value="none" aria-label="none">None</ToggleButton>
             {(Object.keys(PSEUDO_MODE_LABELS) as PseudoMode[]).map((m) => (
               <ToggleButton key={m} value={m} aria-label={m}>
                 {PSEUDO_MODE_LABELS[m]}
