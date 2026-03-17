@@ -24,12 +24,23 @@ const _ACCENT_MAP = {
 };
 const _FILLER = 'Lorem ipsum dolor sit amet consetetur';
 
+function _alreadyTransformed(text, mode) {
+  if (mode === 'accented') return text.startsWith('[') && text.endsWith(']');
+  if (mode === 'expanded') return text.includes(_FILLER.slice(0, 5));
+  if (mode === 'double') {
+    const n = Math.floor(text.length / 2);
+    return text.length === 2 * n + 1 && text[n] === ' ' && text.slice(0, n) === text.slice(n + 1);
+  }
+  return false;
+}
+
 function _transform(text, mode) {
   if (!text || !text.trim()) return text;
+  if (_alreadyTransformed(text, mode)) return text;
   if (mode === 'accented') return '[' + text.split('').map(c => _ACCENT_MAP[c] ?? c).join('') + ']';
   if (mode === 'expanded') {
     if (text.length > 100) return text + ' [...]';
-    return text + ' ' + _FILLER.slice(0, Math.max(4, Math.ceil(text.length * 0.4)));
+    return text + ' ' + _FILLER.slice(0, Math.ceil(text.length * 0.4));
   }
   if (mode === 'double') return text + ' ' + text;
   return text;

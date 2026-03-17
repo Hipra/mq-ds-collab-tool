@@ -33,17 +33,20 @@ const RTL_MAP: Record<string, string> = {
 const FILLER = 'Lorem ipsum dolor sit amet consetetur';
 
 function applyAccented(text: string): string {
+  if (text.startsWith('[') && text.endsWith(']')) return text;
   const chars = text.split('').map((c) => ACCENT_MAP[c] ?? c).join('');
   return `[${chars}]`;
 }
 
 function applyExpanded(text: string): string {
+  if (text.includes(FILLER.slice(0, 5))) return text;
   if (text.length > 100) return `${text} [...]`;
-  const pad = Math.max(4, Math.ceil(text.length * 0.4));
-  return `${text} ${FILLER.slice(0, pad)}`;
+  return `${text} ${FILLER.slice(0, Math.ceil(text.length * 0.4))}`;
 }
 
 function applyDouble(text: string): string {
+  const n = Math.floor(text.length / 2);
+  if (text.length === 2 * n + 1 && text[n] === ' ' && text.slice(0, n) === text.slice(n + 1)) return text;
   return `${text} ${text}`;
 }
 
