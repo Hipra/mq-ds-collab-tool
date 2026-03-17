@@ -56,8 +56,22 @@ export const ToggleButton = React.forwardRef<HTMLButtonElement, ToggleButtonProp
 ToggleButton.displayName = 'ToggleButton';
 
 // ── ToggleButtonGroup ────────────────────────────────────────────────────────
-// DS ToggleButtonGroup adds a null-check on onChange; not needed in shell.
-export const ToggleButtonGroup = React.forwardRef<HTMLDivElement, ToggleButtonGroupProps>(
-  (props, ref) => <MuiToggleButtonGroup ref={ref} {...props} />
+// DS ToggleButtonGroup adds borderRadius/border props not known to MUI — strip them.
+type DsToggleButtonGroupProps = ToggleButtonGroupProps & { borderRadius?: 'pill' | 'box'; border?: boolean };
+const ToggleButtonGroupBase = React.forwardRef<HTMLDivElement, DsToggleButtonGroupProps>(
+  ({ borderRadius: _br, border: _b, ...props }, ref) => <MuiToggleButtonGroup ref={ref} {...props} />
 );
-ToggleButtonGroup.displayName = 'ToggleButtonGroup';
+ToggleButtonGroupBase.displayName = 'ToggleButtonGroup';
+
+const ToggleButtonGroupNav = React.forwardRef<HTMLDivElement, DsToggleButtonGroupProps>(
+  ({ borderRadius: _br, border: _b, exclusive, onChange, ...props }, ref) => {
+    const handleChange = React.useCallback((e: React.MouseEvent<HTMLElement>, val: unknown) => {
+      if (exclusive && val === null) return;
+      onChange?.(e, val);
+    }, [exclusive, onChange]);
+    return <MuiToggleButtonGroup ref={ref} exclusive={exclusive} onChange={handleChange} {...props} />;
+  }
+);
+ToggleButtonGroupNav.displayName = 'ToggleButtonGroup.Nav';
+
+export const ToggleButtonGroup = Object.assign(ToggleButtonGroupBase, { Nav: ToggleButtonGroupNav });
