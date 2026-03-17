@@ -305,8 +305,7 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
           sx={{
             width: '100%',
             flex: 1,
-            border: pseudoMode ? '2px solid' : 'none',
-            borderColor: 'warning.main',
+            border: 'none',
             display: previewState === 'ready' ? 'block' : 'none',
           }}
           title={`Preview: ${prototypeId}`}
