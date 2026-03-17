@@ -614,7 +614,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                               }}
                               slotProps={{
                                 input: { readOnly: !!pseudoMode },
-                                formHelperText: { sx: { mx: 0, fontSize: '10px', fontStyle: pseudoMode ? 'italic' : 'normal', color: pseudoMode ? 'text.disabled' : undefined } },
+                                formHelperText: { sx: { mx: 0, fontSize: '10px' } },
                               }}
                             />
                           )}
