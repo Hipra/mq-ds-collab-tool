@@ -77,6 +77,11 @@ const TextOverrideContext = createContext({});
 // Format: { [originalText]: newText } — targeted by text content, not data-inspector-id.
 const TextContentOverrideContext = createContext({});
 
+// ─── Pseudo-translation global ────────────────────────────────────────────────
+// window.__pseudoMode is read by /preview-jsx-runtime.js on every jsx/jsxs call.
+// Setting it + triggering a React re-render applies the transform to all text.
+window.__pseudoMode = null;
+
 // ─── Bundle URL from <meta> tag ──────────────────────────────────────────────
 // document.currentScript is always null inside type="module" scripts (browser spec),
 // so we read the bundle URL from a <meta> tag instead.
@@ -270,7 +275,7 @@ function TextContentOverrideApplier() {
                 reverseMap.set(newVal, effectiveOriginal);
               }
             }
-            // Note: reset operations use RELOAD for a clean revert, not handled here.
+            // Reset is handled via RELOAD — no DOM revert needed here.
           }
         }
         node = walker.nextNode();
@@ -394,13 +399,17 @@ function Root() {
   // Phase 3: text overrides — Record<inspectorId, Record<propName, string>>
   const [textOverrides, setTextOverrides] = useState({});
   const [textContentOverrides, setTextContentOverrides] = useState({});
+  // Pseudo-translation mode — triggers re-render via state, createElement patch does the rest
+  const [pseudoMode, setPseudoMode] = useState(null);
+  window.__pseudoMode = pseudoMode; // read by preview-jsx-runtime.js on every render
   // Theme: mode state + optional palette override from ThemeTab
   const [themeMode, setThemeMode] = useState('light');
   const [customPalette, setCustomPalette] = useState(null);
   const theme = useMemo(() => buildThemeForMode(themeMode, customPalette), [themeMode, customPalette]);
 
   const load = useCallback(async (version) => {
-    const url = version > 0 ? `${bundleUrl}?t=${Date.now()}` : bundleUrl;
+    const sep = bundleUrl.includes('?') ? '&' : '?';
+    const url = version > 0 ? `${bundleUrl}${sep}t=${Date.now()}` : bundleUrl;
     try {
       const mod = await import(/* webpackIgnore: true */ url);
       const Component = mod.default;
@@ -452,6 +461,10 @@ function Root() {
       // Data array entries (e.g. TOOLBAR_GROUPS labels) — text content based
       if (event.data?.type === 'SET_TEXT_CONTENT_OVERRIDES') {
         setTextContentOverrides(event.data.overrides ?? {});
+      }
+      // Pseudo-translation mode — React re-render applies transform via createElement patch
+      if (event.data?.type === 'SET_PSEUDO_MODE') {
+        setPseudoMode(event.data.mode ?? null);
       }
       // SET_THEME: mode switching (light/dark/system) — re-render with new mode
       if (event.data?.type === 'SET_THEME') {

@@ -55,12 +55,12 @@ export default function Prototype() {
           <Stack direction="row" spacing={1}>
             <Tooltip title={starred ? 'Unstar' : 'Star'}>
               <IconButton onClick={() => setStarred((v) => !v)} color={starred ? 'primary' : 'default'}>
-                <MqIcon name={starred ? 'star_filled' : 'star'} size={20} />
+                <MqIcon name={starred ? 'star_filled' : 'star_empty'} size={20} />
               </IconButton>
             </Tooltip>
             <Tooltip title="Settings">
               <IconButton>
-                <MqIcon name="settings" size={20} />
+                <MqIcon name="cog" size={20} />
               </IconButton>
             </Tooltip>
             <Button variant="contained" startIcon={<MqIcon name="confirm_segment" size={16} color="#fff" />}>
@@ -183,7 +183,7 @@ export default function Prototype() {
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
                 <Typography variant="subtitle2">Team activity</Typography>
                 <Badge badgeContent={NOTIFICATIONS.filter((n) => n.unread).length} color="primary">
-                  <MqIcon name="notification" size={18} />
+                  <MqIcon name="bell" size={18} />
                 </Badge>
               </Stack>
               <List dense disablePadding>

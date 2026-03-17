@@ -11,8 +11,10 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  FormControlLabel,
   IconButton,
   Stack,
+  Switch,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -69,6 +71,7 @@ export default function Prototype() {
   const [items, setItems] = useState(
     () => Object.fromEntries(ALL_ITEMS.map((item) => [item.id, true]))
   );
+  const [demoToggle, setDemoToggle] = useState(false);
   const [saved, setSaved] = useState({ items: { ...items }, groups: TOOLBAR_GROUPS });
 
   const handleToggle = (id) => {
@@ -114,6 +117,11 @@ export default function Prototype() {
         </DialogTitle>
 
         <DialogContent dividers>
+          <FormControlLabel
+            control={<Switch checked={demoToggle} onChange={(e) => setDemoToggle(e.target.checked)} />}
+            label="Demo toggle"
+            sx={{ mb: 2 }}
+          />
           <Accordion
             expanded={expanded}
             disableGutters

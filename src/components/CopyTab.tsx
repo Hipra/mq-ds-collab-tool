@@ -14,7 +14,11 @@ import ListItem from '@mui/material/ListItem';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import MqIcon from "@/components/MqIcon";
+import { pseudoTransform, PSEUDO_MODE_LABELS, type PseudoMode } from '@/lib/pseudo-translation';
+import { usePseudoTranslationStore } from '@/stores/pseudo-translation';
 
 
 
@@ -91,6 +95,7 @@ function buildTextContentOverrideMap(entries: CopyEntryWithHistory[]): Record<st
 }
 
 
+
 /** Debounce a function */
 function useDebounce<T extends (...args: Parameters<T>) => void>(fn: T, delay: number): T {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -135,6 +140,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
   } = useCopyStore();
 
   const { activeScreenId } = useInspectorStore();
+  const { mode: pseudoMode, setMode: setPseudoMode } = usePseudoTranslationStore();
   const entryRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [expandedHistory, setExpandedHistory] = React.useState<Set<string>>(new Set());
@@ -188,6 +194,14 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
     if (refreshToken === 0) return;
     fetchCopyDataRef.current(activeScreenIdRef.current, true);
   }, [refreshToken]);
+
+  // Pseudo-translation: send SET_PSEUDO_MODE to iframe.
+  // The bootstrap patches React.createElement to transform text at render time —
+  // no DOM manipulation, no RELOAD, works for all text types universally.
+  useEffect(() => {
+    postToPreview({ type: 'SET_PSEUDO_MODE', mode: pseudoMode });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pseudoMode]);
 
   // Scroll to highlighted entry when it changes
   useEffect(() => {
@@ -416,6 +430,26 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Header: summary + search + actions */}
       <Box sx={{ flexShrink: 0 }}>
+        {/* Pseudo-translation control */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+            Pseudo-translation
+          </Typography>
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={pseudoMode}
+            onChange={(_e, val: PseudoMode | null) => setPseudoMode(val)}
+            sx={{ '& .MuiToggleButton-root': { py: 0.25, px: 1, fontSize: '11px', lineHeight: 1.6, textTransform: 'none' } }}
+          >
+            {(Object.keys(PSEUDO_MODE_LABELS) as PseudoMode[]).map((m) => (
+              <ToggleButton key={m} value={m} aria-label={m}>
+                {PSEUDO_MODE_LABELS[m]}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </Box>
+
         {/* Search */}
         <TextField
           size="small"
@@ -471,8 +505,8 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                             py: 1,
                           }}
                         >
-                          {/* Action row — only visible when modified */}
-                          {isModified && (
+                          {/* Action row — only visible when modified and not in pseudo mode */}
+                          {isModified && !pseudoMode && (
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                               <Box
                                 sx={{
@@ -566,17 +600,21 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                               multiline={isMultiline}
                               minRows={isMultiline ? 1 : undefined}
                               maxRows={isMultiline ? 6 : undefined}
-                              value={entry.currentValue}
-                              onChange={(e) => handleEntryChange(entry, e.target.value)}
+                              value={pseudoMode ? pseudoTransform(entry.sourceValue, pseudoMode) : entry.currentValue}
+                              onChange={pseudoMode ? undefined : (e) => handleEntryChange(entry, e.target.value)}
                               onFocus={() => {
                                 setHighlightedKey(entry.key);
                                 handleEntryFocus(entry);
                               }}
                               onBlur={handleEntryBlur}
-                              helperText={`${entry.currentValue.length} chars`}
-                              sx={{ '& .MuiInputBase-input': { fontSize: '0.8125rem' } }}
+                              helperText={pseudoMode ? entry.sourceValue : `${entry.currentValue.length} chars`}
+                              sx={{
+                                '& .MuiInputBase-input': { fontSize: '0.8125rem' },
+                                ...(pseudoMode && { '& .MuiInputBase-root': { bgcolor: 'action.hover' } }),
+                              }}
                               slotProps={{
-                                formHelperText: { sx: { mx: 0, fontSize: '10px' } },
+                                input: { readOnly: !!pseudoMode },
+                                formHelperText: { sx: { mx: 0, fontSize: '10px', fontStyle: pseudoMode ? 'italic' : 'normal', color: pseudoMode ? 'text.disabled' : undefined } },
                               }}
                             />
                           )}

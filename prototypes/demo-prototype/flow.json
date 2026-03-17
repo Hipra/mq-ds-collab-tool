@@ -15,7 +15,7 @@
         "width": 263,
         "height": 40
       },
-      "selected": true,
+      "selected": false,
       "dragging": false
     },
     {
@@ -40,8 +40,8 @@
       "id": "screen-dialog-template",
       "type": "screenNode",
       "position": {
-        "x": -441.90577990382053,
-        "y": -344.60883675995024
+        "x": -479.8407373602636,
+        "y": -341.6907631094546
       },
       "data": {
         "screenId": "dialog-template",
@@ -89,7 +89,7 @@
       "type": "labeled",
       "markerEnd": {
         "type": "arrowclosed",
-        "color": "#64b5f6",
+        "color": "#90caf9",
         "width": 16,
         "height": 16
       },
@@ -102,7 +102,8 @@
       "sourceHandle": "right",
       "target": "screen-main-copy",
       "targetHandle": "left",
-      "id": "xy-edge__screen-dialog-templateright-screen-main-copyleft"
+      "id": "xy-edge__screen-dialog-templateright-screen-main-copyleft",
+      "selected": false
     }
   ]
 }

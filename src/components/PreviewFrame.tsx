@@ -7,6 +7,7 @@ import { useThemeStore } from '@/stores/theme';
 import { useInspectorStore } from '@/stores/inspector';
 import { useCopyStore } from '@/stores/copy';
 import { useThemeConfigStore } from '@/stores/theme-config';
+import { usePseudoTranslationStore } from '@/stores/pseudo-translation';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 
 interface PreviewFrameProps {
@@ -179,6 +180,11 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
           { type: 'SET_THEME_CONFIG', config: themeConfig },
           '*'
         );
+        // Re-fetch component tree — bundler is done, active screen is correct by now.
+        // Read activeScreenId directly from store (not closure) to avoid stale 'index' value.
+        if (!readOnly) fetchTree(useInspectorStore.getState().activeScreenId);
+        // Re-apply copy overrides after any reload (pseudo deactivation, HMR, etc.)
+        if (!readOnly) useCopyStore.getState().requestRefresh();
       }
 
       // Phase 3: forward TEXT_CLICK to copy store — highlight matching entry
@@ -235,6 +241,7 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
     }
   }, [handleIframeLoad]);
 
+  const pseudoMode = usePseudoTranslationStore((s) => s.mode);
   const isFixedWidth = previewWidth !== 'auto';
 
   // Build iframe src with ?screen= param for non-index screens
@@ -298,7 +305,8 @@ export function PreviewFrame({ prototypeId, readOnly = false }: PreviewFrameProp
           sx={{
             width: '100%',
             flex: 1,
-            border: 'none',
+            border: pseudoMode ? '2px solid' : 'none',
+            borderColor: 'warning.main',
             display: previewState === 'ready' ? 'block' : 'none',
           }}
           title={`Preview: ${prototypeId}`}
