@@ -431,7 +431,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
       {/* Header: summary + search + actions */}
       <Box sx={{ flexShrink: 0 }}>
         {/* Pseudo-translation control */}
-        <Box sx={{ mb: 1.5 }}>
+        <Box sx={{ mt: 2, mb: 2.5 }}>
           <FormLabel sx={{ display: 'block', mb: 0.75 }}>Pseudo-translation</FormLabel>
           <ToggleButtonGroup
             size="small"
