@@ -14,10 +14,9 @@ import ListItem from '@mui/material/ListItem';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
-import FormLabel from '@mui/material/FormLabel';
 import { ToggleButton, ToggleButtonGroup } from '@memoq/memoq.web.design';
 import MqIcon from "@/components/MqIcon";
-import { pseudoTransform, PSEUDO_MODE_LABELS, type PseudoMode } from '@/lib/pseudo-translation';
+import { pseudoTransform, type PseudoMode } from '@/lib/pseudo-translation';
 import { usePseudoTranslationStore } from '@/stores/pseudo-translation';
 
 
@@ -432,7 +431,6 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
       <Box sx={{ flexShrink: 0 }}>
         {/* Pseudo-translation control */}
         <Box sx={{ mb: 1.5 }}>
-          <FormLabel sx={{ display: 'block', mb: 0.75 }}>Pseudo-translation</FormLabel>
           <ToggleButtonGroup
             size="small"
             exclusive
@@ -447,10 +445,10 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
               '& .MuiToggleButton-root.Mui-selected': { bgcolor: 'background.paper', boxShadow: 1 },
             }}
           >
-            <ToggleButton value="none">None</ToggleButton>
-            {(Object.keys(PSEUDO_MODE_LABELS) as PseudoMode[]).map((m) => (
-              <ToggleButton key={m} value={m}>{PSEUDO_MODE_LABELS[m]}</ToggleButton>
-            ))}
+            <Tooltip title="No pseudo-translation"><ToggleButton value="none">None</ToggleButton></Tooltip>
+            <Tooltip title="Accented — shows encoding and font issues"><ToggleButton value="accented">Acc</ToggleButton></Tooltip>
+            <Tooltip title="Expanded — simulates longer languages (+40%)"><ToggleButton value="expanded">Exp</ToggleButton></Tooltip>
+            <Tooltip title="Double — reveals fixed-width overflow"><ToggleButton value="double">×2</ToggleButton></Tooltip>
           </ToggleButtonGroup>
         </Box>
 
