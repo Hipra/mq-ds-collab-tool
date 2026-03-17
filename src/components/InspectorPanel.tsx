@@ -2,7 +2,9 @@
 
 import React from 'react';
 import Box from '@mui/material/Box';
-import { ToggleButton, ToggleButtonGroup, Divider } from '@memoq/memoq.web.design';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import { Divider } from '@memoq/memoq.web.design';
 import { useInspectorStore } from '@/stores/inspector';
 import { ComponentTree } from '@/components/ComponentTree';
 import { PropInspector } from '@/components/PropInspector';
@@ -115,30 +117,17 @@ export function InspectorPanel({ prototypeId, tabs = ALL_TABS }: InspectorPanelP
     >
       {/* Tab header — hidden when only one tab is visible */}
       {tabs.length > 1 && (
-        <Box sx={{ flexShrink: 0, pb: 1.5 }}>
-          <ToggleButtonGroup
-            value={tabs[visibleTabIndex]}
-            exclusive
-            onChange={(_e, val) => {
-              if (val !== null) handleTabChange({} as React.SyntheticEvent, tabs.indexOf(val as TabName));
-            }}
-            size="small"
-            fullWidth
-            sx={{
-              '& .MuiToggleButton-root.Mui-selected': {
-                bgcolor: 'action.selected',
-                color: 'text.primary',
-                fontWeight: 600,
-              },
-              '& .MuiToggleButton-root.Mui-selected:hover': {
-                bgcolor: 'action.hover',
-              },
-            }}
+        <Box sx={{ flexShrink: 0, borderBottom: 1, borderColor: 'divider', mb: 1.5, mx: -2 }}>
+          <Tabs
+            value={visibleTabIndex}
+            onChange={handleTabChange}
+            variant="fullWidth"
+            sx={{ minHeight: 36, '& .MuiTab-root': { minHeight: 36, py: 0, textTransform: 'none', fontSize: '0.8125rem' } }}
           >
-            {tabs.includes('copy') && <ToggleButton value="copy" sx={{ flex: 1 }}>Copy</ToggleButton>}
-            {tabs.includes('components') && <ToggleButton value="components" sx={{ flex: 1 }}>Components</ToggleButton>}
-            {tabs.includes('theme') && <ToggleButton value="theme" sx={{ flex: 1 }}>Theme</ToggleButton>}
-          </ToggleButtonGroup>
+            {tabs.includes('copy') && <Tab label="Copy" />}
+            {tabs.includes('components') && <Tab label="Components" />}
+            {tabs.includes('theme') && <Tab label="Theme" />}
+          </Tabs>
         </Box>
       )}
 
