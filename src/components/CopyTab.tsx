@@ -437,12 +437,11 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
             fullWidth
             value={pseudoMode ?? 'none'}
             onChange={(_e, val: PseudoMode | 'none' | null) => setPseudoMode(val === 'none' || val === null ? null : val)}
-            color="secondary"
             sx={{
               border: 'none', bgcolor: 'action.hover', borderRadius: '8px', p: 0.25, gap: 0.25,
               '& .MuiToggleButtonGroup-grouped': { border: 'none !important', borderRadius: '6px !important' },
-              '& .MuiToggleButton-root': { textTransform: 'none', fontSize: '12px', flex: 1 },
-              '& .MuiToggleButton-root.Mui-selected': { bgcolor: 'background.paper', boxShadow: 1 },
+              '& .MuiToggleButton-root': { textTransform: 'none', fontSize: '12px', flex: 1, color: 'text.secondary' },
+              '& .MuiToggleButton-root.Mui-selected': { bgcolor: 'background.paper', boxShadow: 1, color: 'text.primary' },
             }}
           >
             <Tooltip title="No pseudo-translation"><ToggleButton value="none">None</ToggleButton></Tooltip>
