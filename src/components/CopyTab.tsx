@@ -607,7 +607,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
                                 handleEntryFocus(entry);
                               }}
                               onBlur={handleEntryBlur}
-                              helperText={pseudoMode ? entry.sourceValue : `${entry.currentValue.length} chars`}
+                              helperText={`${entry.currentValue.length} chars`}
                               sx={{
                                 '& .MuiInputBase-input': { fontSize: '0.8125rem' },
                                 ...(pseudoMode && { '& .MuiInputBase-root': { bgcolor: 'action.hover' } }),
