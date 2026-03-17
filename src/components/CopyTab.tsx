@@ -434,7 +434,7 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
         <Box sx={{ mb: 1.5 }}>
           <FormLabel sx={{ display: 'block', mb: 0.75 }}>Pseudo-translation</FormLabel>
           <ToggleButtonGroup
-            size="medium"
+            size="small"
             exclusive
             fullWidth
             value={pseudoMode ?? 'none'}
