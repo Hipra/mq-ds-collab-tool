@@ -431,24 +431,52 @@ export function CopyTab({ prototypeId }: CopyTabProps) {
       {/* Header: summary + search + actions */}
       <Box sx={{ flexShrink: 0 }}>
         {/* Pseudo-translation control */}
-        <Box sx={{ mb: 1.5 }}>
-          <FormLabel sx={{ display: 'block', mb: 0.75 }}>Pseudo-translation</FormLabel>
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={pseudoMode ?? 'none'}
-            onChange={(_e, val: PseudoMode | 'none' | null) => setPseudoMode(val === 'none' || val === null ? null : val)}
-            borderRadius="pill"
-            color="secondary"
-            sx={{ '& .MuiToggleButton-root': { py: 0.25, px: 1.5, fontSize: '11px', textTransform: 'none' } }}
-          >
-            <ToggleButton value="none" aria-label="none">None</ToggleButton>
-            {(Object.keys(PSEUDO_MODE_LABELS) as PseudoMode[]).map((m) => (
-              <ToggleButton key={m} value={m} aria-label={m}>
-                {PSEUDO_MODE_LABELS[m]}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
+        <Box sx={{ mb: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <FormLabel sx={{ display: 'block' }}>Pseudo-translation</FormLabel>
+
+          {/* A — pill, no border */}
+          {(['pill', 'box'] as const).map((br) =>
+            ([false, true] as const).map((brd) => (
+              <Box key={`${br}-${brd}`} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="caption" color="text.disabled" sx={{ width: 80, flexShrink: 0 }}>
+                  {br}, {brd ? 'border' : 'no border'}
+                </Typography>
+                <ToggleButtonGroup
+                  size="medium"
+                  exclusive
+                  value={pseudoMode ?? 'none'}
+                  onChange={(_e, val: PseudoMode | 'none' | null) => setPseudoMode(val === 'none' || val === null ? null : val)}
+                  borderRadius={br}
+                  border={brd}
+                  color="secondary"
+                  sx={{ '& .MuiToggleButton-root': { textTransform: 'none', fontSize: '12px' } }}
+                >
+                  <ToggleButton value="none">None</ToggleButton>
+                  {(Object.keys(PSEUDO_MODE_LABELS) as PseudoMode[]).map((m) => (
+                    <ToggleButton key={m} value={m}>{PSEUDO_MODE_LABELS[m]}</ToggleButton>
+                  ))}
+                </ToggleButtonGroup>
+              </Box>
+            ))
+          )}
+
+          {/* Nav variant */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="caption" color="text.disabled" sx={{ width: 80, flexShrink: 0 }}>Nav</Typography>
+            <ToggleButtonGroup.Nav
+              size="medium"
+              exclusive
+              value={pseudoMode ?? 'none'}
+              onChange={(_e, val: PseudoMode | 'none' | null) => setPseudoMode(val === 'none' || val === null ? null : val)}
+              color="secondary"
+              sx={{ '& .MuiToggleButton-root': { textTransform: 'none', fontSize: '12px' } }}
+            >
+              <ToggleButton value="none">None</ToggleButton>
+              {(Object.keys(PSEUDO_MODE_LABELS) as PseudoMode[]).map((m) => (
+                <ToggleButton key={m} value={m}>{PSEUDO_MODE_LABELS[m]}</ToggleButton>
+              ))}
+            </ToggleButtonGroup.Nav>
+          </Box>
         </Box>
 
         {/* Search */}
